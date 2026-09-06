@@ -1,132 +1,195 @@
-import { memo } from 'react'
-import { FileText, Layers, Monitor, Settings, Tag } from 'lucide-react'
+import { memo, type PointerEvent } from 'react'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import {
+  ChevronLeft,
+  FileText,
+  Languages,
+  Layers,
+  Minus,
+  Monitor,
+  Settings,
+  Square,
+  Tag,
+  X,
+} from 'lucide-react'
 import type { TFunction } from 'i18next'
 import logoLight from '@/assets/logo.svg'
 import logoDark from '@/assets/logo-dark.svg'
 
 type HeaderProps = {
   language: string
-  loading: boolean
   activeView: 'myskills' | 'detail' | 'settings' | 'tags' | 'tools' | 'prompts'
-  activeSkillSource: 'custom' | 'community'
   skillCount: number
-  customSkillCount: number
-  communitySkillCount: number
+  tagCount: number
   toolCount: number
+  collapsed: boolean
+  onToggleCollapsed: () => void
   onToggleLanguage: () => void
   onOpenSettings: () => void
   onViewChange: (view: 'myskills' | 'tags' | 'tools' | 'prompts') => void
-  onSkillSourceChange: (source: 'custom' | 'community') => void
   t: TFunction
+}
+
+const appWindow = getCurrentWindow()
+
+const startWindowDrag = (event: PointerEvent<HTMLElement>) => {
+  // Only start dragging on primary button (left click), and skip if the
+  // event target is (or is inside) an interactive element such as a button.
+  if (event.button !== 0) return
+  const target = event.target as HTMLElement
+  if (target.closest('button, input, select, textarea, a, [role="button"]')) return
+  void appWindow.startDragging().catch(() => undefined)
 }
 
 const Header = ({
   language,
   activeView,
-  activeSkillSource,
   skillCount,
-  customSkillCount,
-  communitySkillCount,
+  tagCount,
   toolCount,
+  collapsed,
+  onToggleCollapsed,
   onToggleLanguage,
   onOpenSettings,
   onViewChange,
-  onSkillSourceChange,
   t,
-}: HeaderProps) => {
-  return (
-    <header className="skills-header">
-      <div className="header-left">
-        <div className="brand-area">
-          <img className="brand-logo brand-logo-light" src={logoLight} alt="Skills Hub" width={36} height={36} />
-          <img className="brand-logo brand-logo-dark" src={logoDark} alt="Skills Hub" width={36} height={36} />
-          <div className="brand-text-wrap">
-            <div className="brand-text" aria-label={t('appName')}>
-              <span className="brand-word-main">{t('brand.skills')}</span>
-              <span className="brand-word-accent">{t('brand.hub')}</span>
-            </div>
-          </div>
-          <div className="header-stats">
-            <span className="header-stat">
-              <span className="header-stat-value">{skillCount}</span>
-              <span className="header-stat-label">{t('skills')}</span>
-            </span>
-            <span className="header-stat-sep" />
-            <span className="header-stat">
-              <span className="header-stat-value">{toolCount}</span>
-              <span className="header-stat-label">{t('toolsLabel')}</span>
-            </span>
-          </div>
+}: HeaderProps) => (
+  <>
+    <div
+      className="window-titlebar"
+      onPointerDown={startWindowDrag}
+    >
+      <strong className="titlebar-title">
+        {t('appName')}
+      </strong>
+      <div className="titlebar-right">
+        <span className="titlebar-version">
+          v{__APP_VERSION__}
+        </span>
+        <div className="titlebar-window-controls">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); void appWindow.minimize() }}
+            aria-label={t('window.minimize')}
+          >
+            <Minus size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); void appWindow.toggleMaximize() }}
+            aria-label={t('window.maximize')}
+          >
+            <Square size={13} />
+          </button>
+          <button
+            type="button"
+            className="close"
+            onClick={(e) => { e.stopPropagation(); void appWindow.close() }}
+            aria-label={t('window.close')}
+          >
+            <X size={16} />
+          </button>
         </div>
-        <nav className="nav-tabs">
-          <button
-            className={`nav-tab${activeView === 'myskills' || activeView === 'detail' ? ' active' : ''}`}
-            type="button"
-            onClick={() => onViewChange('myskills')}
-          >
-            <Layers size={15} />
-            {t('navMySkills')}
-          </button>
-          <button
-            className={`nav-tab${activeView === 'tags' ? ' active' : ''}`}
-            type="button"
-            onClick={() => onViewChange('tags')}
-          >
-            <Tag size={15} />
-            {t('navTags')}
-          </button>
-          <button
-            className={`nav-tab${activeView === 'tools' ? ' active' : ''}`}
-            type="button"
-            onClick={() => onViewChange('tools')}
-          >
-            <Monitor size={15} />
-            {t('navTools')}
-          </button>
-          <button
-            className={`nav-tab${activeView === 'prompts' ? ' active' : ''}`}
-            type="button"
-            onClick={() => onViewChange('prompts')}
-          >
-            <FileText size={15} />
-            {t('navPrompts')}
-          </button>
-        </nav>
-        {(activeView === 'myskills' || activeView === 'detail') ? (
-          <div className="source-tabs" role="tablist" aria-label={t('sourceTabs.label')}>
-            <button
-              className={`source-tab${activeSkillSource === 'custom' ? ' active' : ''}`}
-              type="button"
-              role="tab"
-              aria-selected={activeSkillSource === 'custom'}
-              onClick={() => onSkillSourceChange('custom')}
-            >
-              {t('sourceTabs.custom')}
-              <span>{customSkillCount}</span>
-            </button>
-            <button
-              className={`source-tab${activeSkillSource === 'community' ? ' active' : ''}`}
-              type="button"
-              role="tab"
-              aria-selected={activeSkillSource === 'community'}
-              onClick={() => onSkillSourceChange('community')}
-            >
-              {t('sourceTabs.community')}
-              <span>{communitySkillCount}</span>
-            </button>
-          </div>
-        ) : null}
       </div>
-      <div className="header-actions">
-        <button className="lang-btn" type="button" onClick={onToggleLanguage}>
-          {language === 'en' ? t('languageShort.en') : t('languageShort.zh')}
+    </div>
+    <aside className={`skills-sidebar${collapsed ? ' collapsed' : ''}`}>
+      <div className="sidebar-brand">
+        <div className="sidebar-logo">
+          <img
+            className="brand-logo brand-logo-light"
+            src={logoLight}
+            alt="Skills Hub"
+            width={32}
+            height={32}
+          />
+          <img
+            className="brand-logo brand-logo-dark"
+            src={logoDark}
+            alt="Skills Hub"
+            width={32}
+            height={32}
+          />
+        </div>
+        <div className="sidebar-brand-copy">
+          <strong>{t('appName')}</strong>
+          <span>{t('subtitle')}</span>
+        </div>
+        <button
+          className="sidebar-collapse"
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+          title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+        >
+          <ChevronLeft size={16} />
         </button>
-        <button className={`icon-btn${activeView === 'settings' ? ' active' : ''}`} type="button" onClick={onOpenSettings}>
+      </div>
+
+      <div className="sidebar-section-label">{t('sidebar.workspace')}</div>
+      <nav className="sidebar-nav" aria-label={t('sidebar.workspace')}>
+        <button
+          className={activeView === 'myskills' || activeView === 'detail' ? 'active' : ''}
+          type="button"
+          onClick={() => onViewChange('myskills')}
+          title={collapsed ? t('navMySkills') : undefined}
+        >
+          <Layers size={18} />
+          <span>{t('navMySkills')}</span>
+          <em>{skillCount}</em>
+        </button>
+        <button
+          className={activeView === 'prompts' ? 'active' : ''}
+          type="button"
+          onClick={() => onViewChange('prompts')}
+          title={collapsed ? t('navPrompts') : undefined}
+        >
+          <FileText size={18} />
+          <span>{t('navPrompts')}</span>
+        </button>
+      </nav>
+
+      <div className="sidebar-section-label">{t('sidebar.manage')}</div>
+      <nav className="sidebar-nav" aria-label={t('sidebar.manage')}>
+        <button
+          className={activeView === 'tags' ? 'active' : ''}
+          type="button"
+          onClick={() => onViewChange('tags')}
+          title={collapsed ? t('navTags') : undefined}
+        >
+          <Tag size={18} />
+          <span>{t('navTags')}</span>
+          <em>{tagCount}</em>
+        </button>
+        <button
+          className={activeView === 'tools' ? 'active' : ''}
+          type="button"
+          onClick={() => onViewChange('tools')}
+          title={collapsed ? t('navTools') : undefined}
+        >
+          <Monitor size={18} />
+          <span>{t('navTools')}</span>
+          <em>{toolCount}</em>
+        </button>
+      </nav>
+
+      <div className="sidebar-spacer" />
+      <div className="sidebar-footer">
+        <button type="button" onClick={onToggleLanguage} title={collapsed ? t('settings.language') : undefined}>
+          <Languages size={18} />
+          <span>{language === 'en' ? t('languageShort.en') : t('languageShort.zh')}</span>
+        </button>
+        <button
+          className={activeView === 'settings' ? 'active' : ''}
+          type="button"
+          onClick={onOpenSettings}
+          title={collapsed ? t('settings.title') : undefined}
+        >
           <Settings size={18} />
+          <span>{t('settings.title')}</span>
         </button>
       </div>
-    </header>
-  )
-}
+    </aside>
+  </>
+)
 
 export default memo(Header)
