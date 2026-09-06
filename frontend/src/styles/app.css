@@ -603,8 +603,8 @@
 }
 
 .filter-search-wrap .search-container {
-  flex: 0 1 280px;
-  min-width: 180px;
+  flex: 0 0 220px;
+  min-width: 160px;
 }
 
 /* 第二行：筛选器 + 视图切换 */
