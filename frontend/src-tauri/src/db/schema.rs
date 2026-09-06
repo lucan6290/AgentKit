@@ -68,7 +68,8 @@ fn self_heal_schema(conn: &Connection) -> SqlResult<()> {
           last_sync_at INTEGER NULL,
           last_seen_at INTEGER NOT NULL,
           status TEXT NOT NULL,
-          sort_order REAL NOT NULL DEFAULT 0
+          sort_order REAL NOT NULL DEFAULT 0,
+          enabled INTEGER NOT NULL DEFAULT 1
         );
 
         CREATE TABLE IF NOT EXISTS skill_targets (
@@ -221,6 +222,7 @@ fn self_heal_schema(conn: &Connection) -> SqlResult<()> {
     add_column_if_missing(conn, "skills", "skill_file_count", "INTEGER NULL")?;
     add_column_if_missing(conn, "skills", "skill_dir_size", "INTEGER NULL")?;
     add_column_if_missing(conn, "skills", "source_url", "TEXT NULL")?;
+    add_column_if_missing(conn, "skills", "enabled", "INTEGER NOT NULL DEFAULT 1")?;
     add_column_if_missing(conn, "tool_adapter_configs", "project_skills_dir", "TEXT")?;
     add_column_if_missing(conn, "skill_targets", "target_content_hash", "TEXT")?;
     add_column_if_missing(conn, "skill_targets", "target_updated_at", "INTEGER")?;

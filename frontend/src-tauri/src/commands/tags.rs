@@ -1,4 +1,4 @@
-﻿use tauri::State;
+use tauri::State;
 
 use crate::error::{AppError, AppResult};
 use crate::models::{Tag, TagWithCount};
@@ -61,4 +61,18 @@ pub async fn set_skill_tags(
     let repo = TagsRepository::new(&state.db);
     repo.set_skill_tags(&skill_id, &tag_ids)
         .map_err(|e| AppError::DatabaseError(e.to_string()))
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn bulk_set_skill_tags(
+    state: State<'_, AppState>,
+    skill_ids: Vec<String>,
+    tag_ids: Vec<i64>,
+) -> AppResult<serde_json::Value> {
+    let repo = TagsRepository::new(&state.db);
+    for id in &skill_ids {
+        repo.set_skill_tags(id, &tag_ids)
+            .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    }
+    Ok(serde_json::json!({ "updated": skill_ids.len() }))
 }

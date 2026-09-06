@@ -26,6 +26,7 @@ pub struct Skill {
     pub last_seen_at: i64,
     pub status: String,
     pub sort_order: f64,
+    pub enabled: bool,
 }
 
 impl Default for Skill {
@@ -55,6 +56,7 @@ impl Default for Skill {
             last_seen_at: 0,
             status: "active".to_string(),
             sort_order: 0.0,
+            enabled: true,
         }
     }
 }

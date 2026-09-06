@@ -383,3 +383,62 @@ pub async fn list_suite_sub_skills(
 
     Ok(subs)
 }
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn bulk_sync_skills(
+    state: State<'_, AppState>,
+    skill_ids: Vec<String>,
+) -> AppResult<serde_json::Value> {
+    let skills_repo = SkillsRepository::new(&state.db);
+    let targets_repo = SkillTargetsRepository::new(&state.db);
+    let adapters = effective_tool_adapters(&state.db);
+
+    let mut synced = 0usize;
+    let mut skipped = 0usize;
+    let mut errors: Vec<String> = Vec::new();
+
+    for skill_id in &skill_ids {
+        let skill = match skills_repo
+            .get_by_id(skill_id)
+            .map_err(|e| AppError::DatabaseError(e.to_string()))?
+        {
+            Some(skill) => skill,
+            None => {
+                skipped += 1;
+                continue;
+            }
+        };
+
+        if !skill.enabled {
+            skipped += 1;
+            continue;
+        }
+
+        let targets = targets_repo
+            .list_by_skill(skill_id)
+            .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+
+        for target in &targets {
+            let Some(adapter) = adapter::adapter_by_key(&adapters, &target.tool) else {
+                continue;
+            };
+            let target_path = std::path::PathBuf::from(&target.target_path);
+            match crate::skills::sync_engine::sync_dir_for_tool_with_overwrite(
+                &target.tool,
+                &skill.community_path,
+                &target_path,
+                true,
+                adapter.force_copy,
+            ) {
+                Ok(_) => synced += 1,
+                Err(e) => errors.push(format!("{}: {}", skill.name, e)),
+            }
+        }
+    }
+
+    Ok(serde_json::json!({
+        "synced": synced,
+        "skipped": skipped,
+        "errors": errors,
+    }))
+}

@@ -58,6 +58,7 @@ Skill 主记录表，存储每一个 skill 的完整元信息。
 | `last_sync_at` | INTEGER | NULL | 最后一次同步到工具的时间（Unix 毫秒时间戳） |
 | `last_seen_at` | INTEGER | NOT NULL | 仓库扫描器最后一次确认该 skill 存在的时间（Unix 毫秒时间戳） |
 | `status` | TEXT | NOT NULL | 状态：`"active"`、`"missing"`、`"ok"` |
+| `enabled` | INTEGER | NOT NULL, DEFAULT 1 | 是否启用：0=禁用，1=启用（关闭后跳过同步但保留数据） |
 
 索引：`(name)`、`(updated_at)`
 

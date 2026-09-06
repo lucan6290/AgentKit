@@ -44,9 +44,9 @@ impl<'a> SkillsRepository<'a> {
                   category, homepage, skill_file_count, skill_dir_size,
                   source_type, source_ref, source_subpath,
                   source_revision, source_url, community_path, content_hash, created_at, updated_at,
-                  last_sync_at, last_seen_at, status, sort_order
+                  last_sync_at, last_seen_at, status, sort_order, enabled
                 ) VALUES (
-                  ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24
+                  ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25
                 )
                 ON CONFLICT(id) DO UPDATE SET
                   name = excluded.name,
@@ -71,7 +71,8 @@ impl<'a> SkillsRepository<'a> {
                   last_sync_at = excluded.last_sync_at,
                   last_seen_at = excluded.last_seen_at,
                   status = excluded.status,
-                  sort_order = excluded.sort_order",
+                  sort_order = excluded.sort_order,
+                  enabled = excluded.enabled",
                 rusqlite::params![
                     skill.id, skill.name, skill.description, skill.frontmatter_extra,
                     skill.version, skill.author, skill.license, skill.category, skill.homepage,
@@ -79,6 +80,7 @@ impl<'a> SkillsRepository<'a> {
                     skill.source_ref, skill.source_subpath, skill.source_revision, skill.source_url,
                     skill.community_path, skill.content_hash, skill.created_at, skill.updated_at,
                     skill.last_sync_at, skill.last_seen_at, skill.status, skill.sort_order,
+                    skill.enabled,
                 ],
             )?;
             Ok(())
@@ -92,7 +94,7 @@ impl<'a> SkillsRepository<'a> {
                         category, homepage, skill_file_count, skill_dir_size,
                         source_type, source_ref, source_subpath,
                         source_revision, source_url, community_path, content_hash, created_at,
-                        updated_at, last_sync_at, last_seen_at, status, sort_order
+                        updated_at, last_sync_at, last_seen_at, status, sort_order, enabled
                  FROM skills WHERE id = ?1 LIMIT 1",
             )?;
             let result = stmt.query_row([skill_id], row_to_skill);
@@ -114,7 +116,7 @@ impl<'a> SkillsRepository<'a> {
                         category, homepage, skill_file_count, skill_dir_size,
                         source_type, source_ref, source_subpath,
                         source_revision, source_url, community_path, content_hash, created_at,
-                        updated_at, last_sync_at, last_seen_at, status, sort_order
+                        updated_at, last_sync_at, last_seen_at, status, sort_order, enabled
                  FROM skills WHERE content_hash = ?1",
             )?;
             let result = stmt.query_row([content_hash], row_to_skill);
@@ -133,7 +135,7 @@ impl<'a> SkillsRepository<'a> {
                         category, homepage, skill_file_count, skill_dir_size,
                         source_type, source_ref, source_subpath,
                         source_revision, source_url, community_path, content_hash, created_at,
-                        updated_at, last_sync_at, last_seen_at, status, sort_order
+                        updated_at, last_sync_at, last_seen_at, status, sort_order, enabled
                  FROM skills WHERE community_path = ?1 LIMIT 1",
             )?;
             let result = stmt.query_row([community_path], row_to_skill);
@@ -159,7 +161,7 @@ impl<'a> SkillsRepository<'a> {
                         category, homepage, skill_file_count, skill_dir_size,
                         source_type, source_ref, source_subpath,
                         source_revision, source_url, community_path, content_hash, created_at,
-                        updated_at, last_sync_at, last_seen_at, status, sort_order
+                        updated_at, last_sync_at, last_seen_at, status, sort_order, enabled
                  FROM skills ORDER BY {}",
                 order_by
             );
@@ -185,6 +187,16 @@ impl<'a> SkillsRepository<'a> {
             conn.execute(
                 "UPDATE skills SET source_url = ?1, updated_at = ?2 WHERE id = ?3",
                 rusqlite::params![source_url, now, skill_id],
+            )?;
+            Ok(())
+        })
+    }
+
+    pub fn set_enabled(&self, skill_id: &str, enabled: bool) -> AppResult<()> {
+        self.db.with_conn(|conn| {
+            conn.execute(
+                "UPDATE skills SET enabled = ?1 WHERE id = ?2",
+                rusqlite::params![enabled, skill_id],
             )?;
             Ok(())
         })
@@ -224,6 +236,7 @@ fn row_to_skill(row: &rusqlite::Row) -> rusqlite::Result<Skill> {
         last_seen_at: row.get(21)?,
         status: row.get(22)?,
         sort_order: row.get(23)?,
+        enabled: row.get(24)?,
     })
 }
 

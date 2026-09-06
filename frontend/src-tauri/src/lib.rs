@@ -202,6 +202,8 @@ pub fn run() {
             // skills
             crate::commands::skills::get_managed_skills,
             crate::commands::skills::delete_managed_skill,
+            crate::commands::skills::delete_managed_skills,
+            crate::commands::skills::set_skill_enabled,
             crate::commands::skills::update_skill_source_url,
             crate::commands::skills::import_existing_skill,
             crate::commands::skills::list_local_skills_cmd,
@@ -213,6 +215,7 @@ pub fn run() {
             crate::commands::tags::delete_tag,
             crate::commands::tags::get_skill_tags,
             crate::commands::tags::set_skill_tags,
+            crate::commands::tags::bulk_set_skill_tags,
             // sync
             crate::commands::sync::sync_skill_to_tool,
             crate::commands::sync::unsync_skill_from_tool,
@@ -223,6 +226,7 @@ pub fn run() {
             crate::commands::sync::get_recent_projects,
             crate::commands::sync::save_recent_project,
             crate::commands::sync::list_suite_sub_skills,
+            crate::commands::sync::bulk_sync_skills,
             // files
             crate::commands::files::list_skill_files,
             crate::commands::files::read_skill_file,

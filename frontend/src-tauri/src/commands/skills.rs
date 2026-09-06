@@ -79,33 +79,53 @@ pub async fn get_managed_skills(
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn delete_managed_skill(state: State<'_, AppState>, skill_id: String) -> AppResult<()> {
+pub async fn set_skill_enabled(
+    state: State<'_, AppState>,
+    skill_id: String,
+    enabled: bool,
+) -> AppResult<()> {
+    let repo = SkillsRepository::new(&state.db);
+    repo.set_enabled(&skill_id, enabled)
+        .map_err(|e| AppError::DatabaseError(e.to_string()))
+}
+
+fn delete_skill_cascade(state: &AppState, skill_id: &str) -> AppResult<()> {
     let repo = SkillsRepository::new(&state.db);
     // Also remove targets and tag links
     state
         .db
         .with_conn(|conn| {
-            conn.execute("DELETE FROM skill_targets WHERE skill_id = ?1", [&skill_id])?;
-            conn.execute(
-                "DELETE FROM skill_tag_links WHERE skill_id = ?1",
-                [&skill_id],
-            )?;
-            conn.execute(
-                "DELETE FROM skill_scope_preference WHERE skill_id = ?1",
-                [&skill_id],
-            )?;
-            conn.execute("DELETE FROM skill_usage WHERE skill_id = ?1", [&skill_id])?;
+            conn.execute("DELETE FROM skill_targets WHERE skill_id = ?1", [skill_id])?;
+            conn.execute("DELETE FROM skill_tag_links WHERE skill_id = ?1", [skill_id])?;
+            conn.execute("DELETE FROM skill_scope_preference WHERE skill_id = ?1", [skill_id])?;
+            conn.execute("DELETE FROM skill_usage WHERE skill_id = ?1", [skill_id])?;
             Ok::<_, rusqlite::Error>(())
         })
         .map_err(|e| {
-            log::warn!("[DB_ERROR] delete_managed_skill: cascade delete failed | skill_id={}", skill_id);
+            log::warn!("[DB_ERROR] delete_skill_cascade: cascade delete failed | skill_id={}", skill_id);
             AppError::DatabaseError(e.to_string())
         })?;
 
-    repo.delete(&skill_id).map_err(|e| {
-        log::warn!("[DB_ERROR] delete_managed_skill: delete skill failed | skill_id={}", skill_id);
+    repo.delete(skill_id).map_err(|e| {
+        log::warn!("[DB_ERROR] delete_skill_cascade: delete skill failed | skill_id={}", skill_id);
         AppError::DatabaseError(e.to_string())
     })
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn delete_managed_skill(state: State<'_, AppState>, skill_id: String) -> AppResult<()> {
+    delete_skill_cascade(&state, &skill_id)
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn delete_managed_skills(
+    state: State<'_, AppState>,
+    skill_ids: Vec<String>,
+) -> AppResult<serde_json::Value> {
+    for id in &skill_ids {
+        delete_skill_cascade(&state, id)?;
+    }
+    Ok(serde_json::json!({ "removed": skill_ids.len() }))
 }
 
 #[tauri::command(rename_all = "snake_case")]
