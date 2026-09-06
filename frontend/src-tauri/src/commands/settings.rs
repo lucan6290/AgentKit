@@ -160,10 +160,12 @@ pub async fn get_close_behavior(state: State<'_, AppState>) -> AppResult<String>
 #[tauri::command(rename_all = "snake_case")]
 pub async fn set_close_behavior(state: State<'_, AppState>, behavior: String) -> AppResult<()> {
     if behavior != "minimize_to_tray" && behavior != "minimize_to_taskbar" && behavior != "quit" {
+        log::warn!("收到无效的关闭行为设置: {}", behavior);
         return Err(AppError::InvalidInput(
             "behavior must be 'minimize_to_tray', 'minimize_to_taskbar' or 'quit'".into(),
         ));
     }
+    log::info!("关闭行为设置已更改: {}", behavior);
     let repo = SettingsRepository::new(&state.db);
     repo.set("close_behavior", &behavior)
         .map_err(|e| AppError::DatabaseError(e.to_string()))

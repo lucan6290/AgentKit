@@ -3,6 +3,7 @@ import { RefreshCw, Tag, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { getCurrent, onOpenUrl } from '@tauri-apps/plugin-deep-link'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { Header, LoadingOverlay } from '@/components/layout'
 import {
   FilterBar,
@@ -103,6 +104,35 @@ function AppContent() {
       if (sidebarHoverTimer.current !== null) {
         window.clearTimeout(sidebarHoverTimer.current)
       }
+    }
+  }, [])
+
+  // ─── Window event logging ──────────────────────
+  useEffect(() => {
+    const appWindow = getCurrentWindow()
+    const unlisteners: Promise<() => void>[] = []
+
+    const onResized = appWindow.onResized(({ payload }) => {
+      console.debug('[Window] 窗口大小变化:', payload.width, 'x', payload.height)
+    })
+    const onMoved = appWindow.onMoved(({ payload }) => {
+      console.debug('[Window] 窗口位置变化:', payload.x, ',', payload.y)
+    })
+    const onFocusChanged = appWindow.onFocusChanged(({ payload }) => {
+      console.debug('[Window] 焦点变化:', payload)
+    })
+
+    unlisteners.push(onResized, onMoved, onFocusChanged)
+
+    // Log initial window state
+    appWindow.isMaximized().then((maximized) => {
+      console.info('[Window] 窗口初始化完成, 最大化状态:', maximized)
+    }).catch(() => {})
+
+    return () => {
+      unlisteners.forEach((p) => {
+        p.then((unlisten) => unlisten()).catch(() => {})
+      })
     }
   }, [])
 

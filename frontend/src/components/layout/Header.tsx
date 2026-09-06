@@ -37,9 +37,24 @@ type HeaderProps = {
 
 const appWindow = getCurrentWindow()
 
-const handleMinimize = () => { void appWindow.minimize() }
-const handleToggleMaximize = () => { void appWindow.toggleMaximize() }
-const handleClose = () => { void appWindow.close() }
+const handleMinimize = () => {
+  console.info('[Window] 用户点击最小化按钮')
+  appWindow.minimize().catch((err) => {
+    console.error('[Window] 最小化窗口失败:', err)
+  })
+}
+const handleToggleMaximize = () => {
+  console.info('[Window] 用户点击最大化/还原按钮')
+  appWindow.toggleMaximize().catch((err) => {
+    console.error('[Window] 切换最大化状态失败:', err)
+  })
+}
+const handleClose = () => {
+  console.info('[Window] 用户点击关闭按钮')
+  appWindow.close().catch((err) => {
+    console.error('[Window] 关闭窗口失败:', err)
+  })
+}
 
 const Header = ({
   language,
