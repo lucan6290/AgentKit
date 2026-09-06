@@ -401,7 +401,7 @@
   height: 64px;
   opacity: 0.5;
   background:
-    linear-gradient(90deg, transparent 0 18px, color-mix(in srgb, var(--accent-primary) 18%, transparent) 18px 20px, transparent 20px 44px, color-mix(in srgb, var(--accent-warm) 18%, transparent) 44px 46px, transparent 46px),
+    linear-gradient(90deg, transparent 0 18px, color-mix(in srgb, var(--accent-primary) 18%, transparent) 18px 20px, transparent 20px 44px, color-mix(in srgb, var(--accent-project) 18%, transparent) 44px 46px, transparent 46px),
     linear-gradient(180deg, transparent 0 20px, color-mix(in srgb, var(--border-strong) 38%, transparent) 20px 22px, transparent 22px);
   pointer-events: none;
 }
@@ -474,10 +474,8 @@
 .tags-review-row {
   min-height: 68px;
   padding: 14px 16px;
-  border-color: color-mix(in srgb, var(--accent-warm) 26%, var(--border-subtle));
-  background:
-    linear-gradient(90deg, rgba(184, 97, 60, 0.1), transparent 42%),
-    color-mix(in srgb, var(--bg-panel) 92%, transparent);
+  border-color: color-mix(in srgb, var(--accent-project) 26%, var(--border-subtle));
+  background: var(--bg-panel);
 }
 
 .tags-review-left {
