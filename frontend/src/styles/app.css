@@ -28,6 +28,14 @@
   font-size: 12px;
   user-select: none;
   z-index: 40;
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.titlebar-no-drag,
+.titlebar-no-drag * {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 
 .titlebar-title {

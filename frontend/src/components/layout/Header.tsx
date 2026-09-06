@@ -1,4 +1,4 @@
-import { memo, type PointerEvent } from 'react'
+import { memo } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import {
   ChevronLeft,
@@ -37,14 +37,9 @@ type HeaderProps = {
 
 const appWindow = getCurrentWindow()
 
-const startWindowDrag = (event: PointerEvent<HTMLElement>) => {
-  // Only start dragging on primary button (left click), and skip if the
-  // event target is (or is inside) an interactive element such as a button.
-  if (event.button !== 0) return
-  const target = event.target as HTMLElement
-  if (target.closest('button, input, select, textarea, a, [role="button"]')) return
-  void appWindow.startDragging().catch(() => undefined)
-}
+const handleMinimize = () => { void appWindow.minimize() }
+const handleToggleMaximize = () => { void appWindow.toggleMaximize() }
+const handleClose = () => { void appWindow.close() }
 
 const Header = ({
   language,
@@ -66,20 +61,17 @@ const Header = ({
   <>
     <div
       className="window-titlebar"
-      onPointerDown={startWindowDrag}
+      data-tauri-drag-region
     >
-      <strong className="titlebar-title">
+      <strong className="titlebar-title" data-tauri-drag-region>
         {t('appName')}
       </strong>
-      <div className="titlebar-right">
+      <div className="titlebar-right titlebar-no-drag">
         {updateVersion ? (
           <button
             type="button"
             className="titlebar-update-btn"
-            onClick={(e) => {
-              e.stopPropagation()
-              onOpenUpdateDialog()
-            }}
+            onClick={onOpenUpdateDialog}
             title={t('update.newVersion')}
             aria-label={t('update.newVersion')}
           >
@@ -93,23 +85,26 @@ const Header = ({
         <div className="titlebar-window-controls">
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); void appWindow.minimize() }}
+            onClick={handleMinimize}
             aria-label={t('window.minimize')}
+            title={t('window.minimize')}
           >
             <Minus size={16} />
           </button>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); void appWindow.toggleMaximize() }}
+            onClick={handleToggleMaximize}
             aria-label={t('window.maximize')}
+            title={t('window.maximize')}
           >
             <Square size={13} />
           </button>
           <button
             type="button"
             className="close"
-            onClick={(e) => { e.stopPropagation(); void appWindow.close() }}
+            onClick={handleClose}
             aria-label={t('window.close')}
+            title={t('window.close')}
           >
             <X size={16} />
           </button>
