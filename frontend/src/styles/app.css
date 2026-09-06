@@ -48,6 +48,35 @@
   margin-right: 8px;
 }
 
+/* ── Titlebar update badge ── */
+.titlebar-update-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 10px;
+  margin-right: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: #ef4444;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  animation: update-badge-pulse 2s ease-in-out infinite;
+}
+
+.titlebar-update-btn:hover {
+  background: #dc2626;
+}
+
+@keyframes update-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+}
+
 .titlebar-window-controls {
   display: flex;
   align-items: center;
@@ -1049,7 +1078,165 @@
   color: var(--status-error);
 }
 
-/* ── Update modal ── */
+/* ── Update dialog (titlebar-triggered) ── */
+.update-dialog {
+  width: min(520px, calc(100vw - 48px));
+  max-height: calc(100vh - 120px);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow-lg);
+  backdrop-filter: var(--glass-blur-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.update-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+}
+
+.update-dialog-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.update-dialog-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent-primary);
+  color: var(--accent-primary-fg);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.update-dialog-download-btn:hover {
+  background: var(--accent-primary-hover);
+}
+
+.update-dialog-body {
+  padding: 16px 24px 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.update-dialog-version {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.update-dialog-notes {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.update-dialog-notes ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.update-dialog-notes li {
+  margin: 4px 0;
+}
+
+.update-dialog-footer {
+  padding: 0 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.update-dialog-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-element);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.update-dialog-progress-bar {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.update-dialog-progress-text {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.update-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.update-dialog-cancel {
+  height: 36px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.update-dialog-cancel:hover {
+  background: var(--bg-element);
+  color: var(--text-primary);
+}
+
+.update-dialog-update {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  min-width: 90px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent-primary);
+  color: var(--accent-primary-fg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.update-dialog-update:hover {
+  background: var(--accent-primary-hover);
+}
+
+.update-dialog-update:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Legacy update modal (settings page) ── */
 .update-modal {
   width: 380px;
   padding: 24px;

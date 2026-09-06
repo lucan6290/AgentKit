@@ -1,8 +1,17 @@
 use tauri::AppHandle;
+use tauri::Emitter;
 use tauri_plugin_updater::UpdaterExt;
 
 use crate::error::{AppError, AppResult};
 use crate::update::{self, CheckUpdateResponse, PerformUpdateResponse};
+
+/// Progress payload sent to the frontend during download.
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct UpdateProgress {
+    chunk_length: usize,
+    content_length: Option<u64>,
+}
 
 /// Check for updates via the GitHub Releases API (for display: version + release notes).
 ///
@@ -19,9 +28,8 @@ pub async fn check_update(app: AppHandle) -> AppResult<CheckUpdateResponse> {
 
 /// Download and install the latest update via the native `tauri-plugin-updater`.
 ///
-/// Requires release infrastructure: a signed `latest.json` manifest hosted at the
-/// configured `plugins.updater.endpoints` URL and the matching public key in
-/// `plugins.updater.pubkey`. Until that is set up, this returns a graceful error.
+/// Emits `update://progress` events during download: `{ chunk_length, content_length }`.
+/// On completion the app restarts automatically.
 #[tauri::command(rename_all = "snake_case")]
 pub async fn do_update(app: AppHandle) -> AppResult<PerformUpdateResponse> {
     let updater = app
@@ -46,8 +54,22 @@ pub async fn do_update(app: AppHandle) -> AppResult<PerformUpdateResponse> {
         });
     };
 
+    let app_for_cb = app.clone();
     update
-        .download_and_install(|_chunk, _total| {}, || {})
+        .download_and_install(
+            move |chunk_length, content_length| {
+                let _ = app_for_cb.emit(
+                    "update://progress",
+                    UpdateProgress {
+                        chunk_length,
+                        content_length,
+                    },
+                );
+            },
+            || {
+                // download finished callback
+            },
+        )
         .await
         .map_err(|e| {
             log::error!("[UPDATE_ERROR] do_update: download_and_install failed | version={} {}", update.version, e);

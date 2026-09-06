@@ -29,6 +29,9 @@ type HeaderProps = {
   onToggleLanguage: () => void
   onOpenSettings: () => void
   onViewChange: (view: 'myskills' | 'tags' | 'tools' | 'prompts') => void
+  /** New version available to show the red badge button; null/undefined when up-to-date */
+  updateVersion: string | null
+  onOpenUpdateDialog: () => void
   t: TFunction
 }
 
@@ -56,6 +59,8 @@ const Header = ({
   onToggleLanguage,
   onOpenSettings,
   onViewChange,
+  updateVersion,
+  onOpenUpdateDialog,
   t,
 }: HeaderProps) => (
   <>
@@ -67,9 +72,24 @@ const Header = ({
         {t('appName')}
       </strong>
       <div className="titlebar-right">
-        <span className="titlebar-version">
-          v{__APP_VERSION__}
-        </span>
+        {updateVersion ? (
+          <button
+            type="button"
+            className="titlebar-update-btn"
+            onClick={(e) => {
+              e.stopPropagation()
+              onOpenUpdateDialog()
+            }}
+            title={t('update.newVersion')}
+            aria-label={t('update.newVersion')}
+          >
+            v{updateVersion}
+          </button>
+        ) : (
+          <span className="titlebar-version">
+            v{__APP_VERSION__}
+          </span>
+        )}
         <div className="titlebar-window-controls">
           <button
             type="button"

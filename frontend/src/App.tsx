@@ -21,6 +21,8 @@ import { skillService } from '@/services'
 import { AppStateProvider, useAppState } from '@/context/AppStateContext'
 import { ModalProvider, useModal } from '@/context/ModalContext'
 import type { ManagedSkill } from '@/features/skills'
+import { checkUpdate, getAutoCheckUpdate, type CheckUpdateResult } from '@/lib/api'
+import UpdateDialog from '@/features/settings/components/UpdateDialog'
 
 // ─── Lazy-loaded views ──────────────────────────────
 const SkillDetailView = lazy(() => import('@/features/skills/components/SkillDetailView'))
@@ -102,6 +104,38 @@ function AppContent() {
         window.clearTimeout(sidebarHoverTimer.current)
       }
     }
+  }, [])
+
+  // ─── Update check ────────────────────────────────
+  const [updateResult, setUpdateResult] = useState<CheckUpdateResult | null>(null)
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
+  const hasAutoChecked = useRef(false)
+
+  useEffect(() => {
+    if (hasAutoChecked.current) return
+    hasAutoChecked.current = true
+    // Check auto-check setting, then check for update if enabled
+    getAutoCheckUpdate()
+      .then((enabled) => {
+        if (enabled) {
+          return checkUpdate().then((res) => {
+            if (res.update_available && !res.error) {
+              setUpdateResult(res)
+            }
+          })
+        }
+      })
+      .catch(() => {
+        // Silently ignore update check failures (network etc.)
+      })
+  }, [])
+
+  const handleOpenUpdateDialog = useCallback(() => {
+    setUpdateDialogOpen(true)
+  }, [])
+
+  const handleCloseUpdateDialog = useCallback(() => {
+    setUpdateDialogOpen(false)
   }, [])
 
   const [viewMode, setViewMode] = useState<'list' | 'cards'>(() => {
@@ -482,6 +516,8 @@ function AppContent() {
         onToggleLanguage={appState.toggleLanguage}
         onOpenSettings={modal.openSettings}
         onViewChange={modal.handleViewChange}
+        updateVersion={updateResult?.update_available ? updateResult.latest_version : null}
+        onOpenUpdateDialog={handleOpenUpdateDialog}
         t={t}
       />
 
@@ -935,6 +971,14 @@ function AppContent() {
           />
         ) : null}
       </Suspense>
+
+      {/* Update dialog (triggered by titlebar badge) */}
+      <UpdateDialog
+        open={updateDialogOpen}
+        result={updateResult}
+        t={t}
+        onClose={handleCloseUpdateDialog}
+      />
     </div>
   )
 }
