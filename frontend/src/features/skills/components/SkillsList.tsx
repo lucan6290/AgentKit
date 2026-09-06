@@ -21,6 +21,11 @@ type SkillsListProps = {
   getSkillProjects: (skill: ManagedSkill) => string[]
   draggable?: boolean
   onReorder?: (items: { id: string; sort_order: number }[]) => Promise<void>
+  viewMode: 'list' | 'cards'
+  bulkMode: boolean
+  selectedSkillIds: string[]
+  onToggleBulkSelection: (skillId: string) => void
+  onToggleEnabled: (skillId: string, enabled: boolean) => void
   t: TFunction
 }
 
@@ -41,6 +46,11 @@ const SkillsList = ({
   getSkillProjects,
   draggable = false,
   onReorder,
+  viewMode,
+  bulkMode,
+  selectedSkillIds,
+  onToggleBulkSelection,
+  onToggleEnabled,
   t,
 }: SkillsListProps) => {
   const discoveredToolCount = plan
@@ -101,6 +111,8 @@ const SkillsList = ({
     setOverIndex(null)
     dragIdRef.current = null
   }, [])
+
+  const selectedSkillSet = new Set(selectedSkillIds)
   return (
     <div className="skills-list">
       {plan && plan.total_skills_found > 0 ? (
@@ -133,7 +145,7 @@ const SkillsList = ({
       {visibleSkills.length === 0 ? (
         <div className="empty">{t('skillsEmpty')}</div>
       ) : (
-        <>
+        <div className={`skills-table ${viewMode}-view`}>
           {visibleSkills.map((skill, index) => (
             <SkillCard
               key={skill.id}
@@ -156,10 +168,14 @@ const SkillsList = ({
               onDragEnd={handleDragEnd}
               isDragging={dragIndex === index}
               isDragOver={overIndex === index && dragIndex !== null && dragIndex !== index}
+              bulkMode={bulkMode}
+              bulkSelected={selectedSkillSet.has(skill.id)}
+              onToggleBulkSelection={onToggleBulkSelection}
+              onToggleEnabled={onToggleEnabled}
               t={t}
             />
           ))}
-        </>
+        </div>
       )}
     </div>
   )

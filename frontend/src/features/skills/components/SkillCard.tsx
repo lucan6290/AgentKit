@@ -24,6 +24,10 @@ type SkillCardProps = {
   onDragEnd?: () => void
   isDragging?: boolean
   isDragOver?: boolean
+  onToggleEnabled: (skillId: string, enabled: boolean) => void
+  bulkMode: boolean
+  bulkSelected: boolean
+  onToggleBulkSelection: (skillId: string) => void
   t: TFunction
 }
 
@@ -49,12 +53,17 @@ const SkillCard = ({
   onDragEnd,
   isDragging = false,
   isDragOver = false,
+  onToggleEnabled,
+  bulkMode,
+  bulkSelected,
+  onToggleBulkSelection,
   t,
 }: SkillCardProps) => {
   const iconNode = <Folder size={18} />
   const copyValue = (skill.source_ref || getSkillSourceLabel(skill)).trim()
   const skillScope = getSkillScope(skill)
   const projectCount = getSkillProjects(skill).length
+  const enabled = skill.enabled !== false
 
   const handleCardClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement
@@ -94,7 +103,7 @@ const SkillCard = ({
 
   return (
     <div
-      className={`skill-card clickable-card${isDragging ? ' dragging' : ''}${isDragOver ? ' drag-over' : ''}`}
+      className={`skill-card clickable-card${isDragging ? ' dragging' : ''}${isDragOver ? ' drag-over' : ''}${bulkMode ? ' bulk-mode' : ''}${bulkSelected ? ' bulk-selected' : ''}${enabled ? '' : ' disabled-skill'}`}
       onClick={handleCardClick}
       draggable={draggable}
       onDragStart={onDragStart}
@@ -102,6 +111,17 @@ const SkillCard = ({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
     >
+      {bulkMode ? (
+        <label className="bulk-skill-check" aria-label={t('bulk.toggleSkill')}>
+          <input
+            type="checkbox"
+            checked={bulkSelected}
+            onChange={() => onToggleBulkSelection(skill.id)}
+            disabled={loading}
+          />
+          <span />
+        </label>
+      ) : null}
       {draggable ? (
         <div className="drag-handle" title={t('dragToReorder')}>
           <GripVertical size={16} />
@@ -185,6 +205,7 @@ const SkillCard = ({
               className="tool-pill active"
               title={`${tool.label} (${target.mode ?? t('unknown')})`}
               onClick={() => void onToggleTool(skill, tool.id)}
+              disabled={!enabled}
             >
               <span className="status-badge" />
               {tool.label}
@@ -206,6 +227,7 @@ const SkillCard = ({
                 className="tool-pill inactive"
                 title={tool.label}
                 onClick={() => void onToggleTool(skill, tool.id)}
+                disabled={!enabled}
               >
                 {tool.label}
               </button>
@@ -213,6 +235,16 @@ const SkillCard = ({
         </div>
       </div>
       <div className="skill-actions-col">
+        <button
+          className={`skill-switch${enabled ? ' enabled' : ''}`}
+          type="button"
+          onClick={() => onToggleEnabled(skill.id, !enabled)}
+          disabled={loading}
+          aria-label={enabled ? t('disableSkill') : t('enableSkill')}
+          title={enabled ? t('disableSkill') : t('enableSkill')}
+        >
+          <span />
+        </button>
         <button
           className={`card-btn tag-action${skill.tags.length > 0 ? ' has-tags' : ''}`}
           type="button"

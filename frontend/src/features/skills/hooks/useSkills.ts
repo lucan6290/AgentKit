@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { TFunction } from 'i18next'
 import { invokeCommand, reorder as apiReorder, updateSkillSourceUrl } from '@/lib/api'
 import { useApi } from '@/hooks/useApi'
+import { skillService } from '@/services'
 import type {
   ManagedSkill,
   TagWithCountDto,
@@ -301,6 +302,21 @@ export function useSkills(
     [],
   )
 
+  const handleToggleEnabled = useCallback(
+    async (skillId: string, enabled: boolean) => {
+      setManagedSkills((prev) =>
+        prev.map((s) => (s.id === skillId ? { ...s, enabled } : s)),
+      )
+      try {
+        await skillService.setSkillEnabled(skillId, enabled)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err))
+        await loadManagedSkills()
+      }
+    },
+    [loadManagedSkills, setError],
+  )
+
   // ─── 批量排序 ────────────────────────────────
   const reorderSkills = useCallback(
     async (items: { id: string; sort_order: number }[]) => {
@@ -370,6 +386,7 @@ export function useSkills(
     isSkillNameTaken,
     getSkillProjects,
     handleUpdateSourceUrl,
+    handleToggleEnabled,
     // 批量排序
     reorderSkills,
     reorderTags,

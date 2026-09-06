@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowUpDown, Check, ChevronDown, Globe, Monitor, Plus, RefreshCw, Search, Tags } from 'lucide-react'
+import { ArrowUpDown, Check, CheckSquare, ChevronDown, Globe, LayoutGrid, List, Monitor, Plus, RefreshCw, Search, Tags } from 'lucide-react'
 import type { TFunction } from 'i18next'
 import type { TagWithCountDto, ToolOption } from '../types'
 
@@ -26,6 +26,11 @@ type FilterBarProps = {
   onToggleUntagged: () => void
   onClearTags: () => void
   onManageTags: () => void
+  bulkMode: boolean
+  bulkSelectedCount: number
+  viewMode: 'list' | 'cards'
+  onToggleBulkMode: () => void
+  onViewModeChange: (value: 'list' | 'cards') => void
   t: TFunction
 }
 
@@ -52,6 +57,11 @@ const FilterBar = ({
   onToggleUntagged,
   onClearTags,
   onManageTags,
+  bulkMode,
+  bulkSelectedCount,
+  viewMode,
+  onToggleBulkMode,
+  onViewModeChange,
   t,
 }: FilterBarProps) => {
   const [tagMenuOpen, setTagMenuOpen] = useState(false)
@@ -154,6 +164,14 @@ const FilterBar = ({
             <option value="name">{t('sortName')}</option>
           </select>
         </button>
+        <button
+          className={`btn btn-secondary bulk-mode-btn${bulkMode ? ' active' : ''}`}
+          type="button"
+          onClick={onToggleBulkMode}
+        >
+          <CheckSquare size={14} />
+          {bulkMode ? t('bulk.selectedShort', { count: bulkSelectedCount }) : t('bulk.manage')}
+        </button>
         <div className="tag-filter-wrap" ref={tagMenuRef}>
           <button
             className={`btn btn-secondary tag-filter-btn${selectedCount > 0 ? ' active' : ''}`}
@@ -225,6 +243,28 @@ const FilterBar = ({
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={t('searchPlaceholder')}
           />
+        </div>
+        <div className="view-mode-toggle" role="group" aria-label={t('viewMode.label')}>
+          <button
+            className={viewMode === 'list' ? 'active' : ''}
+            type="button"
+            onClick={() => onViewModeChange('list')}
+            aria-label={t('viewMode.list')}
+            title={t('viewMode.list')}
+            aria-pressed={viewMode === 'list'}
+          >
+            <List size={15} />
+          </button>
+          <button
+            className={viewMode === 'cards' ? 'active' : ''}
+            type="button"
+            onClick={() => onViewModeChange('cards')}
+            aria-label={t('viewMode.cards')}
+            title={t('viewMode.cards')}
+            aria-pressed={viewMode === 'cards'}
+          >
+            <LayoutGrid size={15} />
+          </button>
         </div>
       </div>
     </div>

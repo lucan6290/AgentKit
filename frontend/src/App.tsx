@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { RefreshCw, Tag, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { getCurrent, onOpenUrl } from '@tauri-apps/plugin-deep-link'
@@ -16,6 +17,7 @@ import {
 } from '@/features/skills'
 import { useTheme } from '@/features/settings'
 import { useImportFlow } from '@/features/import-flow'
+import { skillService } from '@/services'
 import { AppStateProvider, useAppState } from '@/context/AppStateContext'
 import { ModalProvider, useModal } from '@/context/ModalContext'
 import type { ManagedSkill } from '@/features/skills'
@@ -62,6 +64,44 @@ function AppContent() {
   // ─── 共享 loading 状态（供 useAddSkill 等使用）─
   const [loading, setLoading] = useState(false)
   const [loadingStartAt, setLoadingStartAt] = useState<number | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarCollapsed((value) => !value)
+  }, [])
+
+  const [viewMode, setViewMode] = useState<'list' | 'cards'>(() => {
+    if (typeof window === 'undefined') return 'cards'
+    return window.localStorage.getItem('skills-view-mode') === 'list' ? 'list' : 'cards'
+  })
+  const [bulkMode, setBulkMode] = useState(false)
+  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([])
+  const [showBulkTagsModal, setShowBulkTagsModal] = useState(false)
+  const [bulkTagIds, setBulkTagIds] = useState<number[]>([])
+
+  const handleViewModeChange = useCallback((value: 'list' | 'cards') => {
+    setViewMode(value)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('skills-view-mode', value)
+    }
+  }, [])
+
+  const handleToggleBulkMode = useCallback(() => {
+    setBulkMode((value) => !value)
+    setSelectedSkillIds([])
+  }, [])
+
+  const handleToggleBulkSelection = useCallback((skillId: string) => {
+    setSelectedSkillIds((prev) =>
+      prev.includes(skillId) ? prev.filter((id) => id !== skillId) : [...prev, skillId],
+    )
+  }, [])
+
+  const handleToggleBulkTag = useCallback((tagId: number) => {
+    setBulkTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
+    )
+  }, [])
 
   // ─── Layer 1.5：派生 helper ──────────────────
   const getSkillScope = useCallback(
@@ -99,8 +139,69 @@ function AppContent() {
     skills.toolSkillNamesByTool,
   )
 
+  const setError = appState.setError
+  const setSuccessToastMessage = appState.setSuccessToastMessage
+
   const loadTags = skills.loadTags
   const loadManagedSkills = skills.loadManagedSkills
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedSkillIds.length === 0) return
+    setLoading(true)
+    setLoadingStartAt(Date.now())
+    try {
+      await skillService.deleteManagedSkills(selectedSkillIds)
+      setSuccessToastMessage(t('bulk.deleted', { count: selectedSkillIds.length }))
+      setSelectedSkillIds([])
+      setBulkMode(false)
+      await loadManagedSkills()
+      await loadTags(modal.activeSkillSource)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setLoading(false)
+      setLoadingStartAt(null)
+    }
+  }, [selectedSkillIds, setLoading, setLoadingStartAt, setSuccessToastMessage, t, loadManagedSkills, loadTags, modal.activeSkillSource, setError])
+
+  const handleBulkSync = useCallback(async () => {
+    if (selectedSkillIds.length === 0) return
+    setLoading(true)
+    setLoadingStartAt(Date.now())
+    try {
+      const result = await skillService.bulkSyncSkills(selectedSkillIds)
+      setSuccessToastMessage(t('bulk.synced', { count: result.synced }))
+      setSelectedSkillIds([])
+      setBulkMode(false)
+      await loadManagedSkills()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setLoading(false)
+      setLoadingStartAt(null)
+    }
+  }, [selectedSkillIds, setLoading, setLoadingStartAt, setSuccessToastMessage, t, loadManagedSkills, setError])
+
+  const handleBulkSetTags = useCallback(async (tagIds: number[]) => {
+    if (selectedSkillIds.length === 0) return
+    setLoading(true)
+    setLoadingStartAt(Date.now())
+    try {
+      await skillService.bulkSetSkillTags(selectedSkillIds, tagIds)
+      setSuccessToastMessage(t('tagsUpdated'))
+      setShowBulkTagsModal(false)
+      setBulkTagIds([])
+      setSelectedSkillIds([])
+      setBulkMode(false)
+      await loadManagedSkills()
+      await loadTags(modal.activeSkillSource)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setLoading(false)
+      setLoadingStartAt(null)
+    }
+  }, [selectedSkillIds, setLoading, setLoadingStartAt, setSuccessToastMessage, t, loadManagedSkills, loadTags, modal.activeSkillSource, setError])
 
   useEffect(() => {
     void loadTags(modal.activeSkillSource, filter.sortBy)
@@ -324,8 +425,8 @@ function AppContent() {
 
   // ─── Render ──────────────────────────────────────
   return (
-    <div className="skills-app">
-      <Toaster position="top-right" richColors toastOptions={{ duration: 1800 }} />
+    <div className={`skills-app${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+      <Toaster position="top-right" richColors offset={48} toastOptions={{ duration: 1800 }} />
       <LoadingOverlay
         loading={globalLoading}
         actionMessage={appState.actionMessage}
@@ -336,20 +437,15 @@ function AppContent() {
 
       <Header
         language={appState.language}
-        loading={globalLoading}
         activeView={modal.activeView}
-        activeSkillSource={modal.activeSkillSource}
         skillCount={skills.managedSkills.length}
-        customSkillCount={customSkillCount}
-        communitySkillCount={communitySkillCount}
+        tagCount={skills.tags.length}
         toolCount={skills.installedTools.length}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={handleToggleSidebar}
         onToggleLanguage={appState.toggleLanguage}
         onOpenSettings={modal.openSettings}
         onViewChange={modal.handleViewChange}
-        onSkillSourceChange={(source) => {
-          modal.setActiveSkillSource(source)
-          modal.backToList()
-        }}
         t={t}
       />
 
@@ -364,7 +460,36 @@ function AppContent() {
           />
         ) : modal.activeView === 'myskills' ? (
           <div className="dashboard-stack">
-            <FilterBar
+            <div className="dashboard-toolbar">
+              <div className="source-tabs" role="tablist" aria-label={t('sourceTabs.label')}>
+                <button
+                  className={`source-tab${modal.activeSkillSource === 'custom' ? ' active' : ''}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={modal.activeSkillSource === 'custom'}
+                  onClick={() => {
+                    modal.setActiveSkillSource('custom')
+                    modal.backToList()
+                  }}
+                >
+                  {t('sourceTabs.custom')}
+                  <span>{customSkillCount}</span>
+                </button>
+                <button
+                  className={`source-tab${modal.activeSkillSource === 'community' ? ' active' : ''}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={modal.activeSkillSource === 'community'}
+                  onClick={() => {
+                    modal.setActiveSkillSource('community')
+                    modal.backToList()
+                  }}
+                >
+                  {t('sourceTabs.community')}
+                  <span>{communitySkillCount}</span>
+                </button>
+              </div>
+              <FilterBar
               sortBy={filter.sortBy}
               searchQuery={filter.searchQuery}
               scopeFilter={filter.scopeFilter}
@@ -387,8 +512,14 @@ function AppContent() {
               onToggleUntagged={filter.handleToggleUntaggedFilter}
               onClearTags={filter.handleClearTagFilters}
               onManageTags={handleOpenTagsPage}
+              bulkMode={bulkMode}
+              bulkSelectedCount={selectedSkillIds.length}
+              viewMode={viewMode}
+              onToggleBulkMode={handleToggleBulkMode}
+              onViewModeChange={handleViewModeChange}
               t={t}
             />
+            </div>
             <SkillsList
               plan={modal.activeSkillSource === 'community' ? importFlow.plan : null}
               visibleSkills={filter.visibleSkills}
@@ -406,8 +537,49 @@ function AppContent() {
               getSkillProjects={skills.getSkillProjects}
               draggable={filter.sortBy === 'manual'}
               onReorder={skills.reorderSkills}
+              viewMode={viewMode}
+              bulkMode={bulkMode}
+              selectedSkillIds={selectedSkillIds}
+              onToggleBulkSelection={handleToggleBulkSelection}
+              onToggleEnabled={skills.handleToggleEnabled}
               t={t}
             />
+            {bulkMode && selectedSkillIds.length > 0 ? (
+              <div className="bulk-action-bar">
+                <div className="bulk-action-copy">
+                  <span>{t('bulk.selectedShort', { count: selectedSkillIds.length })}</span>
+                </div>
+                <div className="bulk-action-buttons">
+                  <button
+                    className="btn btn-secondary"
+                    type="button"
+                    onClick={() => void handleBulkSync()}
+                    disabled={globalLoading}
+                  >
+                    <RefreshCw size={14} />
+                    {t('bulk.sync')}
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    type="button"
+                    onClick={() => setShowBulkTagsModal(true)}
+                    disabled={globalLoading}
+                  >
+                    <Tag size={14} />
+                    {t('bulk.tags')}
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    type="button"
+                    onClick={() => void handleBulkDelete()}
+                    disabled={globalLoading}
+                  >
+                    <Trash2 size={14} />
+                    {t('bulk.delete')}
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : modal.activeView === 'tags' ? (
           <TagsPage
@@ -645,6 +817,67 @@ function AppContent() {
                 disabled={globalLoading}
               >
                 {t('deleteAction')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Inline bulk tags modal */}
+      {showBulkTagsModal ? (
+        <div
+          className="modal-backdrop"
+          onClick={globalLoading ? undefined : () => setShowBulkTagsModal(false)}
+        >
+          <div
+            className="modal bulk-tags-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div className="modal-title">{t('bulk.tags')}</div>
+              <button
+                className="modal-close"
+                type="button"
+                onClick={() => setShowBulkTagsModal(false)}
+                disabled={globalLoading}
+              >
+                {'×'}
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="add-tags-list">
+                {skills.tags.length === 0 ? (
+                  <span className="table-empty">{t('noTags')}</span>
+                ) : (
+                  skills.tags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={`add-tag-pill${bulkTagIds.includes(tag.id) ? ' selected' : ''}`}
+                      onClick={() => handleToggleBulkTag(tag.id)}
+                    >
+                      {tag.name}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={() => setShowBulkTagsModal(false)}
+                disabled={globalLoading}
+              >
+                {t('cancel')}
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => void handleBulkSetTags(bulkTagIds)}
+                disabled={globalLoading}
+              >
+                {t('apply')}
               </button>
             </div>
           </div>
