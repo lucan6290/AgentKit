@@ -168,6 +168,13 @@
   display: grid;
   place-items: center;
   cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.sidebar-brand:hover .sidebar-collapse,
+.sidebar-collapse:focus-visible {
+  opacity: 1;
 }
 
 .sidebar-collapse:hover {
@@ -298,8 +305,7 @@
 }
 
 .skills-sidebar.collapsed .sidebar-collapse {
-  width: 32px;
-  height: 28px;
+  display: none;
 }
 
 .skills-sidebar.collapsed .sidebar-section-label {
