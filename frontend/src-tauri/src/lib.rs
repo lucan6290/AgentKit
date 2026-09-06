@@ -75,7 +75,6 @@ pub fn run() {
         "error" => log::LevelFilter::Error,
         _ => log::LevelFilter::Info,
     };
-    log::info!("Skills Hub 启动中, 日志级别: {}", log_level);
 
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::new()
@@ -125,7 +124,8 @@ pub fn run() {
                 .build(),
         )
         .manage(state::AppState::default())
-        .setup(|app| {
+        .setup(move |app| {
+            log::info!("Skills Hub 启动中, 日志级别: {}", log_level);
             log::info!("Tauri setup 阶段开始");
             build_tray(app.handle())?;
 
