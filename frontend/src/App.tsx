@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { RefreshCw, Tag, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
@@ -65,9 +65,43 @@ function AppContent() {
   const [loading, setLoading] = useState(false)
   const [loadingStartAt, setLoadingStartAt] = useState<number | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  // When collapsed, track whether the user is hovering over the left edge
+  // hot-zone or the sidebar itself (floating overlay) so we can reveal it.
+  const [sidebarHovered, setSidebarHovered] = useState(false)
+  const sidebarHoverTimer = useRef<number | null>(null)
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarCollapsed((value) => !value)
+    setSidebarHovered(false)
+  }, [])
+
+  const handleSidebarEnter = useCallback(() => {
+    if (sidebarHoverTimer.current !== null) {
+      window.clearTimeout(sidebarHoverTimer.current)
+      sidebarHoverTimer.current = null
+    }
+    setSidebarHovered(true)
+  }, [])
+
+  const handleSidebarLeave = useCallback(() => {
+    if (sidebarHoverTimer.current !== null) {
+      window.clearTimeout(sidebarHoverTimer.current)
+    }
+    // Small delay so that clicking the collapse button inside the sidebar
+    // can complete before the overlay hides itself.
+    sidebarHoverTimer.current = window.setTimeout(() => {
+      setSidebarHovered(false)
+      sidebarHoverTimer.current = null
+    }, 120)
+  }, [])
+
+  // Clean up the pending timer on unmount
+  useEffect(() => {
+    return () => {
+      if (sidebarHoverTimer.current !== null) {
+        window.clearTimeout(sidebarHoverTimer.current)
+      }
+    }
   }, [])
 
   const [viewMode, setViewMode] = useState<'list' | 'cards'>(() => {
@@ -425,7 +459,7 @@ function AppContent() {
 
   // ─── Render ──────────────────────────────────────
   return (
-    <div className={`skills-app${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+    <div className={`skills-app${sidebarCollapsed ? ' sidebar-collapsed' : ''}${sidebarCollapsed && sidebarHovered ? ' sidebar-hovered' : ''}`}>
       <Toaster position="top-right" richColors offset={48} toastOptions={{ duration: 1800 }} />
       <LoadingOverlay
         loading={globalLoading}
@@ -443,6 +477,8 @@ function AppContent() {
         toolCount={skills.installedTools.length}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={handleToggleSidebar}
+        onSidebarHoverEnter={handleSidebarEnter}
+        onSidebarHoverLeave={handleSidebarLeave}
         onToggleLanguage={appState.toggleLanguage}
         onOpenSettings={modal.openSettings}
         onViewChange={modal.handleViewChange}

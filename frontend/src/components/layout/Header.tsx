@@ -24,6 +24,8 @@ type HeaderProps = {
   toolCount: number
   collapsed: boolean
   onToggleCollapsed: () => void
+  onSidebarHoverEnter?: () => void
+  onSidebarHoverLeave?: () => void
   onToggleLanguage: () => void
   onOpenSettings: () => void
   onViewChange: (view: 'myskills' | 'tags' | 'tools' | 'prompts') => void
@@ -49,12 +51,23 @@ const Header = ({
   toolCount,
   collapsed,
   onToggleCollapsed,
+  onSidebarHoverEnter,
+  onSidebarHoverLeave,
   onToggleLanguage,
   onOpenSettings,
   onViewChange,
   t,
 }: HeaderProps) => (
   <>
+    {/* Left-edge hover hitbox (only present when collapsed) */}
+    {collapsed && (
+      <div
+        className="sidebar-hover-hitzone"
+        onMouseEnter={onSidebarHoverEnter}
+        onMouseLeave={onSidebarHoverLeave}
+        aria-hidden
+      />
+    )}
     <div
       className="window-titlebar"
       onPointerDown={startWindowDrag}
@@ -92,7 +105,11 @@ const Header = ({
         </div>
       </div>
     </div>
-    <aside className={`skills-sidebar${collapsed ? ' collapsed' : ''}`}>
+    <aside
+      className={`skills-sidebar${collapsed ? ' collapsed' : ''}`}
+      onMouseEnter={collapsed ? onSidebarHoverEnter : undefined}
+      onMouseLeave={collapsed ? onSidebarHoverLeave : undefined}
+    >
       <div className="sidebar-brand">
         <div className="sidebar-logo">
           <img

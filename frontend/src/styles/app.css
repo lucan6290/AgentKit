@@ -13,13 +13,13 @@
   grid-template-columns: 0 minmax(0, 1fr);
 }
 
-/* Left-edge hover hitbox that reveals the sidebar */
-.skills-app.sidebar-collapsed::after {
-  content: '';
+/* Left-edge hover hitbox — rendered via JS when collapsed, captures mouse
+   movement near the left edge to reveal the sidebar overlay. */
+.sidebar-hover-hitzone {
   position: fixed;
   left: 0;
-  top: 38px; /* below titlebar */
-  width: 3px;
+  top: 38px;
+  width: 6px;
   height: calc(100vh - 38px);
   z-index: 49;
 }
@@ -298,9 +298,9 @@
   align-items: stretch;
 }
 
-/* Reveal the sidebar when hovering the left-edge hitbox or the sidebar itself */
-.skills-app.sidebar-collapsed:hover .skills-sidebar.collapsed,
-.skills-app.sidebar-collapsed .skills-sidebar.collapsed:hover {
+/* Reveal the sidebar when the JS-managed hover flag is set (mouse over
+   the left-edge hitzone or the sidebar itself). */
+.skills-app.sidebar-hovered .skills-sidebar.collapsed {
   transform: translateX(0);
   opacity: 1;
   pointer-events: auto;
