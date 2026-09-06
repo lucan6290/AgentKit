@@ -563,9 +563,20 @@
 .filter-bar {
   padding: 0;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-row {
+  display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* 第一行：标题 + 主操作 + 搜索 */
+.filter-row-top {
+  justify-content: space-between;
 }
 
 .filter-title {
@@ -577,16 +588,47 @@
   white-space: nowrap;
 }
 
-.filter-actions {
+.filter-primary-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
-  flex: 1 1 auto;
-  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
-.filter-actions .btn {
+.filter-search-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.filter-search-wrap .search-container {
+  flex: 0 1 280px;
+  min-width: 180px;
+}
+
+/* 第二行：筛选器 + 视图切换 */
+.filter-row-bottom {
+  justify-content: space-between;
+}
+
+.filter-secondary-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.filter-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.filter-row .btn {
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -1326,11 +1368,11 @@
 
 /* ── Responsive ── */
 @media (max-width: 1100px) {
-  .filter-actions {
+  .filter-secondary-actions {
     flex-wrap: wrap;
   }
 
-  .search-container {
+  .filter-search-wrap .search-container {
     flex: 1 1 180px;
     min-width: 140px;
   }
@@ -1343,17 +1385,21 @@
     padding: 16px 16px 0;
   }
 
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .filter-actions {
+  .filter-row-top {
     flex-wrap: wrap;
   }
 
-  .search-container {
+  .filter-search-wrap {
     flex: 1 1 100%;
+    order: 3;
+  }
+
+  .filter-search-wrap .search-container {
+    flex: 1 1 100%;
+  }
+
+  .filter-secondary-actions {
+    flex-wrap: wrap;
   }
 
   .skills-list {
