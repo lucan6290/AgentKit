@@ -15,6 +15,7 @@ import {
   Power,
   XCircle,
   Minimize2,
+  Minus,
   Bell,
   FileText,
   RefreshCw,
@@ -77,6 +78,7 @@ const THEME_OPTIONS = [
 
 const CLOSE_BEHAVIOR_OPTIONS = [
   { key: 'minimize_to_tray', labelKey: 'settings.closeMinimizeToTray', Icon: Minimize2 },
+  { key: 'minimize_to_taskbar', labelKey: 'settings.closeMinimizeToTaskbar', Icon: Minus },
   { key: 'quit', labelKey: 'settings.closeQuit', Icon: XCircle },
 ] as const
 

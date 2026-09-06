@@ -147,7 +147,11 @@ pub fn run() {
                     if behavior == "quit" {
                         // Allow the window to close and quit the app
                         app_handle.exit(0);
+                    } else if behavior == "minimize_to_taskbar" {
+                        api.prevent_close();
+                        let _ = main_window.minimize();
                     } else {
+                        // Default: minimize to tray
                         api.prevent_close();
                         let _ = main_window.hide();
                     }
