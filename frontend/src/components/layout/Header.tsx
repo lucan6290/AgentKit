@@ -59,15 +59,6 @@ const Header = ({
   t,
 }: HeaderProps) => (
   <>
-    {/* Left-edge hover hitbox (only present when collapsed) */}
-    {collapsed && (
-      <div
-        className="sidebar-hover-hitzone"
-        onMouseEnter={onSidebarHoverEnter}
-        onMouseLeave={onSidebarHoverLeave}
-        aria-hidden
-      />
-    )}
     <div
       className="window-titlebar"
       onPointerDown={startWindowDrag}

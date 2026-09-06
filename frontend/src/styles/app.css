@@ -10,18 +10,7 @@
 }
 
 .skills-app.sidebar-collapsed {
-  grid-template-columns: 0 minmax(0, 1fr);
-}
-
-/* Left-edge hover hitbox — rendered via JS when collapsed, captures mouse
-   movement near the left edge to reveal the sidebar overlay. */
-.sidebar-hover-hitzone {
-  position: fixed;
-  left: 0;
-  top: 38px;
-  width: 6px;
-  height: calc(100vh - 38px);
-  z-index: 49;
+  grid-template-columns: 64px minmax(0, 1fr);
 }
 
 /* ── Window titlebar ── */
@@ -276,54 +265,132 @@
   gap: 2px;
 }
 
-/* Collapsed sidebar — hidden off-screen, slides in as a floating overlay on hover */
+/* ── Collapsed: 64px icon rail by default ── */
 .skills-sidebar.collapsed {
+  width: 64px;
+  padding: 14px 8px 12px;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Brand area in icon-rail mode: just a small logo + collapse button stacked */
+.skills-sidebar.collapsed .sidebar-brand {
+  width: 100%;
+  height: auto;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 0 6px;
+  margin-bottom: 4px;
+}
+
+.skills-sidebar.collapsed .sidebar-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.skills-sidebar.collapsed .sidebar-logo img {
+  width: 28px;
+  height: 28px;
+}
+
+.skills-sidebar.collapsed .sidebar-brand-copy {
+  display: none;
+}
+
+.skills-sidebar.collapsed .sidebar-collapse {
+  width: 32px;
+  height: 28px;
+}
+
+.skills-sidebar.collapsed .sidebar-section-label {
+  width: 100%;
+  height: 18px;
+  padding: 4px 0 0;
+  font-size: 0;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.skills-sidebar.collapsed .sidebar-section-label::after {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+.skills-sidebar.collapsed .sidebar-nav,
+.skills-sidebar.collapsed .sidebar-footer {
+  width: 48px;
+}
+
+.skills-sidebar.collapsed .sidebar-nav button,
+.skills-sidebar.collapsed .sidebar-footer button {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding: 0;
+  height: 40px;
+}
+
+.skills-sidebar.collapsed .sidebar-nav button > span,
+.skills-sidebar.collapsed .sidebar-nav em,
+.skills-sidebar.collapsed .sidebar-footer button > span {
+  display: none;
+}
+
+.skills-sidebar.collapsed .sidebar-nav button > svg,
+.skills-sidebar.collapsed .sidebar-footer button > svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ── Hover floating overlay: full sidebar slides out from the icon rail ── */
+.skills-app.sidebar-hovered .skills-sidebar.collapsed {
   position: fixed;
   top: 38px;
   left: 0;
   width: 232px;
   height: calc(100vh - 38px);
-  grid-column: auto;
-  grid-row: auto;
-  border-right: 1px solid var(--border-subtle);
-  background: var(--bg-app);
   padding: 18px 12px 12px;
-  box-shadow: var(--shadow-lg);
-  transform: translateX(-100%);
-  transition: transform 0.18s var(--ease-out), opacity 0.18s var(--ease-out);
-  opacity: 0;
-  pointer-events: none;
-  z-index: 50;
-  /* Reset the icon-only rules that no longer apply */
   align-items: stretch;
+  gap: 0;
+  background: var(--bg-app);
+  border-right: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  /* brand */
 }
 
-/* Reveal the sidebar when the JS-managed hover flag is set (mouse over
-   the left-edge hitzone or the sidebar itself). */
-.skills-app.sidebar-hovered .skills-sidebar.collapsed {
-  transform: translateX(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* When collapsed, brand area returns to full (non-icon) layout */
-.skills-sidebar.collapsed .sidebar-brand {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-brand {
   width: auto;
   flex-direction: row;
   gap: 10px;
   height: 60px;
-  padding: 4px 4px;
+  padding: 4px 4px 10px;
+  margin-bottom: 0;
 }
 
-.skills-sidebar.collapsed .sidebar-brand-copy {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-logo {
+  width: 32px;
+  height: 32px;
+}
+
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-logo img {
+  width: 32px;
+  height: 32px;
+}
+
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-brand-copy {
   display: block;
 }
 
-.skills-sidebar.collapsed .sidebar-collapse {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-collapse {
   width: 28px;
+  height: 30px;
 }
 
-.skills-sidebar.collapsed .sidebar-section-label {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-section-label {
   width: auto;
   height: 38px;
   padding: 0 10px 8px;
@@ -332,34 +399,34 @@
   justify-content: flex-start;
 }
 
-.skills-sidebar.collapsed .sidebar-section-label::after {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-section-label::after {
   display: none;
 }
 
-.skills-sidebar.collapsed .sidebar-nav,
-.skills-sidebar.collapsed .sidebar-footer {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-nav,
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-footer {
   width: auto;
 }
 
-.skills-sidebar.collapsed .sidebar-nav button,
-.skills-sidebar.collapsed .sidebar-footer button {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-nav button,
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-footer button {
   grid-template-columns: 20px 1fr auto;
   justify-items: stretch;
   padding: 0 10px;
   height: 38px;
 }
 
-.skills-sidebar.collapsed .sidebar-nav button > span,
-.skills-sidebar.collapsed .sidebar-footer button > span {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-nav button > span,
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-footer button > span {
   display: block;
 }
 
-.skills-sidebar.collapsed .sidebar-nav em {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-nav em {
   display: grid;
 }
 
-.skills-sidebar.collapsed .sidebar-nav button > svg,
-.skills-sidebar.collapsed .sidebar-footer button > svg {
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-nav button > svg,
+.skills-app.sidebar-hovered .skills-sidebar.collapsed .sidebar-footer button > svg {
   width: 18px;
   height: 18px;
 }
