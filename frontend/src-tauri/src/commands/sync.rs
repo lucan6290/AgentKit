@@ -10,6 +10,17 @@ use crate::state::AppState;
 use crate::tools::adapter::{
     self, effective_tool_adapters, resolve_default_path, resolve_project_path,
 };
+use crate::utils::path_safety;
+
+fn safe_sync_target_path(
+    base: &str,
+    name: &str,
+    fallback: &str,
+    label: &str,
+) -> AppResult<std::path::PathBuf> {
+    let dir_name = path_safety::safe_dir_name_with_fallback(Some(name), fallback);
+    path_safety::safe_child_path(base, &dir_name, label).map_err(AppError::PathError)
+}
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn sync_skill_to_tool(
@@ -45,7 +56,7 @@ pub async fn sync_skill_to_tool(
             .unwrap_or_else(|| "skill".to_string())
     });
 
-    let target_path_buf = std::path::Path::new(&target_dir).join(&skill_name);
+    let target_path_buf = safe_sync_target_path(&target_dir, &skill_name, "skill", "skill name")?;
     let target_path = target_path_buf.to_string_lossy().to_string();
 
     // Ensure parent directory exists
@@ -61,7 +72,12 @@ pub async fn sync_skill_to_tool(
         adapter.force_copy,
     )
     .map_err(|e| {
-        log::warn!("[SYNC_ERROR] sync_skill_to_tool failed | skill_id={} tool={} scope={}", skill_id, tool, scope);
+        log::warn!(
+            "[SYNC_ERROR] sync_skill_to_tool failed | skill_id={} tool={} scope={}",
+            skill_id,
+            tool,
+            scope
+        );
         AppError::FileSystemError(e)
     })?;
 
@@ -85,12 +101,14 @@ pub async fn sync_skill_to_tool(
     };
 
     let targets_repo = SkillTargetsRepository::new(&state.db);
-    targets_repo
-        .upsert(&target)
-        .map_err(|e| {
-            log::warn!("[DB_ERROR] sync_skill_to_tool: upsert target failed | skill_id={} tool={}", skill_id, tool);
-            AppError::DatabaseError(e.to_string())
-        })?;
+    targets_repo.upsert(&target).map_err(|e| {
+        log::warn!(
+            "[DB_ERROR] sync_skill_to_tool: upsert target failed | skill_id={} tool={}",
+            skill_id,
+            tool
+        );
+        AppError::DatabaseError(e.to_string())
+    })?;
 
     // Update skill last_sync_at
     state
@@ -103,7 +121,10 @@ pub async fn sync_skill_to_tool(
             Ok::<_, rusqlite::Error>(())
         })
         .map_err(|e| {
-            log::warn!("[DB_ERROR] sync_skill_to_tool: update last_sync_at failed | skill_id={}", skill_id);
+            log::warn!(
+                "[DB_ERROR] sync_skill_to_tool: update last_sync_at failed | skill_id={}",
+                skill_id
+            );
             AppError::DatabaseError(e.to_string())
         })?;
 
@@ -124,7 +145,11 @@ pub async fn unsync_skill_from_tool(
     let target = targets_repo
         .get(&skill_id, &tool, &scope, project_path.as_deref())
         .map_err(|e| {
-            log::warn!("[DB_ERROR] unsync_skill_from_tool: get target failed | skill_id={} tool={}", skill_id, tool);
+            log::warn!(
+                "[DB_ERROR] unsync_skill_from_tool: get target failed | skill_id={} tool={}",
+                skill_id,
+                tool
+            );
             AppError::DatabaseError(e.to_string())
         })?;
 
@@ -135,7 +160,11 @@ pub async fn unsync_skill_from_tool(
         targets_repo
             .delete(&skill_id, &tool, &scope, project_path.as_deref())
             .map_err(|e| {
-                log::warn!("[DB_ERROR] unsync_skill_from_tool: delete target failed | skill_id={} tool={}", skill_id, tool);
+                log::warn!(
+                    "[DB_ERROR] unsync_skill_from_tool: delete target failed | skill_id={} tool={}",
+                    skill_id,
+                    tool
+                );
                 AppError::DatabaseError(e.to_string())
             })?;
     }
@@ -203,7 +232,8 @@ pub async fn sync_suite_to_tool(
         }
 
         let sub_name = entry.file_name().to_string_lossy().to_string();
-        let target_path_buf = std::path::Path::new(&target_base).join(&sub_name);
+        let target_path_buf =
+            safe_sync_target_path(&target_base, &sub_name, "skill", "suite sub-skill name")?;
         let target_path_str = target_path_buf.to_string_lossy().to_string();
 
         std::fs::create_dir_all(&target_base)
@@ -238,16 +268,19 @@ pub async fn sync_suite_to_tool(
             suite_skill_id: Some(skill_id.clone()),
             ..Default::default()
         };
-        targets_repo
-            .upsert(&target)
-            .map_err(|e| {
-                log::warn!("[DB_ERROR] sync_suite_to_tool: upsert sub-target failed | skill_id={} tool={}", skill_id, tool);
-                AppError::DatabaseError(e.to_string())
-            })?;
+        targets_repo.upsert(&target).map_err(|e| {
+            log::warn!(
+                "[DB_ERROR] sync_suite_to_tool: upsert sub-target failed | skill_id={} tool={}",
+                skill_id,
+                tool
+            );
+            AppError::DatabaseError(e.to_string())
+        })?;
     }
 
     // Also record the suite-level target
-    let suite_target_path = std::path::Path::new(&target_base).join(&suite_name);
+    let suite_target_path =
+        safe_sync_target_path(&target_base, &suite_name, "suite", "suite name")?;
     let suite_target = SkillTarget {
         id: uuid::Uuid::new_v4().to_string(),
         skill_id: skill_id.clone(),
@@ -441,4 +474,40 @@ pub async fn bulk_sync_skills(
         "skipped": skipped,
         "errors": errors,
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn safe_sync_target_path_sanitizes_windows_invalid_name_chars() {
+        let base = std::env::temp_dir().join("skills_hub_sync_target_path_test");
+        let base_str = base.to_string_lossy().to_string();
+
+        let target = safe_sync_target_path(
+            &base_str,
+            "tasteskill: Anti-Slop/Frontend Skill",
+            "skill",
+            "skill name",
+        )
+        .unwrap();
+
+        assert_eq!(
+            target.file_name().unwrap().to_string_lossy(),
+            "tasteskill- Anti-Slop-Frontend Skill"
+        );
+        assert!(path_safety::is_path_within(&target, &base));
+    }
+
+    #[test]
+    fn safe_sync_target_path_uses_custom_fallback() {
+        let base = std::env::temp_dir().join("skills_hub_sync_suite_path_test");
+        let base_str = base.to_string_lossy().to_string();
+
+        let target = safe_sync_target_path(&base_str, "...", "suite", "suite name").unwrap();
+
+        assert_eq!(target.file_name().unwrap().to_string_lossy(), "suite");
+        assert!(path_safety::is_path_within(&target, &base));
+    }
 }
