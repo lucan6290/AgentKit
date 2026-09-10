@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import i18n from '@/i18n'
 import { logger } from '@/lib/logger'
+import { copyDiagnosticText } from '@/lib/uiFeedback'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -9,16 +11,19 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean
   error: Error | null
+  componentStack: string
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false, error: null }
+  state: ErrorBoundaryState = { hasError: false, error: null, componentStack: '' }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error }
+    return { hasError: true, error, componentStack: '' }
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    this.setState({ componentStack: info.componentStack ?? '' })
+
     logger.error({
       event: 'frontend.react.error',
       area: 'error-boundary',
@@ -29,7 +34,30 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null })
+    this.setState({ hasError: false, error: null, componentStack: '' })
+  }
+
+  buildDiagnosticText() {
+    const { error, componentStack } = this.state
+    const lines = [
+      `${i18n.t('feedback.errorBoundaryTitle')}`,
+      '',
+      error ? `${error.name}: ${error.message}` : i18n.t('feedback.errorBoundaryFallback'),
+    ]
+
+    if (error?.stack) {
+      lines.push('', 'Stack:', error.stack)
+    }
+
+    if (componentStack) {
+      lines.push('', 'Component stack:', componentStack)
+    }
+
+    return lines.join('\n')
+  }
+
+  handleCopyDetails = () => {
+    void copyDiagnosticText(this.buildDiagnosticText())
   }
 
   render() {
@@ -39,11 +67,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="error-boundary">
           <div className="error-boundary-content">
-            <h2>Something went wrong</h2>
-            <p>{this.state.error?.message ?? 'An unexpected error occurred'}</p>
-            <button className="btn btn-primary" type="button" onClick={this.handleReset}>
-              Try Again
-            </button>
+            <h2>{i18n.t('feedback.errorBoundaryTitle')}</h2>
+            <p>{i18n.t('feedback.errorBoundaryDescription')}</p>
+            <pre className="error-boundary-detail">
+              {this.state.error?.message ?? i18n.t('feedback.errorBoundaryFallback')}
+            </pre>
+            <div className="error-boundary-actions">
+              <button className="btn btn-primary" type="button" onClick={this.handleReset}>
+                {i18n.t('feedback.tryAgain')}
+              </button>
+              <button className="btn btn-secondary" type="button" onClick={this.handleCopyDetails}>
+                {i18n.t('feedback.copyDetails')}
+              </button>
+            </div>
           </div>
         </div>
       )
