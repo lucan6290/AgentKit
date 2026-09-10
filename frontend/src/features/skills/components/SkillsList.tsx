@@ -1,8 +1,8 @@
 import { memo, useCallback, useRef, useState } from 'react'
-import { MessageCircle } from 'lucide-react'
+import { Layers, MessageCircle } from 'lucide-react'
 import type { TFunction } from 'i18next'
-import type { ManagedSkill, OnboardingPlan, ToolOption } from '../types'
-import SkillCard from './SkillCard'
+import type { ManagedSkill, OnboardingPlan, ToolOption } from '@/features/skills/types'
+import SkillCard from '@/features/skills/components/SkillCard'
 
 type SkillsListProps = {
   plan: OnboardingPlan | null
@@ -143,7 +143,11 @@ const SkillsList = ({
       ) : null}
 
       {visibleSkills.length === 0 ? (
-        <div className="empty">{t('skillsEmpty')}</div>
+        <div className="skills-empty">
+          <div className="skills-empty-icon"><Layers size={28} strokeWidth={1.5} /></div>
+          <h2>{t('workspace.emptyTitle')}</h2>
+          <p>{t('workspace.emptyDescription')}</p>
+        </div>
       ) : (
         <div className={`skills-table ${viewMode}-view`}>
           {visibleSkills.map((skill, index) => (

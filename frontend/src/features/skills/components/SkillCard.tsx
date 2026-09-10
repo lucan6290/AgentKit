@@ -2,7 +2,7 @@ import { memo, useState, type MouseEvent } from 'react'
 import { Copy, Folder, GripVertical, Tag, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { TFunction } from 'i18next'
-import type { ManagedSkill, ToolOption } from '../types'
+import type { ManagedSkill, ToolOption } from '@/features/skills/types'
 
 type SkillCardProps = {
   skill: ManagedSkill
@@ -67,7 +67,7 @@ const SkillCard = ({
 
   const handleCardClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement
-    if (target.closest('button, a, input, textarea, select, [role="button"]')) {
+    if (target.closest('button, a, input, textarea, select, label, [role="button"]')) {
       return
     }
     onOpenDetail(skill)
@@ -115,6 +115,7 @@ const SkillCard = ({
         <label className="bulk-skill-check" aria-label={t('bulk.toggleSkill')}>
           <input
             type="checkbox"
+            aria-label={t('workspace.selectSkill', { name: skill.name })}
             checked={bulkSelected}
             onChange={() => onToggleBulkSelection(skill.id)}
             disabled={loading}
@@ -240,6 +241,8 @@ const SkillCard = ({
           type="button"
           onClick={() => onToggleEnabled(skill.id, !enabled)}
           disabled={loading}
+          role="switch"
+          aria-checked={enabled}
           aria-label={enabled ? t('disableSkill') : t('enableSkill')}
           title={enabled ? t('disableSkill') : t('enableSkill')}
         >
@@ -261,6 +264,7 @@ const SkillCard = ({
           onClick={() => onDelete(skill.id)}
           disabled={loading}
           aria-label={t('remove')}
+          title={t('remove')}
         >
           <Trash2 size={15} />
         </button>

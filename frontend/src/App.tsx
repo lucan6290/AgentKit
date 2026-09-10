@@ -563,64 +563,66 @@ function AppContent() {
         ) : modal.activeView === 'myskills' ? (
           <div className="dashboard-stack">
             <div className="dashboard-toolbar">
-              <div className="source-tabs" role="tablist" aria-label={t('sourceTabs.label')}>
-                <button
-                  className={`source-tab${modal.activeSkillSource === 'custom' ? ' active' : ''}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={modal.activeSkillSource === 'custom'}
-                  onClick={() => {
-                    modal.setActiveSkillSource('custom')
-                    modal.backToList()
-                  }}
-                >
-                  {t('sourceTabs.custom')}
-                  <span>{customSkillCount}</span>
-                </button>
-                <button
-                  className={`source-tab${modal.activeSkillSource === 'community' ? ' active' : ''}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={modal.activeSkillSource === 'community'}
-                  onClick={() => {
-                    modal.setActiveSkillSource('community')
-                    modal.backToList()
-                  }}
-                >
-                  {t('sourceTabs.community')}
-                  <span>{communitySkillCount}</span>
-                </button>
-              </div>
               <FilterBar
-              sortBy={filter.sortBy}
-              searchQuery={filter.searchQuery}
-              scopeFilter={filter.scopeFilter}
-              toolFilter={filter.toolFilter}
-              installedTools={skills.installedTools}
-              tags={skills.tags}
-              selectedTagIds={filter.selectedTagIds}
-              includeUntagged={filter.includeUntagged}
-              untaggedCount={filter.untaggedCount}
-              totalCount={filter.visibleSkills.length}
-              refreshing={skills.refreshingSkills}
-              loading={globalLoading}
-              onSortChange={filter.handleSortChange}
-              onSearchChange={filter.handleSearchChange}
-              onScopeFilterChange={filter.handleScopeFilterChange}
-              onToolFilterChange={filter.handleToolFilterChange}
-              onRefresh={() => skills.handleRefreshSkills(modal.activeSkillSource)}
-              onOpenAdd={() => addSkill.handleOpenAdd(modal.activeSkillSource)}
-              onToggleTag={filter.handleToggleTagFilter}
-              onToggleUntagged={filter.handleToggleUntaggedFilter}
-              onClearTags={filter.handleClearTagFilters}
-              onManageTags={handleOpenTagsPage}
-              bulkMode={bulkMode}
-              bulkSelectedCount={selectedSkillIds.length}
-              viewMode={viewMode}
-              onToggleBulkMode={handleToggleBulkMode}
-              onViewModeChange={handleViewModeChange}
-              t={t}
-            />
+                sourceTabs={
+                  <div className="source-tabs" role="tablist" aria-label={t('sourceTabs.label')}>
+                    <button
+                      className={`source-tab${modal.activeSkillSource === 'custom' ? ' active' : ''}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={modal.activeSkillSource === 'custom'}
+                      onClick={() => {
+                        modal.setActiveSkillSource('custom')
+                        modal.backToList()
+                      }}
+                    >
+                      {t('sourceTabs.custom')}
+                      <span>{customSkillCount}</span>
+                    </button>
+                    <button
+                      className={`source-tab${modal.activeSkillSource === 'community' ? ' active' : ''}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={modal.activeSkillSource === 'community'}
+                      onClick={() => {
+                        modal.setActiveSkillSource('community')
+                        modal.backToList()
+                      }}
+                    >
+                      {t('sourceTabs.community')}
+                      <span>{communitySkillCount}</span>
+                    </button>
+                  </div>
+                }
+                sortBy={filter.sortBy}
+                searchQuery={filter.searchQuery}
+                scopeFilter={filter.scopeFilter}
+                toolFilter={filter.toolFilter}
+                installedTools={skills.installedTools}
+                tags={skills.tags}
+                selectedTagIds={filter.selectedTagIds}
+                includeUntagged={filter.includeUntagged}
+                untaggedCount={filter.untaggedCount}
+                totalCount={filter.visibleSkills.length}
+                refreshing={skills.refreshingSkills}
+                loading={globalLoading}
+                onSortChange={filter.handleSortChange}
+                onSearchChange={filter.handleSearchChange}
+                onScopeFilterChange={filter.handleScopeFilterChange}
+                onToolFilterChange={filter.handleToolFilterChange}
+                onRefresh={() => skills.handleRefreshSkills(modal.activeSkillSource)}
+                onOpenAdd={() => addSkill.handleOpenAdd(modal.activeSkillSource)}
+                onToggleTag={filter.handleToggleTagFilter}
+                onToggleUntagged={filter.handleToggleUntaggedFilter}
+                onClearTags={filter.handleClearTagFilters}
+                onManageTags={handleOpenTagsPage}
+                bulkMode={bulkMode}
+                bulkSelectedCount={selectedSkillIds.length}
+                viewMode={viewMode}
+                onToggleBulkMode={handleToggleBulkMode}
+                onViewModeChange={handleViewModeChange}
+                t={t}
+              />
             </div>
             <SkillsList
               plan={modal.activeSkillSource === 'community' ? importFlow.plan : null}

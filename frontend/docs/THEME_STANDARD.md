@@ -4,7 +4,7 @@
 
 ## 1. 核心原则
 
-**浅色模式为主要开发模式，暗色模式仅做兼容支持。**
+**浅色工作台为主要设计方向，使用蓝色强调和清晰的操作层级，同时兼顾深色主题。**
 
 ## 2. 开发优先级
 
@@ -30,11 +30,11 @@ import './styles/index.css'  // ② 模块化组件样式（@import 聚合）
 
 | 内容 | 说明 |
 |------|------|
-| 字体导入 | Google Fonts: IBM Plex Sans + IBM Plex Mono |
+| 字体导入 | Google Fonts: Inter + IBM Plex Mono |
 | `@import "tailwindcss"` | Tailwind CSS 4 |
 | `:root` | 浅色模式 CSS 变量（默认） |
 | `:root[data-theme='dark']` | 暗色模式 CSS 变量覆盖 |
-| `*` / `body` / `#root` / `a` | 全局 reset + 网格背景 |
+| `*` / `body` / `#root` / `a` | 全局 reset + 工作台背景 |
 
 ### 3.3 入口 ②：`src/styles/index.css`
 
@@ -74,6 +74,7 @@ import './styles/index.css'  // ② 模块化组件样式（@import 聚合）
 | `styles/settings.css` | 设置页 v2（CC Switch 风格 Tab/segmented） |
 | `styles/database.css` | 数据库面板（概览/表格/维护/详情弹窗） |
 | `styles/markdown.css` | Markdown 渲染样式 |
+| `styles/prompts-page.css` | 提示词列表与编辑面板 |
 
 ### 3.5 样式规则
 
@@ -91,64 +92,66 @@ import './styles/index.css'  // ② 模块化组件样式（@import 聚合）
 
 | 类别 | 变量名 | 值 |
 |------|--------|-----|
-| **背景** | `--bg-app` | `#f6f4ee` |
-| | `--bg-panel` | `#fffefa` |
-| | `--bg-element` | `#ece8dc` |
-| | `--bg-element-hover` | `#e3ded0` |
-| | `--bg-header` | `rgba(255, 254, 250, 0.82)` |
-| | `--bg-badge` | `#eee9db` |
-| | `--bg-hover` | `rgba(31, 42, 55, 0.05)` |
-| **边框** | `--border-subtle` | `#ddd6c7` |
-| | `--border-strong` | `#bfb39f` |
-| | `--border-faint` | `#ebe5d8` |
-| | `--border-hover` | `#bfb39f` |
-| **文字** | `--text-primary` | `#1f2933` |
-| | `--text-secondary` | `#58616d` |
-| | `--text-tertiary` | `#8b8174` |
-| **强调色** | `--accent-primary` | `#1d7180` |
-| | `--accent-primary-hover` | `#155d69` |
+| **背景** | `--bg-app` | `#f5f7fb` |
+| | `--bg-panel` | `#ffffff` |
+| | `--bg-element` | `#edf1f7` |
+| | `--bg-element-hover` | `#e4eaf3` |
+| | `--bg-header` | `rgba(248, 250, 253, 0.96)` |
+| | `--bg-badge` | `#edf1f7` |
+| | `--bg-hover` | `rgba(37, 56, 88, 0.045)` |
+| **边框** | `--border-subtle` | `#e1e7f0` |
+| | `--border-strong` | `#c9d4e4` |
+| | `--border-faint` | `#edf1f6` |
+| | `--border-hover` | `#bfcde0` |
+| **文字** | `--text-primary` | `#202d43` |
+| | `--text-secondary` | `#586980` |
+| | `--text-tertiary` | `#738298` |
+| **强调色** | `--accent-primary` | `#3269db` |
+| | `--accent-primary-hover` | `#2556bd` |
 | | `--accent-primary-fg` | `#ffffff` |
-| | `--accent-soft-bg` | `#e5f2f1` |
-| | `--accent-soft-border` | `#a8cecc` |
-| **状态色** | `--status-success` | `#26734d` |
-| | `--status-warning` | `#b26119` |
-| | `--status-error` | `#c2413d` |
-| | `--status-info` | `#1d7180` |
-| **软背景** | `--success-soft-bg` | `#e9f7ef` |
-| | `--success-soft-border` | `#add8bd` |
-| | `--warning-soft-bg` | `#fff4d8` |
-| | `--warning-soft-border` | `#dfb35f` |
-| | `--danger-soft-bg` | `#fff0ed` |
-| | `--danger-soft-border` | `#efc0b7` |
-| | `--danger-soft-bg-strong` | `#ffe7e2` |
-| **字体** | `--font-ui` | `"IBM Plex Sans", "Microsoft YaHei UI", "PingFang SC", system-ui, ...` |
-| | `--font-mono` | `"IBM Plex Mono", ui-monospace, SFMono-Regular, ...` |
+| | `--accent-soft-bg` | `#eaf1ff` |
+| | `--accent-soft-border` | `#d3e1fc` |
+| **状态色** | `--status-success` | `#08795a` |
+| | `--status-warning` | `#9a6208` |
+| | `--status-error` | `#dc2626` |
+| | `--status-info` | `#2563eb` |
+| **软背景** | `--success-soft-bg` | `#ecfdf5` |
+| | `--success-soft-border` | `#bbf7d0` |
+| | `--warning-soft-bg` | `#fffbeb` |
+| | `--warning-soft-border` | `#fcd34d` |
+| | `--danger-soft-bg` | `#fef2f2` |
+| | `--danger-soft-border` | `#fee2e2` |
+| | `--danger-soft-bg-strong` | `#fff1f2` |
+| **字体** | `--font-ui` | `Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif` |
+| | `--font-mono` | `"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace` |
 | **项目作用域色** | `--accent-project` | `#2563eb` |
 | | `--accent-project-hover` | `#1d4ed8` |
 | | `--accent-project-soft-bg` | `rgba(37, 99, 235, 0.08)` |
 | | `--accent-project-soft-border` | `rgba(37, 99, 235, 0.35)` |
-| **品牌色** | `--brand-accent` | `#b8613c`（Hub 文字颜色） |
+| **品牌色** | `--brand-accent` | `#3269db` |
 | **别名** | `--text-muted` | `var(--text-tertiary)` |
 | | `--success` | `var(--status-success)` |
 | | `--danger` | `var(--status-error)` |
-| **强调阴影** | `--accent-primary-shadow` | `rgba(29, 113, 128, 0.2)` |
-| | `--accent-primary-shadow-strong` | `rgba(29, 113, 128, 0.3)` |
-| **字号层级** | `--text-xs` ~ `--text-4xl` | `11px` ~ `24px`（10 级） |
+| **强调阴影** | `--accent-primary-shadow` | `rgba(47, 111, 237, 0.2)` |
+| | `--accent-primary-shadow-strong` | `rgba(47, 111, 237, 0.3)` |
+| **字号层级** | `--text-2xs` ~ `--text-4xl` | `10px` ~ `24px`（10 级） |
 | **行高** | `--leading-tight` / `--leading-snug` / `--leading-normal` / `--leading-relaxed` | `1.2` / `1.35` / `1.5` / `1.6` |
-| **圆角** | `--radius-sm` / `--radius-md` / `--radius-lg` / `--radius-xl` | `4px` / `8px` / `8px` / `12px` |
+| **圆角** | `--radius-sm` / `--radius-md` / `--radius-lg` / `--radius-xl` | `6px` / `10px` / `14px` / `18px` |
 | **阴影** | `--shadow-xs` / `--shadow-sm` / `--shadow-md` / `--shadow-lg` | 4 级递进 |
 | **过渡** | `--transition-fast` / `--transition-base` / `--transition-slow` | `0.15s` / `0.2s` / `0.3s` |
 | | `--ease-out` / `--ease-spring` | `cubic-bezier(0.4, 0, 0.2, 1)` / `cubic-bezier(0.34, 1.56, 0.64, 1)` |
+| **遮罩** | `--overlay-bg` | `rgba(24, 38, 60, 0.3)` |
+| **开关滑块** | `--control-thumb` | `#ffffff` |
 
 ### 4.2 暗色模式（`:root[data-theme='dark']`，覆盖）
 
-暗色模式覆盖上述所有变量。关键差异：
+暗色模式覆盖颜色和阴影变量，字号、圆角与过渡沿用默认值。关键差异：
 
-- 背景使用深灰色而非纯黑（`#151715` / `#1d201d`）
-- 文字使用暖白色（`#f5f1e7`）
-- 强调色偏亮（`#67c4bf`），前景色为深色（`#101513`）
-- 阴影更深（`rgb(0 0 0 / 0.38)` / `rgb(0 0 0 / 0.72)`）
-- 额外设置 `color-scheme: dark`
+- 背景使用蓝灰色而非纯黑（`#10151e` / `#18212e`）
+- 主文字使用冷白色（`#edf2fa`）
+- 强调色偏亮（`#6f9cff`），前景色为深色（`#111214`）
+- 遮罩使用 `rgba(4, 9, 16, 0.6)`，开关滑块为 `#ffffff`
+- 阴影采用低亮度黑色，额外设置 `color-scheme: dark`
 
 ## 5. 主题切换机制
 
@@ -190,15 +193,16 @@ import './styles/index.css'  // ② 模块化组件样式（@import 聚合）
 
 ### 6.3 全局背景
 
-`body` 使用网格背景叠加（定义在 `index.css` 中）：
+`body` 使用纯色 `var(--bg-app)`，不叠加网格；主工作区仅在右上角使用轻微强调色渐变。基础字号为 14px，行高为 1.5，UI 字体采用 Inter 和系统中英文字体回退。
 
-```css
-background:
-  linear-gradient(90deg, rgba(31, 41, 51, 0.035) 1px, transparent 1px),
-  linear-gradient(rgba(31, 41, 51, 0.028) 1px, transparent 1px),
-  var(--bg-app);
-background-size: 36px 36px, 36px 36px, auto;
-```
+### 6.4 布局与交互尺寸
+
+- 工作台、工具、提示词、标签页面采用 28px / 32px 顶部与水平留白；920px、720px 窗口逐级缩小。
+- 常规主操作按钮至少 40px；筛选控件为 36px；紧凑按钮与卡片操作为 32px。
+- 卡片圆角使用 `--radius-lg`（14px），通用弹窗使用 `--radius-xl`（18px）。
+- 弹窗高度限制在标题栏下方遮罩的可用区域内；正文滚动，页头与操作区不收缩。
+- hover、active 不应用于禁用按钮；键盘导航保留清晰的 `:focus-visible` 轮廓。
+- 系统启用 `prefers-reduced-motion: reduce` 时缩短动画与过渡并关闭平滑滚动。
 
 ## 7. 暗色模式兼容要求
 

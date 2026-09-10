@@ -196,6 +196,8 @@ Project-level skills directories are relative to the chosen project root. Tools 
 ## Contributing & Security
 
 - Code of Conduct: [`CODE_OF_CONDUCT.en.md`](CODE_OF_CONDUCT.en.md) (English) / [`../CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md) (中文)
+- Contributing: [`CONTRIBUTING.en.md`](CONTRIBUTING.en.md) (English) / [`../CONTRIBUTING.md`](../CONTRIBUTING.md) (中文)
+- Support: [`SUPPORT.en.md`](SUPPORT.en.md) (English) / [`../SUPPORT.md`](../SUPPORT.md) (中文)
 - Security Policy: [`SECURITY.en.md`](SECURITY.en.md) (English) / [`../SECURITY.md`](../SECURITY.md) (中文)
 
 ## FAQ

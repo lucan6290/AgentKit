@@ -1,9 +1,10 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowUpDown, Check, CheckSquare, ChevronDown, Globe, LayoutGrid, List, Monitor, Plus, RefreshCw, Search, Tags } from 'lucide-react'
+import { memo, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { ArrowUpDown, Check, CheckSquare, ChevronDown, Globe, LayoutGrid, List, Monitor, Plus, RefreshCw, Search, Tags, X } from 'lucide-react'
 import type { TFunction } from 'i18next'
-import type { TagWithCountDto, ToolOption } from '../types'
+import type { TagWithCountDto, ToolOption } from '@/features/skills/types'
 
 type FilterBarProps = {
+  sourceTabs: ReactNode
   sortBy: 'manual' | 'updated' | 'name'
   searchQuery: string
   scopeFilter: 'all' | 'global' | 'project'
@@ -35,6 +36,7 @@ type FilterBarProps = {
 }
 
 const FilterBar = ({
+  sourceTabs,
   sortBy,
   searchQuery,
   scopeFilter,
@@ -67,6 +69,7 @@ const FilterBar = ({
   const [tagMenuOpen, setTagMenuOpen] = useState(false)
   const [tagQuery, setTagQuery] = useState('')
   const tagMenuRef = useRef<HTMLDivElement | null>(null)
+  const tagMenuId = useId()
   const scopeOptions: { value: 'all' | 'global' | 'project'; label: string }[] = [
     { value: 'all', label: t('scope.allLabel') },
     { value: 'global', label: t('scope.globalLabel') },
@@ -86,39 +89,58 @@ const FilterBar = ({
 
   useEffect(() => {
     if (!tagMenuOpen) return
-    const handlePointerDown = (event: MouseEvent) => {
+    const handlePointerDown = (event: Event) => {
       if (!tagMenuRef.current?.contains(event.target as Node)) {
         setTagMenuOpen(false)
       }
     }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setTagMenuOpen(false)
+        tagMenuRef.current?.querySelector('button')?.focus()
+      }
+    }
+    tagMenuRef.current?.querySelector('input')?.focus()
     document.addEventListener('mousedown', handlePointerDown)
-    return () => document.removeEventListener('mousedown', handlePointerDown)
+    document.addEventListener('focusin', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('focusin', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [tagMenuOpen])
 
   return (
     <div className="filter-bar">
-      {/* 第一行：标题 + 主操作 + 搜索 */}
+      {/* 标题与主操作 */}
       <div className="filter-row filter-row-top">
-        <div className="filter-title">
-          {title}（{totalCount}）
+        <div className="filter-heading">
+          <h1 className="filter-title">
+            {title}<span className="filter-count">{totalCount}</span>
+          </h1>
+          <p className="filter-description">{t('workspace.description')}</p>
         </div>
         <div className="filter-primary-actions">
           <button
             className="btn btn-secondary refresh-btn"
             type="button"
             onClick={onRefresh}
-            disabled={refreshing}
+            disabled={refreshing || loading}
             title={t('refreshSkills')}
             aria-label={t('refreshSkills')}
           >
             <RefreshCw size={14} className={refreshing ? 'spin' : undefined} />
             {refreshing ? t('refreshing') : t('refresh')}
           </button>
-          <button className="btn btn-secondary" type="button" onClick={onOpenAdd} disabled={loading}>
+          <button className="btn btn-primary" type="button" onClick={onOpenAdd} disabled={loading}>
             <Plus size={14} />
             {t('newSkill')}
           </button>
         </div>
+      </div>
+      <div className="filter-row filter-row-search">
+        {sourceTabs}
         <div className="filter-search-wrap">
           <div className="search-container">
             <Search size={16} className="search-icon-abs" />
@@ -127,14 +149,26 @@ const FilterBar = ({
               value={searchQuery}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder={t('searchPlaceholder')}
+              aria-label={t('searchPlaceholder')}
             />
+            {searchQuery ? (
+              <button
+                className="search-clear"
+                type="button"
+                onClick={() => onSearchChange('')}
+                aria-label={t('workspace.clearSearch')}
+                title={t('workspace.clearSearch')}
+              >
+                <X size={14} />
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
       {/* 第二行：筛选器 + 排序 + 视图切换 */}
       <div className="filter-row filter-row-bottom">
         <div className="filter-secondary-actions">
-          <button className="btn btn-secondary sort-btn tool-filter-btn" type="button">
+          <label className="btn btn-secondary sort-btn tool-filter-btn">
             <Monitor size={14} />
             {selectedTool?.label ?? t('toolFilter.all')}
             <ChevronDown size={12} />
@@ -150,8 +184,8 @@ const FilterBar = ({
                 </option>
               ))}
             </select>
-          </button>
-          <button className="btn btn-secondary sort-btn" type="button">
+          </label>
+          <label className="btn btn-secondary sort-btn">
             <Globe size={14} />
             {scopeOptions.find((option) => option.value === scopeFilter)?.label ?? t('scope.allLabel')}
             <ChevronDown size={12} />
@@ -168,8 +202,8 @@ const FilterBar = ({
                 </option>
               ))}
             </select>
-          </button>
-          <button className="btn btn-secondary sort-btn" type="button">
+          </label>
+          <label className="btn btn-secondary sort-btn">
             {sortBy === 'manual' ? t('sortManual') : sortBy === 'updated' ? t('sortUpdated') : t('sortName')}
             <ArrowUpDown size={12} />
             <select
@@ -181,12 +215,14 @@ const FilterBar = ({
               <option value="updated">{t('sortUpdated')}</option>
               <option value="name">{t('sortName')}</option>
             </select>
-          </button>
+          </label>
           <div className="tag-filter-wrap" ref={tagMenuRef}>
             <button
               className={`btn btn-secondary tag-filter-btn${selectedCount > 0 ? ' active' : ''}`}
               type="button"
               onClick={() => setTagMenuOpen((open) => !open)}
+              aria-expanded={tagMenuOpen}
+              aria-controls={tagMenuOpen ? tagMenuId : undefined}
             >
               <Tags size={14} />
               {selectedCount > 0
@@ -195,7 +231,7 @@ const FilterBar = ({
               <ChevronDown size={12} />
             </button>
             {tagMenuOpen ? (
-              <div className="tag-filter-menu">
+              <div className="tag-filter-menu" id={tagMenuId} role="group" aria-label={t('tags')}>
                 <div className="tag-filter-head">
                   <span>{t('tags')}</span>
                   <span>{t('matchAny')}</span>
@@ -206,6 +242,7 @@ const FilterBar = ({
                     value={tagQuery}
                     onChange={(event) => setTagQuery(event.target.value)}
                     placeholder={t('searchTags')}
+                    aria-label={t('searchTags')}
                   />
                 </div>
                 <div className="tag-filter-options">
@@ -213,6 +250,7 @@ const FilterBar = ({
                     className={`tag-filter-option${includeUntagged ? ' selected' : ''}`}
                     type="button"
                     onClick={onToggleUntagged}
+                    aria-pressed={includeUntagged}
                   >
                     <span className="tag-check">{includeUntagged ? <Check size={14} /> : null}</span>
                     <span>{t('untagged')}</span>
@@ -226,6 +264,7 @@ const FilterBar = ({
                         className={`tag-filter-option${selected ? ' selected' : ''}`}
                         type="button"
                         onClick={() => onToggleTag(tag.id)}
+                        aria-pressed={selected}
                       >
                         <span className="tag-check">{selected ? <Check size={14} /> : null}</span>
                         <span>{tag.name}</span>
@@ -249,6 +288,7 @@ const FilterBar = ({
             className={`btn btn-secondary bulk-mode-btn${bulkMode ? ' active' : ''}`}
             type="button"
             onClick={onToggleBulkMode}
+            aria-pressed={bulkMode}
           >
             <CheckSquare size={14} />
             {bulkMode ? t('bulk.selectedShort', { count: bulkSelectedCount }) : t('bulk.manage')}

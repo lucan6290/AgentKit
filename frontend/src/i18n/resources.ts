@@ -280,6 +280,13 @@ export const resources = {
       },
       filterSort: 'Sort',
       allSkills: 'All Skills',
+      workspace: {
+        description: 'Your skills, organized. Ready for every tool.',
+        clearSearch: 'Clear search',
+        emptyTitle: 'No skills to show',
+        emptyDescription: 'Try another search or filter, or add a skill to get started.',
+        selectSkill: 'Select {{name}}',
+      },
       scope: {
         all: 'All',
         allLabel: 'All scopes',
@@ -970,6 +977,13 @@ export const resources = {
       },
       filterSort: '排序',
       allSkills: '全部 Skills',
+      workspace: {
+        description: '让技能井然有序，让每个工具随时就绪。',
+        clearSearch: '清除搜索',
+        emptyTitle: '暂无可展示的技能',
+        emptyDescription: '试试其他搜索或筛选条件，也可以添加技能，开启你的工作流。',
+        selectSkill: '选择 {{name}}',
+      },
       scope: {
         all: '全部',
         allLabel: '全部范围',

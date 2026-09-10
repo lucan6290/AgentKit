@@ -156,6 +156,7 @@ const Header = ({
           className="sidebar-collapse"
           type="button"
           onClick={onToggleCollapsed}
+          aria-expanded={!collapsed}
           aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
         >
@@ -169,6 +170,7 @@ const Header = ({
           className={activeView === 'myskills' || activeView === 'detail' ? 'active' : ''}
           type="button"
           onClick={() => onViewChange('myskills')}
+          aria-current={activeView === 'myskills' || activeView === 'detail' ? 'page' : undefined}
           title={collapsed ? t('navMySkills') : undefined}
         >
           <Layers size={18} />
@@ -179,6 +181,7 @@ const Header = ({
           className={activeView === 'prompts' ? 'active' : ''}
           type="button"
           onClick={() => onViewChange('prompts')}
+          aria-current={activeView === 'prompts' ? 'page' : undefined}
           title={collapsed ? t('navPrompts') : undefined}
         >
           <FileText size={18} />
@@ -192,6 +195,7 @@ const Header = ({
           className={activeView === 'tags' ? 'active' : ''}
           type="button"
           onClick={() => onViewChange('tags')}
+          aria-current={activeView === 'tags' ? 'page' : undefined}
           title={collapsed ? t('navTags') : undefined}
         >
           <Tag size={18} />
@@ -202,6 +206,7 @@ const Header = ({
           className={activeView === 'tools' ? 'active' : ''}
           type="button"
           onClick={() => onViewChange('tools')}
+          aria-current={activeView === 'tools' ? 'page' : undefined}
           title={collapsed ? t('navTools') : undefined}
         >
           <Monitor size={18} />
@@ -220,6 +225,7 @@ const Header = ({
           className={activeView === 'settings' ? 'active' : ''}
           type="button"
           onClick={onOpenSettings}
+          aria-current={activeView === 'settings' ? 'page' : undefined}
           title={collapsed ? t('settings.title') : undefined}
         >
           <Settings size={18} />
