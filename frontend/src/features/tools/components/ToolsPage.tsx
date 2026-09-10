@@ -24,7 +24,7 @@ import { invokeCommand, reorder as apiReorder } from '@/lib/api'
 import { pickFolder } from '@/lib/pickFolder'
 import { promptService } from '@/services/promptService'
 import type { PromptFileDto } from '@/features/prompts/types'
-import { toast } from 'sonner'
+import { showError, showSuccess } from '@/lib/uiFeedback'
 
 type ToolSkillEntry = {
   name: string
@@ -134,7 +134,7 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
       )
       setTools(data)
       if (refresh) {
-        toast.success(t('toolsPage.refreshSuccess'))
+        showSuccess(t('toolsPage.refreshSuccess'))
       }
     } catch {
       setTools([])
@@ -161,10 +161,10 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
         source_path: skillPath,
         name: skillName,
       })
-      toast.success(t('toolsPage.syncedToHub', { name: result.name }))
+      showSuccess(t('toolsPage.syncedToHub', { name: result.name }))
       void loadTools()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setSyncing(null)
     }
@@ -178,10 +178,10 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
     setDeleting(skillPath)
     try {
       await invokeCommand('delete_tool_skill', { tool_key: toolKey, skill_path: skillPath })
-      toast.success(t('toolsPage.deleted', { name: skillName }))
+      showSuccess(t('toolsPage.deleted', { name: skillName }))
       void loadTools()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setDeleting(null)
     }
@@ -192,10 +192,10 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
     setClearingTool(toolKey)
     try {
       const result = await invokeCommand<{ ok: boolean; removed: number }>('clear_tool_skills', { tool_key: toolKey })
-      toast.success(t('toolsPage.clearedTool', { name: toolName, count: result.removed }))
+      showSuccess(t('toolsPage.clearedTool', { name: toolName, count: result.removed }))
       void loadTools()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setClearingTool(null)
     }
@@ -204,9 +204,9 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
   const handleOpenFolder = useCallback(async (toolKey: string, toolName: string) => {
     try {
       await invokeCommand<{ ok: boolean; path: string }>('open_tool_skills_dir', { tool_key: toolKey })
-      toast.success(t('toolsPage.openedFolder', { name: toolName }))
+      showSuccess(t('toolsPage.openedFolder', { name: toolName }))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     }
   }, [t])
 
@@ -245,12 +245,12 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
         supports_project_scope: editingConfig.supports_project_scope,
         is_custom: editingConfig.is_custom,
       })
-      toast.success(t('toolsPage.configSaved'))
+      showSuccess(t('toolsPage.configSaved'))
       setEditingConfig(null)
       await loadAdapterConfigs()
       await loadTools(true)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setSavingConfig(false)
     }
@@ -265,12 +265,12 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
     setSavingConfig(true)
     try {
       await invokeCommand('reset_tool_adapter_config', { tool_key: editingConfig.tool_key })
-      toast.success(editingConfig.is_custom ? t('toolsPage.customToolDeleted') : t('toolsPage.configReset'))
+      showSuccess(editingConfig.is_custom ? t('toolsPage.customToolDeleted') : t('toolsPage.configReset'))
       setEditingConfig(null)
       await loadAdapterConfigs()
       await loadTools(true)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setSavingConfig(false)
     }
@@ -305,7 +305,7 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
       setEditPromptContent(content)
       setOriginalPromptContent(content)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
       setEditPromptContent('')
       setOriginalPromptContent('')
     }
@@ -316,10 +316,10 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
     try {
       await promptService.writePromptFile(pf.file_path, editPromptContent)
       setOriginalPromptContent(editPromptContent)
-      toast.success(t('toolsPage.promptSaved'))
+      showSuccess(t('toolsPage.promptSaved'))
       await loadPromptFiles()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setSavingPrompt(false)
     }
@@ -332,10 +332,10 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
       setEditingPromptId(null)
       setEditPromptContent('')
       setOriginalPromptContent('')
-      toast.success(t('toolsPage.promptDeleted'))
+      showSuccess(t('toolsPage.promptDeleted'))
       await loadPromptFiles()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     }
   }, [loadPromptFiles, t])
 
@@ -419,7 +419,7 @@ const ToolsPage = ({ t }: ToolsPageProps) => {
       try {
         await apiReorder('tools', reorderItems)
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : String(err))
+        showError(err instanceof Error ? err.message : String(err), err)
         // 失败时重新加载
         await loadAdapterConfigs()
       }

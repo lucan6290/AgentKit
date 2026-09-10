@@ -4,6 +4,7 @@ pub mod contracts;
 pub mod db;
 pub mod error;
 pub mod filesystem;
+pub mod logging;
 pub mod models;
 pub mod platform;
 pub mod repo;
@@ -19,7 +20,6 @@ pub mod utils;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::Manager;
-use tauri_plugin_log::{RotationStrategy, Target, TargetKind, TimezoneStrategy};
 
 pub fn run() {
     let log_dir = crate::config::resolve_data_dir().join("logs");
@@ -31,7 +31,7 @@ pub fn run() {
     let error_log_path = log_dir.join("skills-hub-error.log");
     std::panic::set_hook(Box::new(move |panic_info| {
         use std::io::Write;
-        let now = time::OffsetDateTime::now_local().unwrap_or_else(|_| time::OffsetDateTime::now_utc());
+        let now = time::OffsetDateTime::now_utc();
         let timestamp = format!(
             "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
             now.year(),
@@ -56,7 +56,14 @@ pub fn run() {
             });
         // Also attempt to route through the regular logger (may fail if the
         // panic originated inside the logger itself).
-        log::error!("PANIC: {}", panic_info);
+        tracing::error!(
+            target: crate::logging::app_target(),
+            event = "app.panic",
+            layer = "backend",
+            area = "app",
+            outcome = "failed",
+            "application panic"
+        );
     }));
 
     // Read log level from DB before Tauri initializes (use a temporary connection).
@@ -69,39 +76,21 @@ pub fn run() {
             "info".to_string()
         }
     };
-    let level_filter = match log_level.as_str() {
-        "debug" => log::LevelFilter::Debug,
-        "warn" => log::LevelFilter::Warn,
-        "error" => log::LevelFilter::Error,
-        _ => log::LevelFilter::Info,
-    };
+    crate::logging::init(&log_dir, &log_level);
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::new()
-            .targets([
-                Target::new(TargetKind::Stdout),
-                Target::new(TargetKind::Folder {
-                    path: log_dir.clone(),
-                    file_name: Some("skills-hub".to_string()),
-                }),
-                // Dedicated error log: only captures Error-level messages
-                // → skills-hub-error.log
-                Target::new(TargetKind::Folder {
-                    path: log_dir,
-                    file_name: Some("skills-hub-error".to_string()),
-                })
-                .filter(|metadata| metadata.level() == log::Level::Error),
-                Target::new(TargetKind::Webview),
-            ])
-            .level(level_filter)
-            .max_file_size(10_000_000) // 10 MB per file
-            .rotation_strategy(RotationStrategy::KeepSome(7)) // keep 7 rotated files
-            .timezone_strategy(TimezoneStrategy::UseLocal)
-            .build())
         // single-instance must be the first plugin; the deep-link feature forwards
         // scheme URLs from a second process to the running instance.
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            log::info!("检测到第二个实例启动，已转发到现有窗口, args={:?}", args);
+            tracing::info!(
+                target: crate::logging::app_target(),
+                event = "app.instance.forwarded",
+                layer = "backend",
+                area = "app",
+                outcome = "success",
+                args = ?args,
+                "second app instance forwarded"
+            );
             show_main_window(app);
         }))
         .plugin(tauri_plugin_autostart::init(
@@ -117,7 +106,15 @@ pub fn run() {
                 .with_handler(move |app, shortcut, event| {
                     use tauri_plugin_global_shortcut::ShortcutState;
                     if event.state == ShortcutState::Pressed {
-                        log::debug!("全局快捷键触发: {:?}", shortcut);
+                        tracing::debug!(
+                            target: crate::logging::app_target(),
+                            event = "shortcut.triggered",
+                            layer = "backend",
+                            area = "shortcut",
+                            outcome = "started",
+                            shortcut = ?shortcut,
+                            "global shortcut triggered"
+                        );
                         show_main_window(app);
                     }
                 })
@@ -125,8 +122,23 @@ pub fn run() {
         )
         .manage(state::AppState::default())
         .setup(move |app| {
-            log::info!("Skills Hub 启动中, 日志级别: {}", log_level);
-            log::info!("Tauri setup 阶段开始");
+            tracing::info!(
+                target: crate::logging::app_target(),
+                event = "app.start",
+                layer = "backend",
+                area = "app",
+                outcome = "started",
+                log_level = %log_level,
+                "Skills Hub starting"
+            );
+            tracing::info!(
+                target: crate::logging::app_target(),
+                event = "app.setup.started",
+                layer = "backend",
+                area = "app",
+                outcome = "started",
+                "Tauri setup started"
+            );
             build_tray(app.handle())?;
 
             // Intercept the close button based on user setting:
@@ -134,7 +146,14 @@ pub fn run() {
             let main_window = app
                 .get_webview_window("main")
                 .unwrap_or_else(|| {
-                    log::error!("setup 阶段未找到主窗口");
+                    tracing::error!(
+                        target: crate::logging::app_target(),
+                        event = "app.window.missing",
+                        layer = "backend",
+                        area = "window",
+                        outcome = "failed",
+                        "main window not found during setup"
+                    );
                     panic!("main window not found");
                 });
             let app_handle = app.handle().clone();
@@ -145,7 +164,15 @@ pub fn run() {
                 let repo = crate::repositories::SettingsRepository::new(db);
                 let initial_behavior = repo.get("close_behavior").ok().flatten()
                     .unwrap_or_else(|| "minimize_to_tray".to_string());
-                log::info!("关闭行为设置: {}", initial_behavior);
+                tracing::info!(
+                    target: crate::logging::app_target(),
+                    event = "settings.close_behavior.loaded",
+                    layer = "backend",
+                    area = "settings",
+                    outcome = "success",
+                    close_behavior = %initial_behavior,
+                    "close behavior loaded"
+                );
             }
 
             main_window.clone().on_window_event(move |event| {
@@ -158,42 +185,130 @@ pub fn run() {
                             })
                             .unwrap_or_else(|| "minimize_to_tray".to_string());
 
-                        log::info!("用户触发窗口关闭，当前关闭行为: {}", behavior);
+                        tracing::info!(
+                            target: crate::logging::app_target(),
+                            event = "window.close.requested",
+                            layer = "backend",
+                            area = "window",
+                            outcome = "started",
+                            close_behavior = %behavior,
+                            "window close requested"
+                        );
 
                         match behavior.as_str() {
                             "quit" => {
-                                log::info!("执行退出应用");
+                                tracing::info!(
+                                    target: crate::logging::app_target(),
+                                    event = "app.quit.requested",
+                                    layer = "backend",
+                                    area = "app",
+                                    outcome = "started",
+                                    "app exit requested"
+                                );
                                 app_handle.exit(0);
                             }
                             "minimize_to_taskbar" => {
-                                log::info!("执行最小化到任务栏");
+                                tracing::info!(
+                                    target: crate::logging::app_target(),
+                                    event = "window.minimize.started",
+                                    layer = "backend",
+                                    area = "window",
+                                    outcome = "started",
+                                    destination = "taskbar",
+                                    "minimize window to taskbar"
+                                );
                                 api.prevent_close();
                                 if let Err(e) = main_window.minimize() {
-                                    log::error!("最小化到任务栏失败: {}", e);
+                                    tracing::error!(
+                                        target: crate::logging::app_target(),
+                                        event = "window.minimize.failed",
+                                        layer = "backend",
+                                        area = "window",
+                                        outcome = "failed",
+                                        destination = "taskbar",
+                                        error = %e,
+                                        "failed to minimize window to taskbar"
+                                    );
                                 } else {
-                                    log::debug!("窗口已最小化到任务栏");
+                                    tracing::debug!(
+                                        target: crate::logging::app_target(),
+                                        event = "window.minimize.completed",
+                                        layer = "backend",
+                                        area = "window",
+                                        outcome = "success",
+                                        destination = "taskbar",
+                                        "window minimized to taskbar"
+                                    );
                                 }
                             }
                             _ => {
                                 // Default: minimize to tray
-                                log::info!("执行最小化到托盘 (默认)");
+                                tracing::info!(
+                                    target: crate::logging::app_target(),
+                                    event = "window.hide.started",
+                                    layer = "backend",
+                                    area = "window",
+                                    outcome = "started",
+                                    destination = "tray",
+                                    "hide window to tray"
+                                );
                                 api.prevent_close();
                                 if let Err(e) = main_window.hide() {
-                                    log::error!("隐藏窗口到托盘失败: {}", e);
+                                    tracing::error!(
+                                        target: crate::logging::app_target(),
+                                        event = "window.hide.failed",
+                                        layer = "backend",
+                                        area = "window",
+                                        outcome = "failed",
+                                        destination = "tray",
+                                        error = %e,
+                                        "failed to hide window to tray"
+                                    );
                                 } else {
-                                    log::debug!("窗口已隐藏到托盘");
+                                    tracing::debug!(
+                                        target: crate::logging::app_target(),
+                                        event = "window.hide.completed",
+                                        layer = "backend",
+                                        area = "window",
+                                        outcome = "success",
+                                        destination = "tray",
+                                        "window hidden to tray"
+                                    );
                                 }
                             }
                         }
                     }
                     tauri::WindowEvent::Focused(focused) => {
-                        log::trace!("窗口焦点变化: focused={}", focused);
+                        tracing::trace!(
+                            target: crate::logging::app_target(),
+                            event = "window.focus.changed",
+                            layer = "backend",
+                            area = "window",
+                            focused = *focused,
+                            "window focus changed"
+                        );
                     }
                     tauri::WindowEvent::Resized(size) => {
-                        log::trace!("窗口大小变化: {}x{}", size.width, size.height);
+                        tracing::trace!(
+                            target: crate::logging::app_target(),
+                            event = "window.resize.changed",
+                            layer = "backend",
+                            area = "window",
+                            width = size.width,
+                            height = size.height,
+                            "window size changed"
+                        );
                     }
                     tauri::WindowEvent::Moved(position) => {
-                        log::trace!("窗口移动: ({}, {})", position.x, position.y);
+                        tracing::trace!(
+                            target: crate::logging::app_target(),
+                            event = "window.move.changed",
+                            layer = "backend",
+                            area = "window",
+                            x = position.x,
+                            y = position.y,
+                            "window moved"
+                        );
                     }
                     _ => {}
                 }
@@ -204,7 +319,15 @@ pub fn run() {
                 // Non-fatal: if the hotkey is already taken by another app,
                 // log a warning instead of crashing the entire setup.
                 if let Err(e) = register_global_shortcut(app.handle()) {
-                    log::warn!("全局快捷键注册失败: {e}");
+                    tracing::warn!(
+                        target: crate::logging::app_target(),
+                        event = "shortcut.register.failed",
+                        layer = "backend",
+                        area = "shortcut",
+                        outcome = "failed",
+                        error = %e,
+                        "failed to register global shortcut"
+                    );
                 }
             }
 
@@ -225,28 +348,65 @@ pub fn run() {
                     .flatten()
                     .map(|v| v == "true")
                     .unwrap_or(false);
-                log::info!("启动时自动刷新: {}", if auto_refresh { "已启用" } else { "已禁用" });
+                tracing::info!(
+                    target: crate::logging::app_target(),
+                    event = "repo.auto_refresh.configured",
+                    layer = "backend",
+                    area = "repo",
+                    enabled = auto_refresh,
+                    "startup auto refresh setting loaded"
+                );
                 if auto_refresh {
                     let db = state.db.clone();
                     std::thread::spawn(move || {
-                        log::debug!("开始启动时自动刷新仓库...");
+                        tracing::debug!(
+                            target: crate::logging::app_target(),
+                            event = "repo.auto_refresh.started",
+                            layer = "backend",
+                            area = "repo",
+                            outcome = "started",
+                            "startup repository refresh started"
+                        );
                         match crate::repo::scanner::sync_all_repo_registries(&db) {
-                            Ok(result) => log::info!(
-                                "启动时自动刷新完成: registered={}, removed={}",
-                                result.registered, result.removed
+                            Ok(result) => tracing::info!(
+                                target: crate::logging::app_target(),
+                                event = "repo.auto_refresh.completed",
+                                layer = "backend",
+                                area = "repo",
+                                outcome = "success",
+                                registered = result.registered,
+                                removed = result.removed,
+                                "startup repository refresh completed"
                             ),
-                            Err(e) => log::warn!("启动时自动刷新失败: {}", e),
+                            Err(e) => tracing::warn!(
+                                target: crate::logging::app_target(),
+                                event = "repo.auto_refresh.failed",
+                                layer = "backend",
+                                area = "repo",
+                                outcome = "failed",
+                                error = %e,
+                                "startup repository refresh failed"
+                            ),
                         }
                     });
                 }
             }
 
-            log::info!("Skills Hub 启动完成");
+            tracing::info!(
+                target: crate::logging::app_target(),
+                event = "app.ready",
+                layer = "backend",
+                area = "app",
+                outcome = "success",
+                "Skills Hub started"
+            );
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             // health
             crate::commands::health::health_check,
+            // logging
+            crate::commands::logging::write_frontend_log,
             // skills
             crate::commands::skills::get_managed_skills,
             crate::commands::skills::delete_managed_skill,
@@ -340,14 +500,29 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .unwrap_or_else(|e| {
-            log::error!("应用启动失败: {}", e);
+            tracing::error!(
+                target: crate::logging::app_target(),
+                event = "app.run.failed",
+                layer = "backend",
+                area = "app",
+                outcome = "failed",
+                error = %e,
+                "failed to run Skills Hub"
+            );
             panic!("failed to run Skills Hub: {}", e);
         });
 }
 
 /// Build the system tray icon with a context menu.
 fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
-    log::debug!("构建系统托盘...");
+    tracing::debug!(
+        target: crate::logging::app_target(),
+        event = "tray.build.started",
+        layer = "backend",
+        area = "tray",
+        outcome = "started",
+        "building system tray"
+    );
     let version = app.package_info().version.to_string();
     let version_label = format!("Skills Hub v{}", version);
 
@@ -426,7 +601,14 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         .default_window_icon()
         .cloned()
         .unwrap_or_else(|| {
-            log::error!("窗口图标未配置");
+            tracing::error!(
+                target: crate::logging::app_target(),
+                event = "tray.icon.missing",
+                layer = "backend",
+                area = "tray",
+                outcome = "failed",
+                "window icon is not configured"
+            );
             panic!("window icon must be configured");
         });
 
@@ -436,24 +618,68 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         .tooltip("Skills Hub")
         .on_menu_event(|app, event| {
             let id = event.id().as_ref();
-            log::debug!("托盘菜单点击: {}", id);
+            tracing::debug!(
+                target: crate::logging::app_target(),
+                event = "tray.menu.clicked",
+                layer = "backend",
+                area = "tray",
+                outcome = "started",
+                menu_id = id,
+                "tray menu clicked"
+            );
             match id {
                 "show" => {
-                    log::info!("托盘菜单: 显示窗口");
+                    tracing::info!(
+                        target: crate::logging::app_target(),
+                        event = "tray.window.show.clicked",
+                        layer = "backend",
+                        area = "tray",
+                        outcome = "started",
+                        "tray show window clicked"
+                    );
                     show_main_window(app);
                 }
                 "new_window" => {
-                    log::info!("托盘菜单: 新建窗口");
+                    tracing::info!(
+                        target: crate::logging::app_target(),
+                        event = "tray.window.new.clicked",
+                        layer = "backend",
+                        area = "tray",
+                        outcome = "started",
+                        "tray new window clicked"
+                    );
                     if let Err(e) = crate::commands::misc::create_new_window(app) {
-                        log::error!("新建窗口失败: {}", e);
+                        tracing::error!(
+                            target: crate::logging::app_target(),
+                            event = "tray.window.new.failed",
+                            layer = "backend",
+                            area = "tray",
+                            outcome = "failed",
+                            error = %e,
+                            "failed to create new window from tray"
+                        );
                     }
                 }
                 "check_update" => {
-                    log::info!("托盘菜单: 检查更新");
+                    tracing::info!(
+                        target: crate::logging::app_target(),
+                        event = "tray.update_check.clicked",
+                        layer = "backend",
+                        area = "tray",
+                        outcome = "started",
+                        "tray check update clicked"
+                    );
                     tray_check_update(app);
                 }
                 "open_website" => {
-                    log::info!("托盘菜单: 打开官方网站");
+                    tracing::info!(
+                        target: crate::logging::app_target(),
+                        event = "tray.website.open.clicked",
+                        layer = "backend",
+                        area = "tray",
+                        outcome = "started",
+                        "tray open website clicked"
+                    );
                     open_url("https://github.com/lucan6290/skills-hub");
                 }
                 "open_app_dir" => open_app_directory(app, AppDir::App),
@@ -461,14 +687,36 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                 "open_resource_dir" => open_app_directory(app, AppDir::Resource),
                 "open_log_dir" => open_app_directory(app, AppDir::Log),
                 "restart" => {
-                    log::info!("托盘菜单: 重启应用");
+                    tracing::info!(
+                        target: crate::logging::app_target(),
+                        event = "tray.app.restart.clicked",
+                        layer = "backend",
+                        area = "tray",
+                        outcome = "started",
+                        "tray restart app clicked"
+                    );
                     app.restart();
                 }
                 "quit" => {
-                    log::info!("托盘菜单: 退出应用");
+                    tracing::info!(
+                        target: crate::logging::app_target(),
+                        event = "tray.app.quit.clicked",
+                        layer = "backend",
+                        area = "tray",
+                        outcome = "started",
+                        "tray quit app clicked"
+                    );
                     app.exit(0);
                 }
-                _ => log::warn!("未知托盘菜单 ID: {}", id),
+                _ => tracing::warn!(
+                    target: crate::logging::app_target(),
+                    event = "tray.menu.unknown",
+                    layer = "backend",
+                    area = "tray",
+                    outcome = "failed",
+                    menu_id = id,
+                    "unknown tray menu id"
+                ),
             }
         })
         .on_tray_icon_event(|tray, event| {
@@ -478,12 +726,26 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                 ..
             } = event
             {
-                log::debug!("托盘左键点击: 显示/聚焦窗口");
+                tracing::debug!(
+                    target: crate::logging::app_target(),
+                    event = "tray.icon.left_click",
+                    layer = "backend",
+                    area = "tray",
+                    outcome = "started",
+                    "tray icon left clicked"
+                );
                 show_main_window(tray.app_handle());
             }
         })
         .build(app)?;
-    log::info!("系统托盘构建完成");
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "tray.build.completed",
+        layer = "backend",
+        area = "tray",
+        outcome = "success",
+        "system tray built"
+    );
     Ok(())
 }
 
@@ -503,7 +765,15 @@ fn open_app_directory(app: &tauri::AppHandle, dir: AppDir) {
         AppDir::Resource => "内核目录",
         AppDir::Log => "日志目录",
     };
-    log::info!("打开目录: {}", dir_name);
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "directory.open.started",
+        layer = "backend",
+        area = "filesystem",
+        outcome = "started",
+        directory_kind = %dir_name,
+        "opening app directory"
+    );
 
     let path = match dir {
         AppDir::App => std::env::current_exe()
@@ -515,51 +785,171 @@ fn open_app_directory(app: &tauri::AppHandle, dir: AppDir) {
     };
 
     let Some(path) = path else {
-        log::warn!("无法解析目录路径: {}", dir_name);
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "directory.resolve.failed",
+            layer = "backend",
+            area = "filesystem",
+            outcome = "failed",
+            directory_kind = %dir_name,
+            "failed to resolve app directory"
+        );
         return;
     };
-    log::debug!("目录路径: {}", path.display());
+    tracing::debug!(
+        target: crate::logging::app_target(),
+        event = "directory.resolved",
+        layer = "backend",
+        area = "filesystem",
+        outcome = "success",
+        directory_kind = %dir_name,
+        path = %path.display(),
+        "app directory resolved"
+    );
 
     if !path.exists() {
-        log::debug!("目录不存在，正在创建: {}", path.display());
+        tracing::debug!(
+            target: crate::logging::app_target(),
+            event = "directory.create.started",
+            layer = "backend",
+            area = "filesystem",
+            outcome = "started",
+            directory_kind = %dir_name,
+            path = %path.display(),
+            "creating missing app directory"
+        );
         if let Err(e) = std::fs::create_dir_all(&path) {
-            log::warn!("无法创建目录 {}: {}", path.display(), e);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "directory.create.failed",
+                layer = "backend",
+                area = "filesystem",
+                outcome = "failed",
+                directory_kind = %dir_name,
+                path = %path.display(),
+                error = %e,
+                "failed to create app directory"
+            );
             return;
         }
     }
 
     if let Err(e) = crate::filesystem::open_folder(&path) {
-        log::warn!("无法打开目录 {}: {}", path.display(), e);
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "directory.open.failed",
+            layer = "backend",
+            area = "filesystem",
+            outcome = "failed",
+            directory_kind = %dir_name,
+            path = %path.display(),
+            error = %e,
+            "failed to open app directory"
+        );
     } else {
-        log::debug!("目录已在文件管理器中打开: {}", path.display());
+        tracing::debug!(
+            target: crate::logging::app_target(),
+            event = "directory.open.completed",
+            layer = "backend",
+            area = "filesystem",
+            outcome = "success",
+            directory_kind = %dir_name,
+            path = %path.display(),
+            "app directory opened"
+        );
     }
 }
 
 /// Open a URL in the system default browser.
 fn open_url(url: &str) {
-    log::info!("在默认浏览器中打开 URL: {}", url);
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "browser.open.started",
+        layer = "backend",
+        area = "shell",
+        outcome = "started",
+        url = %url,
+        "opening url in default browser"
+    );
     #[cfg(windows)]
     {
         match std::process::Command::new("cmd")
             .args(["/c", "start", "", url])
             .spawn()
         {
-            Ok(_) => log::debug!("URL 打开命令已执行 (Windows)"),
-            Err(e) => log::error!("打开 URL 失败: {}", e),
+            Ok(_) => tracing::debug!(
+                target: crate::logging::app_target(),
+                event = "browser.open.spawned",
+                layer = "backend",
+                area = "shell",
+                outcome = "success",
+                platform = "windows",
+                url = %url,
+                "url open command spawned"
+            ),
+            Err(e) => tracing::error!(
+                target: crate::logging::app_target(),
+                event = "browser.open.failed",
+                layer = "backend",
+                area = "shell",
+                outcome = "failed",
+                platform = "windows",
+                url = %url,
+                error = %e,
+                "failed to open url"
+            ),
         }
     }
     #[cfg(target_os = "macos")]
     {
         match std::process::Command::new("open").arg(url).spawn() {
-            Ok(_) => log::debug!("URL 打开命令已执行 (macOS)"),
-            Err(e) => log::error!("打开 URL 失败: {}", e),
+            Ok(_) => tracing::debug!(
+                target: crate::logging::app_target(),
+                event = "browser.open.spawned",
+                layer = "backend",
+                area = "shell",
+                outcome = "success",
+                platform = "macos",
+                url = %url,
+                "url open command spawned"
+            ),
+            Err(e) => tracing::error!(
+                target: crate::logging::app_target(),
+                event = "browser.open.failed",
+                layer = "backend",
+                area = "shell",
+                outcome = "failed",
+                platform = "macos",
+                url = %url,
+                error = %e,
+                "failed to open url"
+            ),
         }
     }
     #[cfg(target_os = "linux")]
     {
         match std::process::Command::new("xdg-open").arg(url).spawn() {
-            Ok(_) => log::debug!("URL 打开命令已执行 (Linux)"),
-            Err(e) => log::error!("打开 URL 失败: {}", e),
+            Ok(_) => tracing::debug!(
+                target: crate::logging::app_target(),
+                event = "browser.open.spawned",
+                layer = "backend",
+                area = "shell",
+                outcome = "success",
+                platform = "linux",
+                url = %url,
+                "url open command spawned"
+            ),
+            Err(e) => tracing::error!(
+                target: crate::logging::app_target(),
+                event = "browser.open.failed",
+                layer = "backend",
+                area = "shell",
+                outcome = "failed",
+                platform = "linux",
+                url = %url,
+                error = %e,
+                "failed to open url"
+            ),
         }
     }
 }
@@ -568,18 +958,51 @@ fn open_url(url: &str) {
 fn tray_check_update(app: &tauri::AppHandle) {
     use tauri_plugin_notification::NotificationExt;
 
-    log::debug!("托盘触发检查更新");
+    tracing::debug!(
+        target: crate::logging::app_target(),
+        event = "tray.update_check.started",
+        layer = "backend",
+        area = "update",
+        outcome = "started",
+        "tray update check started"
+    );
     let app_handle = app.clone();
     std::thread::spawn(move || {
         let version = app_handle.package_info().version.to_string();
         let result = crate::update::check_for_update(&version, "tray");
 
         if let Some(err) = &result.error {
-            log::warn!("检查更新失败: {}", err);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "tray.update_check.failed",
+                layer = "backend",
+                area = "update",
+                outcome = "failed",
+                current_version = %result.current_version,
+                error = %err,
+                "tray update check failed"
+            );
         } else if result.update_available {
-            log::info!("发现新版本: v{} → v{}", result.current_version, result.latest_version);
+            tracing::info!(
+                target: crate::logging::app_target(),
+                event = "tray.update_check.update_available",
+                layer = "backend",
+                area = "update",
+                outcome = "success",
+                current_version = %result.current_version,
+                latest_version = %result.latest_version,
+                "tray update check found new version"
+            );
         } else {
-            log::debug!("已是最新版本: v{}", result.current_version);
+            tracing::debug!(
+                target: crate::logging::app_target(),
+                event = "tray.update_check.up_to_date",
+                layer = "backend",
+                area = "update",
+                outcome = "success",
+                current_version = %result.current_version,
+                "tray update check is up to date"
+            );
         }
 
         let (title, body) = if let Some(err) = &result.error {
@@ -600,7 +1023,15 @@ fn tray_check_update(app: &tauri::AppHandle) {
             .body(&body)
             .show()
         {
-            log::error!("发送更新通知失败: {}", e);
+            tracing::error!(
+                target: crate::logging::app_target(),
+                event = "tray.update_notification.failed",
+                layer = "backend",
+                area = "notification",
+                outcome = "failed",
+                error = %e,
+                "failed to send tray update notification"
+            );
         }
     });
 }
@@ -612,31 +1043,100 @@ fn register_global_shortcut(app: &tauri::AppHandle) -> tauri::Result<()> {
 
     let hotkey = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::Space);
     app.global_shortcut().register(hotkey).map_err(|e| {
-        log::warn!("全局快捷键注册失败: {}", e);
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "shortcut.register.failed",
+            layer = "backend",
+            area = "shortcut",
+            outcome = "failed",
+            shortcut = "Ctrl+Shift+Space",
+            error = %e,
+            "global shortcut registration failed"
+        );
         std::io::Error::new(std::io::ErrorKind::Other, e.to_string())
     })?;
-    log::info!("全局快捷键 Ctrl+Shift+Space 注册成功");
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "shortcut.register.completed",
+        layer = "backend",
+        area = "shortcut",
+        outcome = "success",
+        shortcut = "Ctrl+Shift+Space",
+        "global shortcut registered"
+    );
     Ok(())
 }
 
 /// Show, unminimize and focus the main window. No-op if the window is gone.
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
-        log::debug!("显示主窗口");
+        tracing::debug!(
+            target: crate::logging::app_target(),
+            event = "window.show.started",
+            layer = "backend",
+            area = "window",
+            outcome = "started",
+            "showing main window"
+        );
         if let Err(e) = window.unminimize() {
-            log::warn!("取消最小化失败: {}", e);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "window.unminimize.failed",
+                layer = "backend",
+                area = "window",
+                outcome = "failed",
+                error = %e,
+                "failed to unminimize main window"
+            );
         }
         if let Err(e) = window.show() {
-            log::error!("显示窗口失败: {}", e);
+            tracing::error!(
+                target: crate::logging::app_target(),
+                event = "window.show.failed",
+                layer = "backend",
+                area = "window",
+                outcome = "failed",
+                error = %e,
+                "failed to show main window"
+            );
         } else {
-            log::debug!("窗口已显示");
+            tracing::debug!(
+                target: crate::logging::app_target(),
+                event = "window.show.completed",
+                layer = "backend",
+                area = "window",
+                outcome = "success",
+                "main window shown"
+            );
         }
         if let Err(e) = window.set_focus() {
-            log::warn!("窗口聚焦失败: {}", e);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "window.focus.failed",
+                layer = "backend",
+                area = "window",
+                outcome = "failed",
+                error = %e,
+                "failed to focus main window"
+            );
         } else {
-            log::debug!("窗口已聚焦");
+            tracing::debug!(
+                target: crate::logging::app_target(),
+                event = "window.focus.completed",
+                layer = "backend",
+                area = "window",
+                outcome = "success",
+                "main window focused"
+            );
         }
     } else {
-        log::error!("未找到主窗口，无法显示");
+        tracing::error!(
+            target: crate::logging::app_target(),
+            event = "window.main.missing",
+            layer = "backend",
+            area = "window",
+            outcome = "failed",
+            "main window missing"
+        );
     }
 }

@@ -37,7 +37,16 @@ impl Serialize for AppError {
     {
         // Single-point error logging: every command error returned to the
         // frontend flows through here. This ensures no error is silently lost.
-        log::error!("[{}] {}", self.code(), self);
+        tracing::error!(
+            target: crate::logging::app_target(),
+            event = "command.error",
+            layer = "backend",
+            area = "command",
+            outcome = "failed",
+            error_code = self.code(),
+            error = %self,
+            "command returned an error"
+        );
 
         let mut response = serializer.serialize_struct("ErrorResponse", 4)?;
         response.serialize_field("ok", &false)?;

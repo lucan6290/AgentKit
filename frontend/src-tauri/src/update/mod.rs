@@ -128,26 +128,43 @@ pub fn check_for_update(current_version: &str, install_mode: &str) -> CheckUpdat
             let age = entry.fetched_at.elapsed();
             if age < ttl {
                 let remaining = ttl - age;
-                log::info!(
-                    "[update-check] cache HIT ({}, age={:.1}s, ttl={}s, remaining={:.1}s)",
-                    label,
-                    age.as_secs_f64(),
-                    ttl.as_secs(),
-                    remaining.as_secs_f64()
+                tracing::info!(
+                    target: crate::logging::app_target(),
+                    event = "update.check.cache.hit",
+                    layer = "backend",
+                    area = "update",
+                    outcome = "success",
+                    cache_kind = label,
+                    age_seconds = age.as_secs_f64(),
+                    ttl_seconds = ttl.as_secs(),
+                    remaining_seconds = remaining.as_secs_f64(),
+                    "update check cache hit"
                 );
                 entry.result.clone()
             } else {
-                log::info!(
-                    "[update-check] cache EXPIRED ({}, age={:.1}s, ttl={}s), fetching fresh data...",
-                    label,
-                    age.as_secs_f64(),
-                    ttl.as_secs()
+                tracing::info!(
+                    target: crate::logging::app_target(),
+                    event = "update.check.cache.expired",
+                    layer = "backend",
+                    area = "update",
+                    outcome = "started",
+                    cache_kind = label,
+                    age_seconds = age.as_secs_f64(),
+                    ttl_seconds = ttl.as_secs(),
+                    "update check cache expired"
                 );
                 drop(guard);
                 fetch_and_cache(&url)
             }
         } else {
-            log::info!("[update-check] cache MISS (no entry), fetching fresh data...");
+            tracing::info!(
+                target: crate::logging::app_target(),
+                event = "update.check.cache.miss",
+                layer = "backend",
+                area = "update",
+                outcome = "started",
+                "update check cache miss"
+            );
             drop(guard);
             fetch_and_cache(&url)
         }
@@ -158,15 +175,39 @@ pub fn check_for_update(current_version: &str, install_mode: &str) -> CheckUpdat
 
 /// 从 GitHub API 获取发布信息并写入缓存。
 fn fetch_and_cache(url: &str) -> Result<GithubRelease, String> {
-    log::info!("[update-check] → GET {}", url);
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "update.check.request.started",
+        layer = "backend",
+        area = "update",
+        outcome = "started",
+        url = %url,
+        "update check request started"
+    );
     let result = fetch_release_info(url);
     match &result {
         Ok(release) => {
             let tag = release.tag_name.as_deref().unwrap_or("(no tag)");
-            log::info!("[update-check] ← 200 OK, latest={}", tag);
+            tracing::info!(
+                target: crate::logging::app_target(),
+                event = "update.check.request.completed",
+                layer = "backend",
+                area = "update",
+                outcome = "success",
+                latest_version = tag,
+                "update check request completed"
+            );
         }
         Err(e) => {
-            log::warn!("[update-check] ← request failed: {}", e);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "update.check.request.failed",
+                layer = "backend",
+                area = "update",
+                outcome = "failed",
+                error = %e,
+                "update check request failed"
+            );
         }
     }
     let entry = CachedEntry {
@@ -174,7 +215,14 @@ fn fetch_and_cache(url: &str) -> Result<GithubRelease, String> {
         result: result.clone(),
     };
     *cache().lock().unwrap() = Some(entry);
-    log::info!("[update-check] cache UPDATED");
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "update.check.cache.updated",
+        layer = "backend",
+        area = "update",
+        outcome = "success",
+        "update check cache updated"
+    );
     result
 }
 
@@ -302,8 +350,8 @@ mod tests {
     fn test_check_update_returns_response_on_error() {
         // This will fail because we can't reach GitHub in tests,
         // but it should return a valid response with error field set
-        let response = check_for_update("0.1.0", "dev");
-        assert_eq!(response.current_version, "0.1.0");
+        let response = check_for_update("9999.0.0", "dev");
+        assert_eq!(response.current_version, "9999.0.0");
         assert!(!response.update_available);
         // Error may or may not be set depending on network
     }

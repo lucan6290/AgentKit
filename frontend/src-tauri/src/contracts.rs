@@ -32,6 +32,23 @@ pub struct ReorderItem {
     pub sort_order: f64,
 }
 
+// ── Logging ─────────────────────────────────────────────
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct FrontendLogPayload {
+    pub level: String,
+    pub event: String,
+    pub message: String,
+    pub area: Option<String>,
+    pub outcome: Option<String>,
+    pub command: Option<String>,
+    pub task_id: Option<String>,
+    pub error_code: Option<String>,
+    pub duration_ms: Option<u64>,
+    pub app_version: Option<String>,
+    pub meta: Option<serde_json::Value>,
+}
+
 // ── Tool Status ─────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize)]

@@ -25,7 +25,6 @@ import {
   Settings2,
 } from 'lucide-react'
 import type { TFunction } from 'i18next'
-import { toast } from 'sonner'
 import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart'
 import DatabasePanel from '@/features/database/components/DatabasePanel'
 import UpdatePanel from '@/features/settings/components/UpdatePanel'
@@ -36,6 +35,8 @@ import {
   getLogLevel, setLogLevel,
   getAutoRefreshOnStartup, setAutoRefreshOnStartup,
 } from '@/lib/api'
+import { isLogLevel, logger } from '@/lib/logger'
+import { showError, showSuccess } from '@/lib/uiFeedback'
 import logoLight from '@/assets/logo.svg'
 import logoDark from '@/assets/logo-dark.svg'
 
@@ -153,7 +154,12 @@ const SettingsPage = ({
     getProxyUrl().then(setProxyUrlState).catch(() => {})
     getCloseBehavior().then(setCloseBehaviorState).catch(() => {})
     getShowTrayIcon().then(setTrayIconEnabled).catch(() => {})
-    getLogLevel().then(setLogLevelState).catch(() => {})
+    getLogLevel()
+      .then((level) => {
+        setLogLevelState(level)
+        if (isLogLevel(level)) logger.setLevel(level)
+      })
+      .catch(() => {})
     getAutoRefreshOnStartup().then(setAutoRefresh).catch(() => {})
   }, [])
 
@@ -177,9 +183,9 @@ const SettingsPage = ({
       } else {
         await disable()
       }
-    } catch {
+    } catch (err) {
       setAutostartEnabled(!next)
-      toast.error(t('settings.saveFailed'))
+      showError(t('settings.saveFailed'), err)
     } finally {
       setAutostartSaving(false)
     }
@@ -189,9 +195,9 @@ const SettingsPage = ({
     setCloseBehaviorState(behavior)
     try {
       await setCloseBehavior(behavior)
-    } catch {
+    } catch (err) {
       setCloseBehaviorState(closeBehavior)
-      toast.error(t('settings.saveFailed'))
+      showError(t('settings.saveFailed'), err)
     }
   }
 
@@ -200,9 +206,9 @@ const SettingsPage = ({
     setTrayIconEnabled(next)
     try {
       await setShowTrayIcon(next)
-    } catch {
+    } catch (err) {
       setTrayIconEnabled(!next)
-      toast.error(t('settings.saveFailed'))
+      showError(t('settings.saveFailed'), err)
     }
   }
 
@@ -210,9 +216,11 @@ const SettingsPage = ({
     setLogLevelState(level)
     try {
       await setLogLevel(level)
-    } catch {
+      if (isLogLevel(level)) logger.setLevel(level)
+    } catch (err) {
       setLogLevelState(logLevel)
-      toast.error(t('settings.saveFailed'))
+      if (isLogLevel(logLevel)) logger.setLevel(logLevel)
+      showError(t('settings.saveFailed'), err)
     }
   }
 
@@ -221,9 +229,9 @@ const SettingsPage = ({
     setAutoRefresh(next)
     try {
       await setAutoRefreshOnStartup(next)
-    } catch {
+    } catch (err) {
       setAutoRefresh(!next)
-      toast.error(t('settings.saveFailed'))
+      showError(t('settings.saveFailed'), err)
     }
   }
 
@@ -231,9 +239,9 @@ const SettingsPage = ({
     setProxySaving(true)
     try {
       await setProxyUrl(proxyUrl.trim())
-      toast.success(t('settings.saved'))
+      showSuccess(t('settings.saved'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setProxySaving(false)
     }
@@ -242,9 +250,9 @@ const SettingsPage = ({
   const handleCopyPath = async (path: string) => {
     try {
       await navigator.clipboard.writeText(path)
-      toast.success(t('copied'))
+      showSuccess(t('copied'))
     } catch {
-      toast.error(t('copyFailed'))
+      showError(t('copyFailed'))
     }
   }
 
@@ -253,7 +261,7 @@ const SettingsPage = ({
     onSetLanguage(DEFAULT_LANGUAGE)
     onThemeChange(DEFAULT_THEME)
     await onResetDefaults()
-    toast.success(t('settings.saved'))
+    showSuccess(t('settings.saved'))
   }
 
   return (

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { TFunction } from 'i18next'
 import { invokeCommand, reorder as apiReorder, updateSkillSourceUrl } from '@/lib/api'
+import { logger } from '@/lib/logger'
 import { useApi } from '@/hooks/useApi'
 import { skillService } from '@/services'
 import type {
@@ -87,7 +88,14 @@ export function useSkills(
       )
       applyToolSkillSnapshots(result)
     } catch (err) {
-      console.warn(err)
+      logger.warn({
+        event: 'tools.skills.load.failed',
+        area: 'skills',
+        outcome: 'failed',
+        command: 'get_tool_skills',
+        message: 'Failed to load tool skill snapshots',
+        meta: { refresh },
+      }, err)
     }
   }, [applyToolSkillSnapshots])
 
@@ -99,7 +107,13 @@ export function useSkills(
         return status
       }
     } catch (err) {
-      console.warn(err)
+      logger.warn({
+        event: 'tools.status.load.failed',
+        area: 'skills',
+        outcome: 'failed',
+        command: 'get_tool_status',
+        message: 'Failed to load tool status',
+      }, err)
     }
     return undefined
   }, [invoke])

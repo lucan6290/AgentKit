@@ -22,7 +22,8 @@ import { skillService } from '@/services'
 import { AppStateProvider, useAppState } from '@/context/AppStateContext'
 import { ModalProvider, useModal } from '@/context/ModalContext'
 import type { ManagedSkill } from '@/features/skills'
-import { checkUpdate, getAutoCheckUpdate, type CheckUpdateResult } from '@/lib/api'
+import { checkUpdate, getAutoCheckUpdate, getLogLevel, type CheckUpdateResult } from '@/lib/api'
+import { isLogLevel, logger } from '@/lib/logger'
 import UpdateDialog from '@/features/settings/components/UpdateDialog'
 
 // ─── Lazy-loaded views ──────────────────────────────
@@ -112,22 +113,64 @@ function AppContent() {
     const appWindow = getCurrentWindow()
     const unlisteners: Promise<() => void>[] = []
 
+    getLogLevel()
+      .then((level) => {
+        if (isLogLevel(level)) logger.setLevel(level)
+      })
+      .catch((err) => {
+        logger.warn({
+          event: 'settings.log_level.load.failed',
+          area: 'settings',
+          outcome: 'failed',
+          command: 'get_log_level',
+          message: 'Failed to load frontend log level',
+        }, err)
+      })
+
     const onResized = appWindow.onResized(({ payload }) => {
-      console.debug('[Window] 窗口大小变化:', payload.width, 'x', payload.height)
+      logger.debug({
+        event: 'window.resize.changed',
+        area: 'window',
+        message: 'Window size changed',
+        meta: { width: payload.width, height: payload.height },
+      })
     })
     const onMoved = appWindow.onMoved(({ payload }) => {
-      console.debug('[Window] 窗口位置变化:', payload.x, ',', payload.y)
+      logger.debug({
+        event: 'window.move.changed',
+        area: 'window',
+        message: 'Window position changed',
+        meta: { x: payload.x, y: payload.y },
+      })
     })
     const onFocusChanged = appWindow.onFocusChanged(({ payload }) => {
-      console.debug('[Window] 焦点变化:', payload)
+      logger.debug({
+        event: 'window.focus.changed',
+        area: 'window',
+        message: 'Window focus changed',
+        meta: { focused: payload },
+      })
     })
 
     unlisteners.push(onResized, onMoved, onFocusChanged)
 
     // Log initial window state
     appWindow.isMaximized().then((maximized) => {
-      console.info('[Window] 窗口初始化完成, 最大化状态:', maximized)
-    }).catch(() => {})
+      logger.info({
+        event: 'window.initialized',
+        area: 'window',
+        outcome: 'success',
+        message: 'Window initialized',
+        meta: { maximized },
+      })
+    }).catch((err) => {
+      logger.warn({
+        event: 'window.initial_state.load.failed',
+        area: 'window',
+        outcome: 'failed',
+        message: 'Failed to load initial window state',
+      }, err)
+    })
 
     return () => {
       unlisteners.forEach((p) => {

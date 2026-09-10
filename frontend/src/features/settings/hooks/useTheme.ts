@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { TFunction } from 'i18next'
-import { toast } from 'sonner'
 import { useApi } from '@/hooks/useApi'
 import { pickFolder } from '@/lib/pickFolder'
+import { showInfo, showSuccess } from '@/lib/uiFeedback'
 
 const THEME_STORAGE_KEY = 'skills-theme'
 
@@ -90,7 +90,7 @@ export function useTheme(
       const result = await invoke<{ new_path: string }>('set_community_repo_path', { path })
       setStoragePath(result.new_path)
       await loadManagedSkills()
-      toast.success(t('settings.saved'))
+      showSuccess(t('settings.saved'))
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
@@ -103,8 +103,8 @@ export function useTheme(
       const result = await invoke<{ ok: boolean; path: string; empty?: boolean }>('set_custom_repo_path', { path })
       setCustomRepoPath(result.path)
       await loadManagedSkills(true, 'custom')
-      toast.success(t('settings.saved'))
-      if (result.empty) toast.info(t('settings.emptyDirHint'))
+      showSuccess(t('settings.saved'))
+      if (result.empty) showInfo(t('settings.emptyDirHint'))
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
@@ -113,7 +113,7 @@ export function useTheme(
   const handleOpenFolder = useCallback(async (path: string) => {
     try {
       await invoke<{ ok: boolean }>('open_settings_folder', { path })
-      toast.success(t('settings.openedFolder'))
+      showSuccess(t('settings.openedFolder'))
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }

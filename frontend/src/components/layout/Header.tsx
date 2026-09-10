@@ -15,6 +15,7 @@ import {
 import type { TFunction } from 'i18next'
 import logoLight from '@/assets/logo.svg'
 import logoDark from '@/assets/logo-dark.svg'
+import { logger } from '@/lib/logger'
 
 type HeaderProps = {
   language: string
@@ -38,21 +39,51 @@ type HeaderProps = {
 const appWindow = getCurrentWindow()
 
 const handleMinimize = () => {
-  console.info('[Window] 用户点击最小化按钮')
+  logger.info({
+    event: 'window.minimize.clicked',
+    area: 'window',
+    outcome: 'started',
+    message: 'User clicked minimize window',
+  })
   appWindow.minimize().catch((err) => {
-    console.error('[Window] 最小化窗口失败:', err)
+    logger.error({
+      event: 'window.minimize.failed',
+      area: 'window',
+      outcome: 'failed',
+      message: 'Failed to minimize window',
+    }, err)
   })
 }
 const handleToggleMaximize = () => {
-  console.info('[Window] 用户点击最大化/还原按钮')
+  logger.info({
+    event: 'window.maximize_toggle.clicked',
+    area: 'window',
+    outcome: 'started',
+    message: 'User clicked maximize toggle',
+  })
   appWindow.toggleMaximize().catch((err) => {
-    console.error('[Window] 切换最大化状态失败:', err)
+    logger.error({
+      event: 'window.maximize_toggle.failed',
+      area: 'window',
+      outcome: 'failed',
+      message: 'Failed to toggle maximize state',
+    }, err)
   })
 }
 const handleClose = () => {
-  console.info('[Window] 用户点击关闭按钮')
+  logger.info({
+    event: 'window.close.clicked',
+    area: 'window',
+    outcome: 'started',
+    message: 'User clicked close window',
+  })
   appWindow.close().catch((err) => {
-    console.error('[Window] 关闭窗口失败:', err)
+    logger.error({
+      event: 'window.close.failed',
+      area: 'window',
+      outcome: 'failed',
+      message: 'Failed to close window',
+    }, err)
   })
 }
 

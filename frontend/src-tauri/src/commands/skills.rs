@@ -102,12 +102,30 @@ fn delete_skill_cascade(state: &AppState, skill_id: &str) -> AppResult<()> {
             Ok::<_, rusqlite::Error>(())
         })
         .map_err(|e| {
-            log::warn!("[DB_ERROR] delete_skill_cascade: cascade delete failed | skill_id={}", skill_id);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "skills.delete.cascade.failed",
+                layer = "backend",
+                area = "skills",
+                outcome = "failed",
+                skill_id = %skill_id,
+                error = %e,
+                "failed to delete related skill records"
+            );
             AppError::DatabaseError(e.to_string())
         })?;
 
     repo.delete(skill_id).map_err(|e| {
-        log::warn!("[DB_ERROR] delete_skill_cascade: delete skill failed | skill_id={}", skill_id);
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "skills.delete.failed",
+            layer = "backend",
+            area = "skills",
+            outcome = "failed",
+            skill_id = %skill_id,
+            error = %e,
+            "failed to delete skill"
+        );
         AppError::DatabaseError(e.to_string())
     })
 }
@@ -168,13 +186,33 @@ pub async fn import_existing_skill(
         &source_type,
     )
     .map_err(|e| {
-        log::warn!("[INSTALL_ERROR] import_existing_skill: install failed | path={} source_type={}", source_path, source_type);
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "skills.import.install.failed",
+            layer = "backend",
+            area = "skills",
+            outcome = "failed",
+            source_path = %source_path,
+            source_type = %source_type,
+            error = %e,
+            "failed to install imported skill"
+        );
         AppError::FileSystemError(e)
     })?;
 
     upsert_skill_from_install(&state.db, &result, &source_path, &source_type)
         .map_err(|e| {
-            log::warn!("[DB_ERROR] import_existing_skill: upsert failed | path={}", source_path);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "skills.import.upsert.failed",
+                layer = "backend",
+                area = "skills",
+                outcome = "failed",
+                source_path = %source_path,
+                source_type = %source_type,
+                error = %e,
+                "failed to persist imported skill"
+            );
             AppError::DatabaseError(e)
         })?;
 

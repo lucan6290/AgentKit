@@ -53,7 +53,16 @@ impl Database {
             .lock()
             .map_err(|e| AppError::Unexpected(format!("Failed to acquire database lock: {}", e)))?;
         f(&guard).map_err(|e| {
-            log::warn!("[DB_ERROR] with_conn failed: {}", e);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "database.query.failed",
+                layer = "backend",
+                area = "database",
+                outcome = "failed",
+                access = "read",
+                error = %e,
+                "database read operation failed"
+            );
             AppError::Unexpected(format!("Database error: {}", e))
         })
     }
@@ -67,7 +76,16 @@ impl Database {
             .lock()
             .map_err(|e| AppError::Unexpected(format!("Failed to acquire database lock: {}", e)))?;
         f(&guard).map_err(|e| {
-            log::warn!("[DB_ERROR] with_conn_mut failed: {}", e);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "database.query.failed",
+                layer = "backend",
+                area = "database",
+                outcome = "failed",
+                access = "write",
+                error = %e,
+                "database write operation failed"
+            );
             AppError::Unexpected(format!("Database error: {}", e))
         })
     }

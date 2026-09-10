@@ -647,6 +647,14 @@
   flex-shrink: 0;
 }
 
+.settings-v2-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ─── Update List ────────────────────────────────── */
 
 .settings-v2-update-list {

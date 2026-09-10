@@ -1,8 +1,8 @@
 import { memo, useState, type MouseEvent } from 'react'
 import { Copy, Folder, GripVertical, Tag, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
 import type { TFunction } from 'i18next'
 import type { ManagedSkill, ToolOption } from '@/features/skills/types'
+import { showError, showSuccess } from '@/lib/uiFeedback'
 
 type SkillCardProps = {
   skill: ManagedSkill
@@ -77,9 +77,9 @@ const SkillCard = ({
     if (!copyValue) return
     try {
       await navigator.clipboard.writeText(copyValue)
-      toast.success(t('copied'))
+      showSuccess(t('copied'))
     } catch {
-      toast.error(t('copyFailed'))
+      showError(t('copyFailed'))
     }
   }
 

@@ -58,6 +58,14 @@ export async function invokeCommand<T = unknown>(
 - **禁止**在 `invokeCommand` 之外新建第二个 transport 函数
 - 所有参数直接使用 `snake_case` 传递，与 Rust `#[tauri::command]` 参数名完全一致，**禁止任何转换**
 
+### 2.3 日志桥接例外
+
+`src/lib/logger.ts` 是唯一允许直接调用 `@tauri-apps/api/core` `invoke` 的例外，用于将前端结构化日志写入后端 `write_frontend_log` 命令。
+
+该例外的原因是避免 `api.ts` 与 `logger.ts` 形成循环依赖或递归日志：业务 API 调用仍必须经过 `invokeCommand`，但日志 transport 失败只能在 logger 内部降级到浏览器 console。
+
+前端日志字段约定：组件内部使用 `camelCase` 选项（如 `taskId`、`errorCode`、`durationMs`），发送到后端前映射为跨端统一的 `snake_case` 字段（如 `task_id`、`error_code`、`duration_ms`）。事件名使用小写点分格式，如 `frontend.react.error`、`window.resize.changed`。
+
 ## 3. Service 层
 
 **目录：** `src/services/`
@@ -399,6 +407,14 @@ export function formatSize(bytes: number): string
 | `set_custom_repo_path` | `{ path }` | `{ ok, path, empty? }` | `useTheme` hook 内 `invoke` |
 | `open_settings_folder` | `{ path }` | `{ ok }` | `useTheme` hook 内 `invoke` |
 | `reset_general_settings` | — | `{ ok, community_repo_path, custom_repo_path }` | `useTheme` hook 内 `invoke` |
+| `get_log_level` | — | `string` | `getLogLevel()` |
+| `set_log_level` | `{ level }` | `void` | `setLogLevel()` |
+
+### Logging
+
+| 命令 | 参数 | 返回 | 前端封装 |
+|------|------|------|---------|
+| `write_frontend_log` | `{ payload }` | `void` | `logger` 内部直接桥接 |
 
 ### Database
 

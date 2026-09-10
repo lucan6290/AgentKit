@@ -9,6 +9,8 @@ import {
   Folder,
   FolderOpen,
   Pencil,
+  Copy,
+  AlertTriangle,
   Tag,
   User,
 } from 'lucide-react'
@@ -20,11 +22,11 @@ import {
 import Markdown from 'react-markdown'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
-import { toast } from 'sonner'
 import type { TFunction } from 'i18next'
 import type { ManagedSkill, SkillFileEntry } from '../types'
 import { fetchSkillFiles, fetchSkillFileContent, saveSkillFileContent } from '@/lib/api'
 import { formatSize } from '@/lib/utils'
+import { copyDiagnosticText, showError, showSuccess } from '@/lib/uiFeedback'
 
 // ─── Types ───────────────────────────────────────────
 type SkillDetailViewProps = {
@@ -401,6 +403,7 @@ const SkillDetailView = ({
   const [files, setFiles] = useState<SkillFileEntry[]>([])
   const [activeFile, setActiveFile] = useState<string | null>(null)
   const [fileContent, setFileContent] = useState('')
+  const [fileContentError, setFileContentError] = useState<string | null>(null)
   const [loadingFiles, setLoadingFiles] = useState(true)
   const [loadingContent, setLoadingContent] = useState(false)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
@@ -426,9 +429,9 @@ const SkillDetailView = ({
         if (result.length > 0) {
           setActiveFile(result[0].path)
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          toast.error(t('detail.readError'))
+          showError(t('detail.readError'), err)
         }
       } finally {
         if (!cancelled) setLoadingFiles(false)
@@ -445,13 +448,18 @@ const SkillDetailView = ({
     let cancelled = false
     const load = async () => {
       setLoadingContent(true)
+      setFileContentError(null)
       try {
         const content = await fetchSkillFileContent(skill.id, activeFile)
-        if (!cancelled) setFileContent(content)
+        if (!cancelled) {
+          setFileContent(content)
+        }
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : String(err)
-          setFileContent(msg)
+          setFileContent('')
+          setFileContentError(msg)
+          showError(t('detail.readError'), err)
         }
       } finally {
         if (!cancelled) setLoadingContent(false)
@@ -461,12 +469,13 @@ const SkillDetailView = ({
     return () => {
       cancelled = true
     }
-  }, [activeFile, skill.id])
+  }, [activeFile, skill.id, t])
 
   // Reset editing state when file changes
   useEffect(() => {
     setIsEditing(false)
     setEditingContent('')
+    setFileContentError(null)
   }, [activeFile])
 
   const handleStartEdit = useCallback(() => {
@@ -487,7 +496,8 @@ const SkillDetailView = ({
       setFileContent(editingContent)
       setIsEditing(false)
       setEditingContent('')
-      toast.success(t('detail.saveSuccess'))
+      setFileContentError(null)
+      showSuccess(t('detail.saveSuccess'))
       // Refresh file list to update sizes
       try {
         const result = await fetchSkillFiles(skill.id)
@@ -495,7 +505,7 @@ const SkillDetailView = ({
       } catch { /* keep stale list if refresh fails */ }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
-      toast.error(t('detail.saveError', { error: msg }))
+      showError(t('detail.saveError', { error: msg }), err)
     } finally {
       setSavingContent(false)
     }
@@ -717,6 +727,7 @@ const SkillDetailView = ({
                       className="btn btn-secondary btn-sm"
                       type="button"
                       onClick={handleStartEdit}
+                      disabled={!!fileContentError}
                     >
                       <Pencil size={14} />
                       {t('detail.edit')}
@@ -752,6 +763,20 @@ const SkillDetailView = ({
                 <div className="detail-loading" style={{ height: 200 }}>
                   <div className="detail-spinner" />
                   {t('detail.loadingContent')}
+                </div>
+              ) : fileContentError ? (
+                <div className="file-content-error">
+                  <AlertTriangle size={28} className="file-content-error-icon" />
+                  <div className="file-content-error-title">{t('detail.readError')}</div>
+                  <div className="file-content-error-message">{fileContentError}</div>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    type="button"
+                    onClick={() => void copyDiagnosticText(fileContentError)}
+                  >
+                    <Copy size={14} />
+                    {t('feedback.copyDetails')}
+                  </button>
                 </div>
               ) : isEditing ? (
                 <div className="file-content-edit">

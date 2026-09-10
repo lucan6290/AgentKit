@@ -1,6 +1,7 @@
 pub mod database;
 pub mod files;
 pub mod health;
+pub mod logging;
 pub mod misc;
 pub mod onboarding;
 pub mod prompts;

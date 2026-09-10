@@ -2,8 +2,8 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { ExternalLink, Loader2 } from 'lucide-react'
 import { listen } from '@tauri-apps/api/event'
 import type { TFunction } from 'i18next'
-import { toast } from 'sonner'
 import { performUpdate, type CheckUpdateResult } from '@/lib/api'
+import { showError } from '@/lib/uiFeedback'
 
 type UpdateDialogProps = {
   open: boolean
@@ -60,11 +60,11 @@ const UpdateDialog = ({ open, result, t, onClose }: UpdateDialogProps) => {
       if (res.ok) {
         setState('done')
       } else {
-        toast.error(res.message)
+        showError(res.message, res)
         setState('idle')
       }
     } catch (e) {
-      toast.error(`${t('update.updateFailed')}: ${e instanceof Error ? e.message : String(e)}`)
+      showError(`${t('update.updateFailed')}: ${e instanceof Error ? e.message : String(e)}`, e)
       setState('idle')
     } finally {
       if (unlistenRef.current) {

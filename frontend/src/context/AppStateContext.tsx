@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
-import { parseErrorDetail } from '../lib/errors'
+import { parseErrorDetail } from '@/lib/errors'
+import { showError, showSuccess } from '@/lib/uiFeedback'
 
 // ─── Types ────────────────────────────────────────────
 type AppState = {
@@ -69,10 +69,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         errors.length > 1
           ? t('errors.moreCount', { count: errors.length - 1 })
           : ''
-      toast.error(
-        `${formatErrorMessage(`${head.title}\n${head.message}`)}${more}`,
-        { duration: 3200 },
-      )
+      const formatted = `${formatErrorMessage(`${head.title}\n${head.message}`)}${more}`
+      if (formatted) {
+        showError(formatted, errors, { duration: 3200 })
+      }
     },
     [formatErrorMessage, t],
   )
@@ -81,7 +81,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const setError = useCallback(
     (msg: string) => {
       const formatted = formatErrorMessage(msg)
-      if (formatted) toast.error(formatted, { duration: 2600 })
+      if (formatted) showError(formatted, msg, { duration: 2600 })
       setActionMessage(null)
     },
     [formatErrorMessage],
@@ -89,7 +89,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   // 成功 toast：在 setSuccessToastMessage 调用时直接展示
   const setSuccessToastMessage = useCallback((msg: string) => {
-    toast.success(msg, { duration: 1800 })
+    showSuccess(msg)
   }, [])
 
   const value = useMemo<AppStateContextValue>(

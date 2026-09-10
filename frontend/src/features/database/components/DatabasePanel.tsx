@@ -21,7 +21,6 @@ import {
   Zap,
 } from 'lucide-react'
 import type { TFunction } from 'i18next'
-import { toast } from 'sonner'
 import {
   fetchDbOverview,
   fetchDbTableData,
@@ -33,6 +32,7 @@ import {
   type DbOverview,
   type DbTableData,
 } from '@/lib/api'
+import { copyDiagnosticText, showError, showSuccess } from '@/lib/uiFeedback'
 
 type TabKey = 'overview' | 'tables' | 'maintenance'
 type FragStatus = 'normal' | 'warn' | 'danger'
@@ -137,11 +137,11 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
       })
       setTableData(data)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load table data')
+      showError(err instanceof Error ? err.message : t('db.tableLoadFailed'), err)
     } finally {
       setTableLoading(false)
     }
-  }, [selectedTable, page, pageSize, sortCol, sortDir, filterText])
+  }, [selectedTable, page, pageSize, sortCol, sortDir, filterText, t])
 
   useEffect(() => {
     if (activeTab === 'tables') {
@@ -164,9 +164,9 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
     try {
       const result = await runDbMaintenance(action)
       if (result.ok) {
-        toast.success(result.message)
+        showSuccess(result.message)
       } else {
-        toast.error(result.message)
+        showError(result.message, result)
       }
       // Reload overview after any maintenance
       loadOverview()
@@ -174,27 +174,27 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
         loadTableData()
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Operation failed')
+      showError(err instanceof Error ? err.message : t('db.operationFailed'), err)
     } finally {
       setActionLoading(null)
     }
-  }, [loadOverview, activeTab, selectedTable, loadTableData])
+  }, [loadOverview, activeTab, selectedTable, loadTableData, t])
 
   const handleReset = useCallback(async () => {
     if (resetConfirm.trim() !== 'RESET') {
-      toast.error(t('db.resetConfirmHint'))
+      showError(t('db.resetConfirmHint'))
       return
     }
     setActionLoading('reset')
     try {
       const result = await resetDb(resetConfirm)
-      toast.success(result.message)
+      showSuccess(result.message)
       setShowResetConfirm(false)
       setResetConfirm('')
       setActiveTab('overview')
       loadOverview()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Reset failed')
+      showError(err instanceof Error ? err.message : t('db.resetFailed'), err)
     } finally {
       setActionLoading(null)
     }
@@ -204,12 +204,12 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
     try {
       const result = await exportDb()
       if (result.ok) {
-        toast.success(result.message || t('db.exportSuccess'))
+        showSuccess(result.message || t('db.exportSuccess'))
       } else {
-        toast.error(result.message || 'Export failed')
+        showError(result.message || t('db.exportFailed'), result)
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Export failed')
+      showError(err instanceof Error ? err.message : t('db.exportFailed'), err)
     }
   }, [t])
 
@@ -217,33 +217,33 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
     try {
       const result = await importDb()
       if (result.ok) {
-        toast.success(result.message)
+        showSuccess(result.message)
       } else {
-        toast.error(result.message || 'Import failed')
+        showError(result.message || t('db.importFailed'), result)
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Import failed')
+      showError(err instanceof Error ? err.message : t('db.importFailed'), err)
     }
-  }, [])
+  }, [t])
 
   const handleCopyPath = useCallback(async () => {
     if (!overview?.db_path) return
     try {
       await navigator.clipboard.writeText(overview.db_path)
-      toast.success(t('db.copied'))
+      showSuccess(t('db.copied'))
     } catch {
-      toast.error('Copy failed')
+      showError(t('copyFailed'))
     }
   }, [overview, t])
 
   const handleOpenFolder = useCallback(async () => {
     try {
       const result = await openDbFolder()
-      toast.success(result.message)
+      showSuccess(result.message)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to open folder')
+      showError(err instanceof Error ? err.message : t('db.openFolderFailed'), err)
     }
-  }, [])
+  }, [t])
 
   const handleTableStatSort = useCallback((key: TableSortKey) => {
     if (tableSortKey === key) {
@@ -283,15 +283,25 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
           <div className="db-error-title">{t('db.dbLoadError')}</div>
           <div className="db-error-msg">{loadError}</div>
           <div className="db-error-desc">{t('db.dbMissingDesc')}</div>
-          <button
-            className="btn-secondary db-error-retry"
-            onClick={loadOverview}
-            disabled={loading}
-            type="button"
-          >
-            <RefreshCw size={14} className={loading ? 'db-spin' : ''} />
-            {t('db.refresh')}
-          </button>
+          <div className="db-error-actions">
+            <button
+              className="btn-secondary db-error-retry"
+              onClick={loadOverview}
+              disabled={loading}
+              type="button"
+            >
+              <RefreshCw size={14} className={loading ? 'db-spin' : ''} />
+              {t('db.refresh')}
+            </button>
+            <button
+              className="btn-secondary db-error-retry"
+              onClick={() => void copyDiagnosticText(loadError)}
+              type="button"
+            >
+              <Copy size={14} />
+              {t('feedback.copyDetails')}
+            </button>
+          </div>
         </div>
       )
     }

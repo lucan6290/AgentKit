@@ -230,7 +230,17 @@ impl TaskManager {
                 }
             }
             Err(err) => {
-                log::error!("[TASK_FAILED] task_id={} kind={} error={}", task_id, kind, err);
+                tracing::error!(
+                    target: crate::logging::app_target(),
+                    event = "task.run.failed",
+                    layer = "backend",
+                    area = "task",
+                    outcome = "failed",
+                    task_id = %task_id,
+                    task_kind = %kind,
+                    error = %err,
+                    "background task failed"
+                );
                 let mut tasks = inner.tasks.lock().unwrap();
                 if let Some(task) = tasks.get_mut(&task_id) {
                     if task.cancel_requested || err.contains("cancelled") {

@@ -13,6 +13,8 @@ import {
   X,
 } from 'lucide-react'
 import { promptService } from '@/services/promptService'
+import { logger } from '@/lib/logger'
+import { showError, showSuccess } from '@/lib/uiFeedback'
 import type { PromptFileDto } from '../types'
 
 type PromptsPageProps = {
@@ -80,7 +82,6 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
   const [saving, setSaving] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set())
 
   const loadPromptFiles = useCallback(async () => {
@@ -94,7 +95,12 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
       setExpandedTools(tools)
     } catch (err) {
       setError(t('prompts.loadError'))
-      console.error(err)
+      logger.error({
+        event: 'prompts.files.load.failed',
+        area: 'prompts',
+        outcome: 'failed',
+        message: 'Failed to load prompt files',
+      }, err)
     } finally {
       setLoading(false)
     }
@@ -107,14 +113,19 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
   const handleScan = useCallback(async () => {
     setScanning(true)
     setError(null)
-    setMessage(null)
     try {
       await promptService.scanPromptFiles()
       await loadPromptFiles()
-      setMessage({ type: 'success', text: t('prompts.scanDone') })
+      showSuccess(t('prompts.scanDone'))
     } catch (err) {
       setError(t('prompts.scanError'))
-      console.error(err)
+      showError(t('prompts.scanError'), err)
+      logger.error({
+        event: 'prompts.files.scan.failed',
+        area: 'prompts',
+        outcome: 'failed',
+        message: 'Failed to scan prompt files',
+      }, err)
     } finally {
       setScanning(false)
     }
@@ -125,11 +136,9 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
       setSelectedFileId(null)
       setEditContent('')
       setOriginalContent('')
-      setMessage(null)
       return
     }
     setSelectedFileId(file.id)
-    setMessage(null)
     if (!file.exists_on_disk) {
       setEditContent('')
       setOriginalContent('')
@@ -140,10 +149,21 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
       setEditContent(content)
       setOriginalContent(content)
     } catch (err) {
-      setMessage({ type: 'error', text: t('prompts.readError') })
+      showError(t('prompts.readError'), err)
       setEditContent('')
       setOriginalContent('')
-      console.error(err)
+      logger.error({
+        event: 'prompts.file.read.failed',
+        area: 'prompts',
+        outcome: 'failed',
+        message: 'Failed to read prompt file',
+        meta: {
+          file_id: file.id,
+          file_name: file.file_name,
+          tool: file.tool,
+          scope: file.scope,
+        },
+      }, err)
     }
   }, [selectedFileId, t])
 
@@ -151,15 +171,26 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
     const selectedFile = promptFiles.find((f) => f.id === selectedFileId)
     if (!selectedFile) return
     setSaving(true)
-    setMessage(null)
     try {
       await promptService.writePromptFile(selectedFile.file_path, editContent)
       setOriginalContent(editContent)
-      setMessage({ type: 'success', text: t('prompts.saved') })
+      showSuccess(t('prompts.saved'))
       await loadPromptFiles()
     } catch (err) {
-      setMessage({ type: 'error', text: t('prompts.saveError') })
-      console.error(err)
+      showError(t('prompts.saveError'), err)
+      logger.error({
+        event: 'prompts.file.save.failed',
+        area: 'prompts',
+        outcome: 'failed',
+        message: 'Failed to save prompt file',
+        meta: {
+          file_id: selectedFile.id,
+          file_name: selectedFile.file_name,
+          tool: selectedFile.tool,
+          scope: selectedFile.scope,
+          content_length: editContent.length,
+        },
+      }, err)
     } finally {
       setSaving(false)
     }
@@ -169,17 +200,27 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
     const selectedFile = promptFiles.find((f) => f.id === selectedFileId)
     if (!selectedFile) return
     if (!window.confirm(t('prompts.deleteConfirm'))) return
-    setMessage(null)
     try {
       await promptService.deletePromptFile(selectedFile.id)
       setSelectedFileId(null)
       setEditContent('')
       setOriginalContent('')
-      setMessage({ type: 'success', text: t('prompts.deleted') })
+      showSuccess(t('prompts.deleted'))
       await loadPromptFiles()
     } catch (err) {
-      setMessage({ type: 'error', text: t('prompts.deleteError') })
-      console.error(err)
+      showError(t('prompts.deleteError'), err)
+      logger.error({
+        event: 'prompts.file.delete.failed',
+        area: 'prompts',
+        outcome: 'failed',
+        message: 'Failed to delete prompt file',
+        meta: {
+          file_id: selectedFile.id,
+          file_name: selectedFile.file_name,
+          tool: selectedFile.tool,
+          scope: selectedFile.scope,
+        },
+      }, err)
     }
   }, [loadPromptFiles, promptFiles, selectedFileId, t])
 
@@ -187,7 +228,6 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
     setSelectedFileId(null)
     setEditContent('')
     setOriginalContent('')
-    setMessage(null)
   }, [])
 
   const toggleToolGroup = useCallback((tool: string) => {
@@ -271,17 +311,6 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
           </button>
         </div>
       </div>
-
-      {/* Toast message */}
-      {message && (
-        <div className={`prompts-toast ${message.type}`}>
-          {message.type === 'success' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
-          <span>{message.text}</span>
-          <button className="prompts-toast-close" type="button" onClick={() => setMessage(null)}>
-            <X size={12} />
-          </button>
-        </div>
-      )}
 
       {/* Error banner */}
       {error && (

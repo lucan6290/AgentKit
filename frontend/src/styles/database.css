@@ -808,6 +808,18 @@
   margin-top: 8px;
 }
 
+.db-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.db-error-actions .db-error-retry {
+  margin-top: 0;
+}
+
 /* ── Maintenance container ── */
 .db-maintenance {
   display: flex;

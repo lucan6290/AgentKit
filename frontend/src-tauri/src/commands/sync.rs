@@ -72,11 +72,17 @@ pub async fn sync_skill_to_tool(
         adapter.force_copy,
     )
     .map_err(|e| {
-        log::warn!(
-            "[SYNC_ERROR] sync_skill_to_tool failed | skill_id={} tool={} scope={}",
-            skill_id,
-            tool,
-            scope
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "sync.skill.failed",
+            layer = "backend",
+            area = "sync",
+            outcome = "failed",
+            skill_id = %skill_id,
+            tool = %tool,
+            scope = %scope,
+            error = %e,
+            "failed to sync skill to tool"
         );
         AppError::FileSystemError(e)
     })?;
@@ -102,10 +108,16 @@ pub async fn sync_skill_to_tool(
 
     let targets_repo = SkillTargetsRepository::new(&state.db);
     targets_repo.upsert(&target).map_err(|e| {
-        log::warn!(
-            "[DB_ERROR] sync_skill_to_tool: upsert target failed | skill_id={} tool={}",
-            skill_id,
-            tool
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "sync.skill.target_upsert.failed",
+            layer = "backend",
+            area = "sync",
+            outcome = "failed",
+            skill_id = %skill_id,
+            tool = %tool,
+            error = %e,
+            "failed to persist skill sync target"
         );
         AppError::DatabaseError(e.to_string())
     })?;
@@ -121,9 +133,15 @@ pub async fn sync_skill_to_tool(
             Ok::<_, rusqlite::Error>(())
         })
         .map_err(|e| {
-            log::warn!(
-                "[DB_ERROR] sync_skill_to_tool: update last_sync_at failed | skill_id={}",
-                skill_id
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "sync.skill.timestamp_update.failed",
+                layer = "backend",
+                area = "sync",
+                outcome = "failed",
+                skill_id = %skill_id,
+                error = %e,
+                "failed to update skill sync timestamp"
             );
             AppError::DatabaseError(e.to_string())
         })?;
@@ -145,10 +163,17 @@ pub async fn unsync_skill_from_tool(
     let target = targets_repo
         .get(&skill_id, &tool, &scope, project_path.as_deref())
         .map_err(|e| {
-            log::warn!(
-                "[DB_ERROR] unsync_skill_from_tool: get target failed | skill_id={} tool={}",
-                skill_id,
-                tool
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "sync.skill.target_lookup.failed",
+                layer = "backend",
+                area = "sync",
+                outcome = "failed",
+                skill_id = %skill_id,
+                tool = %tool,
+                scope = %scope,
+                error = %e,
+                "failed to load skill sync target"
             );
             AppError::DatabaseError(e.to_string())
         })?;
@@ -160,10 +185,17 @@ pub async fn unsync_skill_from_tool(
         targets_repo
             .delete(&skill_id, &tool, &scope, project_path.as_deref())
             .map_err(|e| {
-                log::warn!(
-                    "[DB_ERROR] unsync_skill_from_tool: delete target failed | skill_id={} tool={}",
-                    skill_id,
-                    tool
+                tracing::warn!(
+                    target: crate::logging::app_target(),
+                    event = "sync.skill.target_delete.failed",
+                    layer = "backend",
+                    area = "sync",
+                    outcome = "failed",
+                    skill_id = %skill_id,
+                    tool = %tool,
+                    scope = %scope,
+                    error = %e,
+                    "failed to delete skill sync target"
                 );
                 AppError::DatabaseError(e.to_string())
             })?;
@@ -247,7 +279,19 @@ pub async fn sync_suite_to_tool(
             adapter.force_copy,
         )
         .map_err(|e| {
-            log::warn!("[SYNC_ERROR] sync_suite_to_tool: sub-skill sync failed | skill_id={} tool={} sub={}", skill_id, tool, sub_name);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "sync.suite.sub_skill.failed",
+                layer = "backend",
+                area = "sync",
+                outcome = "failed",
+                skill_id = %skill_id,
+                tool = %tool,
+                scope = %scope,
+                sub_skill = %sub_name,
+                error = %e,
+                "failed to sync suite sub-skill"
+            );
             AppError::FileSystemError(e)
         })?;
 
@@ -269,10 +313,17 @@ pub async fn sync_suite_to_tool(
             ..Default::default()
         };
         targets_repo.upsert(&target).map_err(|e| {
-            log::warn!(
-                "[DB_ERROR] sync_suite_to_tool: upsert sub-target failed | skill_id={} tool={}",
-                skill_id,
-                tool
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "sync.suite.sub_target_upsert.failed",
+                layer = "backend",
+                area = "sync",
+                outcome = "failed",
+                skill_id = %skill_id,
+                tool = %tool,
+                scope = %scope,
+                error = %e,
+                "failed to persist suite sub-skill sync target"
             );
             AppError::DatabaseError(e.to_string())
         })?;
@@ -325,7 +376,18 @@ pub async fn unsync_suite_from_tool(
     let deleted = targets_repo
         .delete_suite_targets(&skill_id, &tool, &scope, project_path.as_deref())
         .map_err(|e| {
-            log::warn!("[DB_ERROR] unsync_suite_from_tool: delete suite targets failed | skill_id={} tool={}", skill_id, tool);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "sync.suite.targets_delete.failed",
+                layer = "backend",
+                area = "sync",
+                outcome = "failed",
+                skill_id = %skill_id,
+                tool = %tool,
+                scope = %scope,
+                error = %e,
+                "failed to delete suite sync targets"
+            );
             AppError::DatabaseError(e.to_string())
         })?;
 

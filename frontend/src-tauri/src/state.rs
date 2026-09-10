@@ -43,7 +43,16 @@ impl Default for AppState {
     fn default() -> Self {
         let db_path = crate::config::default_db_path();
         let db = Database::new(&db_path).unwrap_or_else(|e| {
-            log::error!("数据库初始化失败: {}", e);
+            tracing::error!(
+                target: crate::logging::app_target(),
+                event = "database.init.failed",
+                layer = "backend",
+                area = "database",
+                outcome = "failed",
+                path = %db_path.display(),
+                error = %e,
+                "database initialization failed"
+            );
             panic!("failed to initialize database: {}", e);
         });
         Self::new(db)

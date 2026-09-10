@@ -9,9 +9,9 @@ import {
   Tag,
   X,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import type { TFunction } from 'i18next'
 import type { ManagedSkill, ToolOption } from '../types'
+import { showError, showSuccess } from '@/lib/uiFeedback'
 
 type SkillInfoModalProps = {
   skill: ManagedSkill | null
@@ -62,9 +62,9 @@ const SkillInfoModal = ({
     if (!value) return
     try {
       await navigator.clipboard.writeText(value)
-      toast.success(t('copied'))
+      showSuccess(t('copied'))
     } catch {
-      toast.error(t('copyFailed'))
+      showError(t('copyFailed'))
     }
   }
 
@@ -83,10 +83,10 @@ const SkillInfoModal = ({
     setSavingSourceUrl(true)
     try {
       await onUpdateSourceUrl(skill.id, trimmed || null)
-      toast.success(t('detail.sourceUrlSaved'))
+      showSuccess(t('detail.sourceUrlSaved'))
       setEditingSourceUrl(false)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      showError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setSavingSourceUrl(false)
     }

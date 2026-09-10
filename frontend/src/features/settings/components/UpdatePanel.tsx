@@ -7,10 +7,10 @@ import {
   FileText,
   Github,
   Loader2,
+  Copy,
   RefreshCw,
 } from 'lucide-react'
 import type { TFunction } from 'i18next'
-import { toast } from 'sonner'
 import {
   checkUpdate,
   performUpdate,
@@ -18,6 +18,7 @@ import {
   setAutoCheckUpdate,
   type CheckUpdateResult,
 } from '@/lib/api'
+import { copyDiagnosticText, showError, showSuccess } from '@/lib/uiFeedback'
 
 type UpdatePanelProps = {
   t: TFunction
@@ -83,9 +84,9 @@ const UpdatePanel = ({ t }: UpdatePanelProps) => {
     setSavingAutoCheck(true)
     try {
       await setAutoCheckUpdate(next)
-    } catch {
+    } catch (err) {
       setAutoCheck(!next)
-      toast.error(t('update.saveFailed'))
+      showError(t('update.saveFailed'), err)
     } finally {
       setSavingAutoCheck(false)
     }
@@ -98,13 +99,13 @@ const UpdatePanel = ({ t }: UpdatePanelProps) => {
       const res = await performUpdate()
       if (res.ok) {
         setState('done')
-        toast.success(res.message)
+        showSuccess(res.message)
       } else {
-        toast.error(res.message)
+        showError(res.message, res)
         setState('idle')
       }
     } catch (e) {
-      toast.error(`${t('update.updateFailed')}: ${e instanceof Error ? e.message : String(e)}`)
+      showError(`${t('update.updateFailed')}: ${e instanceof Error ? e.message : String(e)}`, e)
       setState('idle')
     }
   }, [result, t])
@@ -161,15 +162,25 @@ const UpdatePanel = ({ t }: UpdatePanelProps) => {
               {errorMessage}
             </div>
           </div>
-          <button
-            className="settings-v2-pill-btn"
-            type="button"
-            onClick={doCheck}
-            disabled={isChecking}
-          >
-            <RefreshCw size={16} />
-            {t('update.retry')}
-          </button>
+          <div className="settings-v2-row-actions">
+            <button
+              className="settings-v2-pill-btn"
+              type="button"
+              onClick={() => void copyDiagnosticText(errorMessage)}
+            >
+              <Copy size={16} />
+              {t('feedback.copyDetails')}
+            </button>
+            <button
+              className="settings-v2-pill-btn"
+              type="button"
+              onClick={doCheck}
+              disabled={isChecking}
+            >
+              <RefreshCw size={16} />
+              {t('update.retry')}
+            </button>
+          </div>
         </div>
       ) : isChecking && !result ? (
         // 首次检查中不额外渲染一行——按钮上已有 loading 指示器

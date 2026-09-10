@@ -35,7 +35,15 @@ pub async fn do_update(app: AppHandle) -> AppResult<PerformUpdateResponse> {
     let updater = app
         .updater()
         .map_err(|e| {
-            log::warn!("[UPDATE_ERROR] do_update: updater not configured | {}", e);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "update.perform.updater_unavailable",
+                layer = "backend",
+                area = "update",
+                outcome = "failed",
+                error = %e,
+                "updater is not configured"
+            );
             AppError::UpdateError(format!("updater 未配置: {e}"))
         })?;
 
@@ -43,7 +51,15 @@ pub async fn do_update(app: AppHandle) -> AppResult<PerformUpdateResponse> {
         .check()
         .await
         .map_err(|e| {
-            log::warn!("[UPDATE_ERROR] do_update: check failed | {}", e);
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "update.perform.check.failed",
+                layer = "backend",
+                area = "update",
+                outcome = "failed",
+                error = %e,
+                "native update check failed"
+            );
             AppError::UpdateError(format!("检查更新失败: {e}"))
         })?;
 
@@ -72,7 +88,16 @@ pub async fn do_update(app: AppHandle) -> AppResult<PerformUpdateResponse> {
         )
         .await
         .map_err(|e| {
-            log::error!("[UPDATE_ERROR] do_update: download_and_install failed | version={} {}", update.version, e);
+            tracing::error!(
+                target: crate::logging::app_target(),
+                event = "update.perform.install.failed",
+                layer = "backend",
+                area = "update",
+                outcome = "failed",
+                version = %update.version,
+                error = %e,
+                "update download and install failed"
+            );
             AppError::UpdateError(format!("下载/安装更新失败: {e}"))
         })?;
 

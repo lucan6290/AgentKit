@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import type { TFunction } from 'i18next'
 import { invokeCommand } from '@/lib/api'
 import { useApi } from '@/hooks/useApi'
+import { logger } from '@/lib/logger'
 import { pickFolder } from '@/lib/pickFolder'
 import type {
   InstallResultDto,
@@ -230,7 +231,14 @@ export function useAddSkill(deps: UseAddSkillDeps) {
         // 保存默认同步工具选择
         const selectedKeys = Object.keys(syncTargets).filter((k) => syncTargets[k])
         invokeCommand('save_default_sync_tools', { tools: selectedKeys }).catch((err) => {
-          console.warn('Failed to save default sync tools:', err)
+          logger.warn({
+            event: 'settings.default_sync_tools.save.failed',
+            area: 'settings',
+            outcome: 'failed',
+            command: 'save_default_sync_tools',
+            message: 'Failed to save default sync tools',
+            meta: { tool_count: selectedKeys.length },
+          }, err)
         })
         await loadManagedSkills()
         await loadTags(addSourceType)

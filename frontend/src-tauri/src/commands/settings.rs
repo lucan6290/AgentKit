@@ -160,12 +160,28 @@ pub async fn get_close_behavior(state: State<'_, AppState>) -> AppResult<String>
 #[tauri::command(rename_all = "snake_case")]
 pub async fn set_close_behavior(state: State<'_, AppState>, behavior: String) -> AppResult<()> {
     if behavior != "minimize_to_tray" && behavior != "minimize_to_taskbar" && behavior != "quit" {
-        log::warn!("收到无效的关闭行为设置: {}", behavior);
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "settings.close_behavior.invalid",
+            layer = "backend",
+            area = "settings",
+            outcome = "failed",
+            behavior = %behavior,
+            "invalid close behavior setting"
+        );
         return Err(AppError::InvalidInput(
             "behavior must be 'minimize_to_tray', 'minimize_to_taskbar' or 'quit'".into(),
         ));
     }
-    log::info!("关闭行为设置已更改: {}", behavior);
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "settings.close_behavior.changed",
+        layer = "backend",
+        area = "settings",
+        outcome = "success",
+        behavior = %behavior,
+        "close behavior setting changed"
+    );
     let repo = SettingsRepository::new(&state.db);
     repo.set("close_behavior", &behavior)
         .map_err(|e| AppError::DatabaseError(e.to_string()))
@@ -200,10 +216,28 @@ pub async fn get_log_level(state: State<'_, AppState>) -> AppResult<String> {
 #[tauri::command(rename_all = "snake_case")]
 pub async fn set_log_level(state: State<'_, AppState>, level: String) -> AppResult<()> {
     if level != "debug" && level != "info" && level != "warn" && level != "error" {
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "settings.log_level.invalid",
+            layer = "backend",
+            area = "settings",
+            outcome = "failed",
+            level = %level,
+            "invalid log level setting"
+        );
         return Err(AppError::InvalidInput(
             "level must be one of 'debug', 'info', 'warn', 'error'".into(),
         ));
     }
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "settings.log_level.changed",
+        layer = "backend",
+        area = "settings",
+        outcome = "success",
+        level = %level,
+        "log level setting changed"
+    );
     let repo = SettingsRepository::new(&state.db);
     repo.set("log_level", &level)
         .map_err(|e| AppError::DatabaseError(e.to_string()))
