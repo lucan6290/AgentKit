@@ -114,7 +114,23 @@ pub fn build_onboarding_plan(
 
             // Compute fingerprint
             let fingerprint = if Path::new(&skill.path).is_dir() {
-                content_hash::hash_dir(&skill.path).ok()
+                match content_hash::hash_dir(&skill.path) {
+                    Ok(fingerprint) => Some(fingerprint),
+                    Err(error) => {
+                        tracing::warn!(
+                            target: crate::logging::app_target(),
+                            event = "onboarding.skill_fingerprint.failed",
+                            layer = "backend",
+                            area = "onboarding",
+                            outcome = "failed",
+                            tool = %skill.tool,
+                            path = %skill.path,
+                            error = %error,
+                            "failed to calculate skill fingerprint during onboarding"
+                        );
+                        None
+                    }
+                }
             } else {
                 None
             };
@@ -180,7 +196,23 @@ fn detect_from_cache(
     let repo = ToolCacheRepository::new(db);
     let tool_key = &adapter.tool_key;
 
-    let state = repo.get_scan_state(tool_key).ok().flatten()?;
+    let state = match repo.get_scan_state(tool_key) {
+        Ok(Some(state)) => state,
+        Ok(None) => return None,
+        Err(error) => {
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "onboarding.cache_scan_state.failed",
+                layer = "backend",
+                area = "onboarding",
+                outcome = "failed",
+                tool_key = %tool_key,
+                error = %error,
+                "failed to read tool scan cache state"
+            );
+            return None;
+        }
+    };
     if !state.installed {
         return None;
     }
@@ -194,7 +226,22 @@ fn detect_from_cache(
         return None;
     }
 
-    let cache_entries = repo.list_skill_cache(tool_key).ok()?;
+    let cache_entries = match repo.list_skill_cache(tool_key) {
+        Ok(entries) => entries,
+        Err(error) => {
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "onboarding.cache_entries.failed",
+                layer = "backend",
+                area = "onboarding",
+                outcome = "failed",
+                tool_key = %tool_key,
+                error = %error,
+                "failed to read cached tool skills"
+            );
+            return None;
+        }
+    };
     if cache_entries.is_empty() {
         return None;
     }

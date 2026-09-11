@@ -1,4 +1,4 @@
-﻿use tauri::State;
+use tauri::State;
 
 use crate::contracts::{OkNameResponse, OkPathResponse, OkRemovedResponse};
 use crate::db::now_ms;
@@ -248,34 +248,136 @@ pub async fn clear_tool_skills(
     state: State<'_, AppState>,
     tool_key: String,
 ) -> AppResult<OkRemovedResponse> {
+    let started = std::time::Instant::now();
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "tools.skills_clear.started",
+        layer = "backend",
+        area = "tools",
+        outcome = "started",
+        tool_key = %tool_key,
+        "clearing tool skills started"
+    );
+
     let adapters = effective_tool_adapters(&state.db);
-    let adapter = adapter::adapter_by_key(&adapters, &tool_key)
-        .ok_or_else(|| AppError::InvalidInput(format!("unknown tool: {}", tool_key)))?;
+    let adapter = adapter::adapter_by_key(&adapters, &tool_key).ok_or_else(|| {
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "tools.skills_clear.failed",
+            layer = "backend",
+            area = "tools",
+            outcome = "failed",
+            tool_key = %tool_key,
+            duration_ms = started.elapsed().as_millis() as u64,
+            "cannot clear skills for an unknown tool"
+        );
+        AppError::InvalidInput(format!("unknown tool: {}", tool_key))
+    })?;
 
     let skills_dir = resolve_default_path(adapter);
     let dir = std::path::Path::new(&skills_dir);
 
     let mut removed: i64 = 0;
     if dir.is_dir() {
-        if let Ok(entries) = std::fs::read_dir(dir) {
-            for entry in entries.filter_map(|e| e.ok()) {
-                if !entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false) {
-                    continue;
-                }
-                let path = entry.path();
-                if path.join("SKILL.md").exists() {
-                    if crate::filesystem::remove_link_or_directory(&path).is_ok() {
-                        removed += 1;
-                    }
-                }
+        let entries = std::fs::read_dir(dir).map_err(|error| {
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "tools.skills_clear.failed",
+                layer = "backend",
+                area = "tools",
+                outcome = "failed",
+                tool_key = %tool_key,
+                path = %dir.display(),
+                duration_ms = started.elapsed().as_millis() as u64,
+                error = %error,
+                "failed to list tool skills directory"
+            );
+            AppError::FileSystemError(error.to_string())
+        })?;
+
+        for entry in entries {
+            let entry = entry.map_err(|error| {
+                tracing::warn!(
+                    target: crate::logging::app_target(),
+                    event = "tools.skills_clear.failed",
+                    layer = "backend",
+                    area = "tools",
+                    outcome = "failed",
+                    tool_key = %tool_key,
+                    path = %dir.display(),
+                    duration_ms = started.elapsed().as_millis() as u64,
+                    error = %error,
+                    "failed to read tool skills directory entry"
+                );
+                AppError::FileSystemError(error.to_string())
+            })?;
+            let path = entry.path();
+            let file_type = entry.file_type().map_err(|error| {
+                tracing::warn!(
+                    target: crate::logging::app_target(),
+                    event = "tools.skills_clear.failed",
+                    layer = "backend",
+                    area = "tools",
+                    outcome = "failed",
+                    tool_key = %tool_key,
+                    path = %path.display(),
+                    duration_ms = started.elapsed().as_millis() as u64,
+                    error = %error,
+                    "failed to inspect tool skill directory entry"
+                );
+                AppError::FileSystemError(error.to_string())
+            })?;
+            if !file_type.is_dir() || !path.join("SKILL.md").exists() {
+                continue;
             }
+
+            crate::filesystem::remove_link_or_directory(&path).map_err(|error| {
+                tracing::warn!(
+                    target: crate::logging::app_target(),
+                    event = "tools.skills_clear.failed",
+                    layer = "backend",
+                    area = "tools",
+                    outcome = "failed",
+                    tool_key = %tool_key,
+                    path = %path.display(),
+                    duration_ms = started.elapsed().as_millis() as u64,
+                    error = %error,
+                    "failed to remove tool skill directory"
+                );
+                AppError::FileSystemError(error)
+            })?;
+            removed += 1;
         }
     }
 
-    // Clear cache
     use crate::repositories::ToolCacheRepository;
     let cache_repo = ToolCacheRepository::new(&state.db);
-    let _ = cache_repo.clear_cache(&tool_key);
+    cache_repo.clear_cache(&tool_key).map_err(|error| {
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "tools.skills_clear.cache_clear.failed",
+            layer = "backend",
+            area = "tools",
+            outcome = "failed",
+            tool_key = %tool_key,
+            duration_ms = started.elapsed().as_millis() as u64,
+            error = %error,
+            "failed to clear tool skill cache after removing files"
+        );
+        AppError::DatabaseError(error.to_string())
+    })?;
+
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "tools.skills_clear.completed",
+        layer = "backend",
+        area = "tools",
+        outcome = "success",
+        tool_key = %tool_key,
+        removed,
+        duration_ms = started.elapsed().as_millis() as u64,
+        "clearing tool skills completed"
+    );
 
     Ok(OkRemovedResponse { ok: true, removed })
 }

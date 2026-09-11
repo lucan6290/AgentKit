@@ -45,11 +45,14 @@ pub fn list_files(dir: impl AsRef<Path>) -> Result<Vec<std::path::PathBuf>, Stri
     if !dir.is_dir() {
         return Err(format!("not a directory: {}", dir.display()));
     }
-    let mut entries: Vec<_> = std::fs::read_dir(dir)
+    let mut entries = Vec::new();
+    for entry in std::fs::read_dir(dir)
         .map_err(|e| format!("failed to read dir {}: {}", dir.display(), e))?
-        .filter_map(|e| e.ok())
-        .map(|e| e.path())
-        .collect();
+    {
+        let entry =
+            entry.map_err(|e| format!("failed to read entry in {}: {}", dir.display(), e))?;
+        entries.push(entry.path());
+    }
     entries.sort();
     Ok(entries)
 }
@@ -73,7 +76,14 @@ fn copy_dir_recursive_inner(source: &Path, target: &Path) -> Result<(), String> 
     let entries = std::fs::read_dir(source)
         .map_err(|e| format!("failed to read dir {}: {}", source.display(), e))?;
 
-    for entry in entries.filter_map(|e| e.ok()) {
+    for entry in entries {
+        let entry = entry.map_err(|e| {
+            format!(
+                "failed to read entry in {} while copying directory: {}",
+                source.display(),
+                e
+            )
+        })?;
         let name = entry.file_name();
         let name_str = name.to_string_lossy();
 
