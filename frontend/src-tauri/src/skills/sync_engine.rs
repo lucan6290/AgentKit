@@ -112,35 +112,45 @@ fn sync_hybrid(source: &Path, target: &Path, overwrite: bool) -> Result<SyncOutc
     // Try symlink first
     match filesystem::create_symlink(source, target) {
         Ok(_) => {
+            tracing::info!(target: crate::logging::app_target(), event = "sync.engine.completed", layer = "backend", area = "sync", outcome = "success", source = %source.display(), target = %target.display(), mode = "symlink", "synced skill directory");
             return Ok(SyncOutcome {
                 mode_used: SyncMode::Symlink,
                 target_path: target.to_path_buf(),
                 replaced: overwrite,
             });
         }
-        Err(_) => {
-            // Clean up any partial state left by failed symlink attempt
-            let _ = filesystem::remove_link_or_directory(target);
+        Err(err) => {
+            tracing::warn!(target: crate::logging::app_target(), event = "sync.engine.fallback", layer = "backend", area = "sync", outcome = "fallback", source = %source.display(), target = %target.display(), mode = "symlink", error = %err, "symlink sync failed; trying junction");
+            if let Err(cleanup_err) = filesystem::remove_link_or_directory(target) {
+                tracing::warn!(target: crate::logging::app_target(), event = "sync.engine.cleanup.failed", layer = "backend", area = "sync", outcome = "failed", source = %source.display(), target = %target.display(), mode = "symlink", error = %cleanup_err, "failed to clean up after symlink attempt");
+            }
         }
     }
 
     // Try junction (Windows only)
     match platform::create_junction(source, target) {
         Ok(_) => {
+            tracing::info!(target: crate::logging::app_target(), event = "sync.engine.completed", layer = "backend", area = "sync", outcome = "success", source = %source.display(), target = %target.display(), mode = "junction", "synced skill directory");
             return Ok(SyncOutcome {
                 mode_used: SyncMode::Junction,
                 target_path: target.to_path_buf(),
                 replaced: overwrite,
             });
         }
-        Err(_) => {
-            // Clean up any partial state left by failed junction attempt
-            let _ = filesystem::remove_link_or_directory(target);
+        Err(err) => {
+            tracing::warn!(target: crate::logging::app_target(), event = "sync.engine.fallback", layer = "backend", area = "sync", outcome = "fallback", source = %source.display(), target = %target.display(), mode = "junction", error = %err, "junction sync failed; trying copy");
+            if let Err(cleanup_err) = filesystem::remove_link_or_directory(target) {
+                tracing::warn!(target: crate::logging::app_target(), event = "sync.engine.cleanup.failed", layer = "backend", area = "sync", outcome = "failed", source = %source.display(), target = %target.display(), mode = "junction", error = %cleanup_err, "failed to clean up after junction attempt");
+            }
         }
     }
 
     // Fallback to copy
-    filesystem::copy_directory(source, target)?;
+    filesystem::copy_directory(source, target).map_err(|err| {
+        tracing::warn!(target: crate::logging::app_target(), event = "sync.engine.copy.failed", layer = "backend", area = "sync", outcome = "failed", source = %source.display(), target = %target.display(), mode = "copy", error = %err, "copy sync failed");
+        err
+    })?;
+    tracing::info!(target: crate::logging::app_target(), event = "sync.engine.completed", layer = "backend", area = "sync", outcome = "success", source = %source.display(), target = %target.display(), mode = "copy", "synced skill directory");
 
     Ok(SyncOutcome {
         mode_used: SyncMode::Copy,

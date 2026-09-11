@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use tauri::State;
 
 use crate::contracts::ManagedSkillDto;
@@ -62,9 +64,8 @@ pub async fn get_managed_skills(
         let usage = usage_repo
             .get_by_skill(&skill.id)
             .map_err(|e| AppError::DatabaseError(e.to_string()))?;
-        let is_suite = crate::repo::scanner::has_sub_skills(std::path::Path::new(
-            &skill.community_path,
-        ));
+        let is_suite =
+            crate::repo::scanner::has_sub_skills(std::path::Path::new(&skill.community_path));
 
         dtos.push(ManagedSkillDto {
             skill,
@@ -96,8 +97,14 @@ fn delete_skill_cascade(state: &AppState, skill_id: &str) -> AppResult<()> {
         .db
         .with_conn(|conn| {
             conn.execute("DELETE FROM skill_targets WHERE skill_id = ?1", [skill_id])?;
-            conn.execute("DELETE FROM skill_tag_links WHERE skill_id = ?1", [skill_id])?;
-            conn.execute("DELETE FROM skill_scope_preference WHERE skill_id = ?1", [skill_id])?;
+            conn.execute(
+                "DELETE FROM skill_tag_links WHERE skill_id = ?1",
+                [skill_id],
+            )?;
+            conn.execute(
+                "DELETE FROM skill_scope_preference WHERE skill_id = ?1",
+                [skill_id],
+            )?;
             conn.execute("DELETE FROM skill_usage WHERE skill_id = ?1", [skill_id])?;
             Ok::<_, rusqlite::Error>(())
         })
@@ -169,9 +176,12 @@ pub async fn import_existing_skill(
     source_type: Option<String>,
 ) -> AppResult<serde_json::Value> {
     let source_type = source_type.unwrap_or_else(|| "community".to_string());
+    let started = Instant::now();
+    tracing::info!(target: crate::logging::app_target(), event = "skills.import.started", layer = "backend", area = "skills", outcome = "started", source = %source_path, source_type = %source_type, "skill import started");
     let path = std::path::Path::new(&source_path);
 
     if !path.is_dir() {
+        tracing::warn!(target: crate::logging::app_target(), event = "skills.import.failed", layer = "backend", area = "skills", outcome = "failed", source = %source_path, source_type = %source_type, duration_ms = started.elapsed().as_millis() as u64, "skill import source is not a directory");
         return Err(AppError::InvalidInput(format!(
             "source path is not a directory: {}",
             source_path
@@ -194,28 +204,29 @@ pub async fn import_existing_skill(
             outcome = "failed",
             source_path = %source_path,
             source_type = %source_type,
+            duration_ms = started.elapsed().as_millis() as u64,
             error = %e,
             "failed to install imported skill"
         );
         AppError::FileSystemError(e)
     })?;
 
-    upsert_skill_from_install(&state.db, &result, &source_path, &source_type)
-        .map_err(|e| {
-            tracing::warn!(
-                target: crate::logging::app_target(),
-                event = "skills.import.upsert.failed",
-                layer = "backend",
-                area = "skills",
-                outcome = "failed",
-                source_path = %source_path,
-                source_type = %source_type,
-                error = %e,
-                "failed to persist imported skill"
-            );
-            AppError::DatabaseError(e)
-        })?;
+    upsert_skill_from_install(&state.db, &result, &source_path, &source_type).map_err(|e| {
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "skills.import.upsert.failed",
+            layer = "backend",
+            area = "skills",
+            outcome = "failed",
+            source_path = %source_path,
+            source_type = %source_type,
+            error = %e,
+            "failed to persist imported skill"
+        );
+        AppError::DatabaseError(e)
+    })?;
 
+    tracing::info!(target: crate::logging::app_target(), event = "skills.import.completed", layer = "backend", area = "skills", outcome = "success", source = %source_path, target = %result.community_path, skill_id = %result.skill_id, source_type = %source_type, file_count = ?result.skill_file_count, dir_size = ?result.skill_dir_size, duration_ms = started.elapsed().as_millis() as u64, "skill import completed");
     Ok(serde_json::json!({
         "skill_id": result.skill_id,
         "name": result.name,
@@ -238,6 +249,9 @@ pub async fn install_local_selection(
     source_type: Option<String>,
 ) -> AppResult<serde_json::Value> {
     let source_type = source_type.unwrap_or_else(|| "custom".to_string());
+    let started = Instant::now();
+    let full_source = std::path::Path::new(&base_path).join(&subpath);
+    tracing::info!(target: crate::logging::app_target(), event = "skills.local_install.started", layer = "backend", area = "skills", outcome = "started", source = %full_source.display(), source_type = %source_type, "local skill installation started");
     let base = std::path::Path::new(&base_path);
 
     let result = install_local_skill_from_selection(
@@ -248,17 +262,23 @@ pub async fn install_local_selection(
         None,
         &source_type,
     )
-    .map_err(|e| AppError::FileSystemError(e))?;
+    .map_err(|e| {
+        tracing::warn!(target: crate::logging::app_target(), event = "skills.local_install.failed", layer = "backend", area = "skills", outcome = "failed", source = %full_source.display(), source_type = %source_type, duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to install selected local skill");
+        AppError::FileSystemError(e)
+    })?;
 
-    let full_source = base.join(&subpath);
     upsert_skill_from_install(
         &state.db,
         &result,
         &full_source.to_string_lossy(),
         &source_type,
     )
-    .map_err(|e| AppError::DatabaseError(e))?;
+    .map_err(|e| {
+        tracing::warn!(target: crate::logging::app_target(), event = "skills.local_install.failed", layer = "backend", area = "skills", outcome = "failed", source = %full_source.display(), skill_id = %result.skill_id, source_type = %source_type, duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to persist selected local skill");
+        AppError::DatabaseError(e)
+    })?;
 
+    tracing::info!(target: crate::logging::app_target(), event = "skills.local_install.completed", layer = "backend", area = "skills", outcome = "success", source = %full_source.display(), target = %result.community_path, skill_id = %result.skill_id, source_type = %source_type, file_count = ?result.skill_file_count, dir_size = ?result.skill_dir_size, duration_ms = started.elapsed().as_millis() as u64, "local skill installation completed");
     Ok(serde_json::json!({
         "skill_id": result.skill_id,
         "name": result.name,

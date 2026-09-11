@@ -149,6 +149,13 @@ impl<'a> SkillTargetsRepository<'a> {
         })
     }
 
+    pub fn delete_by_id(&self, id: &str) -> AppResult<()> {
+        self.db.with_conn(|conn| {
+            conn.execute("DELETE FROM skill_targets WHERE id = ?1", [id])?;
+            Ok(())
+        })
+    }
+
     pub fn delete_suite_targets(
         &self,
         suite_skill_id: &str,

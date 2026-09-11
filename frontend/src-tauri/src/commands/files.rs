@@ -1,4 +1,6 @@
-﻿use tauri::State;
+use std::time::Instant;
+
+use tauri::State;
 
 use crate::error::{AppError, AppResult};
 use crate::repositories::SkillsRepository;
@@ -41,12 +43,27 @@ pub async fn write_skill_file(
     file_path: String,
     content: String,
 ) -> AppResult<()> {
+    let started = Instant::now();
+    let byte_length = content.len();
+    tracing::info!(target: crate::logging::app_target(), event = "skills.file_write.started", layer = "backend", area = "skills", outcome = "started", skill_id = %skill_id, file_path = %file_path, byte_length, "skill file write started");
+
     let repo = SkillsRepository::new(&state.db);
     let skill = repo
         .get_by_id(&skill_id)
-        .map_err(|e| AppError::DatabaseError(e.to_string()))?
-        .ok_or_else(|| AppError::NotFound(format!("skill not found: {}", skill_id)))?;
+        .map_err(|e| {
+            tracing::warn!(target: crate::logging::app_target(), event = "skills.file_write.failed", layer = "backend", area = "skills", outcome = "failed", skill_id = %skill_id, file_path = %file_path, byte_length, duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to look up skill before file write");
+            AppError::DatabaseError(e.to_string())
+        })?
+        .ok_or_else(|| {
+            tracing::warn!(target: crate::logging::app_target(), event = "skills.file_write.failed", layer = "backend", area = "skills", outcome = "failed", skill_id = %skill_id, file_path = %file_path, byte_length, duration_ms = started.elapsed().as_millis() as u64, "skill was not found before file write");
+            AppError::NotFound(format!("skill not found: {}", skill_id))
+        })?;
 
     files::write_file(&skill.community_path, &file_path, &content)
-        .map_err(|e| AppError::FileSystemError(e))
+        .map_err(|e| {
+            tracing::warn!(target: crate::logging::app_target(), event = "skills.file_write.failed", layer = "backend", area = "skills", outcome = "failed", skill_id = %skill_id, file_path = %file_path, byte_length, duration_ms = started.elapsed().as_millis() as u64, error = %e, "skill file write failed");
+            AppError::FileSystemError(e)
+        })?;
+    tracing::info!(target: crate::logging::app_target(), event = "skills.file_write.completed", layer = "backend", area = "skills", outcome = "success", skill_id = %skill_id, file_path = %file_path, byte_length, duration_ms = started.elapsed().as_millis() as u64, "skill file write completed");
+    Ok(())
 }

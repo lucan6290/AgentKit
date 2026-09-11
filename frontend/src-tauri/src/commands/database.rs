@@ -496,15 +496,16 @@ pub async fn db_reset(state: State<'_, AppState>, confirm_text: String) -> AppRe
 pub async fn db_export(app: tauri::AppHandle, state: State<'_, AppState>) -> AppResult<OkResponse> {
     use tauri_plugin_dialog::DialogExt;
 
-    // WAL checkpoint first to ensure all data is in the main .db file
+    let started = std::time::Instant::now();
+    tracing::info!(target: crate::logging::app_target(), event = "database.export.started", layer = "backend", area = "database", outcome = "started", "database export started");
     let maint = MaintenanceRepository::new(&state.db);
-    let _ = maint.wal_checkpoint();
+    maint.wal_checkpoint().map_err(|e| {
+        tracing::warn!(target: crate::logging::app_target(), event = "database.export.failed", layer = "backend", area = "database", outcome = "failed", duration_ms = started.elapsed().as_millis() as u64, error = %e, "WAL checkpoint failed before export");
+        AppError::DatabaseError(e.to_string())
+    })?;
 
     let db_path = crate::config::default_db_path();
-    let default_name = format!(
-        "skills_hub_backup_{}.db",
-        local_timestamp()
-    );
+    let default_name = format!("skills_hub_backup_{}.db", local_timestamp());
 
     let file_path = app
         .dialog()
@@ -518,6 +519,7 @@ pub async fn db_export(app: tauri::AppHandle, state: State<'_, AppState>) -> App
         Some(path) => {
             let dest = path.as_path().unwrap_or_else(|| std::path::Path::new(""));
             if dest.as_os_str().is_empty() {
+                tracing::info!(target: crate::logging::app_target(), event = "database.export.completed", layer = "backend", area = "database", outcome = "canceled", duration_ms = started.elapsed().as_millis() as u64, "database export canceled");
                 return Ok(OkResponse {
                     ok: false,
                     message: "No file selected".to_string(),
@@ -531,18 +533,23 @@ pub async fn db_export(app: tauri::AppHandle, state: State<'_, AppState>) -> App
             };
 
             std::fs::copy(&db_path, &dest).map_err(|e| {
+                tracing::warn!(target: crate::logging::app_target(), event = "database.export.failed", layer = "backend", area = "database", outcome = "failed", duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to copy database export");
                 AppError::FileSystemError(format!("Failed to copy database: {}", e))
             })?;
 
+            tracing::info!(target: crate::logging::app_target(), event = "database.export.completed", layer = "backend", area = "database", outcome = "success", duration_ms = started.elapsed().as_millis() as u64, "database export completed");
             Ok(OkResponse {
                 ok: true,
                 message: format!("Database exported to: {}", dest.display()),
             })
         }
-        None => Ok(OkResponse {
-            ok: false,
-            message: "Export cancelled".to_string(),
-        }),
+        None => {
+            tracing::info!(target: crate::logging::app_target(), event = "database.export.completed", layer = "backend", area = "database", outcome = "canceled", duration_ms = started.elapsed().as_millis() as u64, "database export canceled");
+            Ok(OkResponse {
+                ok: false,
+                message: "Export cancelled".to_string(),
+            })
+        }
     }
 }
 
@@ -583,6 +590,8 @@ fn epoch_days_to_ymd(days_since_epoch: u64) -> (u64, u64, u64) {
 pub async fn db_import(app: tauri::AppHandle, state: State<'_, AppState>) -> AppResult<OkResponse> {
     use tauri_plugin_dialog::DialogExt;
 
+    let started = std::time::Instant::now();
+    tracing::info!(target: crate::logging::app_target(), event = "database.import.started", layer = "backend", area = "database", outcome = "started", "database import started");
     let file_path = app
         .dialog()
         .file()
@@ -594,6 +603,7 @@ pub async fn db_import(app: tauri::AppHandle, state: State<'_, AppState>) -> App
         Some(path) => {
             let src = path.as_path().unwrap_or_else(|| std::path::Path::new(""));
             if src.as_os_str().is_empty() {
+                tracing::info!(target: crate::logging::app_target(), event = "database.import.completed", layer = "backend", area = "database", outcome = "canceled", duration_ms = started.elapsed().as_millis() as u64, "database import canceled");
                 return Ok(OkResponse {
                     ok: false,
                     message: "No file selected".to_string(),
@@ -602,9 +612,11 @@ pub async fn db_import(app: tauri::AppHandle, state: State<'_, AppState>) -> App
 
             // Validate it's a valid SQLite file by checking magic bytes
             let data = std::fs::read(src).map_err(|e| {
+                tracing::warn!(target: crate::logging::app_target(), event = "database.import.failed", layer = "backend", area = "database", outcome = "failed", duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to read database backup");
                 AppError::FileSystemError(format!("Failed to read backup file: {}", e))
             })?;
             if data.len() < 16 || &data[..16] != b"SQLite format 3\0" {
+                tracing::warn!(target: crate::logging::app_target(), event = "database.import.failed", layer = "backend", area = "database", outcome = "failed", duration_ms = started.elapsed().as_millis() as u64, "database backup validation failed");
                 return Err(AppError::InvalidInput(
                     "Selected file is not a valid SQLite database".into(),
                 ));
@@ -614,12 +626,16 @@ pub async fn db_import(app: tauri::AppHandle, state: State<'_, AppState>) -> App
 
             // Step 1: WAL checkpoint to flush all pending writes to the main .db file
             let maint = MaintenanceRepository::new(&state.db);
-            let _ = maint.wal_checkpoint();
+            maint.wal_checkpoint().map_err(|e| {
+                tracing::warn!(target: crate::logging::app_target(), event = "database.import.failed", layer = "backend", area = "database", outcome = "failed", duration_ms = started.elapsed().as_millis() as u64, error = %e, "WAL checkpoint failed before import");
+                AppError::DatabaseError(e.to_string())
+            })?;
 
             // Step 2: Backup current database (including WAL/SHM if they exist)
             let backup_path = db_path.with_extension("db.pre_import_backup");
             if db_path.exists() {
                 std::fs::copy(&db_path, &backup_path).map_err(|e| {
+                    tracing::warn!(target: crate::logging::app_target(), event = "database.import.failed", layer = "backend", area = "database", outcome = "failed", duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to back up current database before import");
                     AppError::FileSystemError(format!("Failed to backup current database: {}", e))
                 })?;
             }
@@ -627,14 +643,26 @@ pub async fn db_import(app: tauri::AppHandle, state: State<'_, AppState>) -> App
             // Step 3: Remove stale WAL and SHM files to prevent data inconsistency
             let wal_path = db_path.with_extension("db-wal");
             let shm_path = db_path.with_extension("db-shm");
-            let _ = std::fs::remove_file(&wal_path);
-            let _ = std::fs::remove_file(&shm_path);
+            for stale_path in [&wal_path, &shm_path] {
+                if let Err(err) = std::fs::remove_file(stale_path) {
+                    if err.kind() != std::io::ErrorKind::NotFound {
+                        tracing::warn!(target: crate::logging::app_target(), event = "database.import.stale_file_remove.failed", layer = "backend", area = "database", outcome = "failed", path = %stale_path.display(), duration_ms = started.elapsed().as_millis() as u64, error = %err, "failed to remove stale database sidecar file");
+                        return Err(AppError::FileSystemError(format!(
+                            "Failed to remove {}: {}",
+                            stale_path.display(),
+                            err
+                        )));
+                    }
+                }
+            }
 
             // Step 4: Write the imported file over the current database
             std::fs::write(&db_path, &data).map_err(|e| {
+                tracing::warn!(target: crate::logging::app_target(), event = "database.import.failed", layer = "backend", area = "database", outcome = "failed", duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to write imported database");
                 AppError::FileSystemError(format!("Failed to write imported database: {}", e))
             })?;
 
+            tracing::info!(target: crate::logging::app_target(), event = "database.import.completed", layer = "backend", area = "database", outcome = "success", duration_ms = started.elapsed().as_millis() as u64, "database import completed");
             Ok(OkResponse {
                 ok: true,
                 message: format!(
@@ -644,10 +672,13 @@ pub async fn db_import(app: tauri::AppHandle, state: State<'_, AppState>) -> App
                 ),
             })
         }
-        None => Ok(OkResponse {
-            ok: false,
-            message: "Import cancelled".to_string(),
-        }),
+        None => {
+            tracing::info!(target: crate::logging::app_target(), event = "database.import.completed", layer = "backend", area = "database", outcome = "canceled", duration_ms = started.elapsed().as_millis() as u64, "database import canceled");
+            Ok(OkResponse {
+                ok: false,
+                message: "Import cancelled".to_string(),
+            })
+        }
     }
 }
 

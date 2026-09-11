@@ -140,7 +140,18 @@ pub async fn get_proxy_url(state: State<'_, AppState>) -> AppResult<String> {
 pub async fn set_proxy_url(state: State<'_, AppState>, url: String) -> AppResult<()> {
     let repo = SettingsRepository::new(&state.db);
     if url.is_empty() {
-        let _ = repo.delete("proxy_url");
+        repo.delete("proxy_url").map_err(|e| {
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "settings.proxy_url.delete.failed",
+                layer = "backend",
+                area = "settings",
+                outcome = "failed",
+                error = %e,
+                "failed to clear proxy URL setting"
+            );
+            AppError::DatabaseError(e.to_string())
+        })?;
     } else {
         repo.set("proxy_url", &url)
             .map_err(|e| AppError::DatabaseError(e.to_string()))?;
@@ -229,6 +240,22 @@ pub async fn set_log_level(state: State<'_, AppState>, level: String) -> AppResu
             "level must be one of 'debug', 'info', 'warn', 'error'".into(),
         ));
     }
+    let repo = SettingsRepository::new(&state.db);
+    repo.set("log_level", &level)
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    crate::logging::set_level(&level).map_err(|e| {
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "settings.log_level.refresh.failed",
+            layer = "backend",
+            area = "settings",
+            outcome = "failed",
+            level = %level,
+            error = %e,
+            "failed to refresh runtime log level"
+        );
+        AppError::Unexpected(e)
+    })?;
     tracing::info!(
         target: crate::logging::app_target(),
         event = "settings.log_level.changed",
@@ -238,9 +265,7 @@ pub async fn set_log_level(state: State<'_, AppState>, level: String) -> AppResu
         level = %level,
         "log level setting changed"
     );
-    let repo = SettingsRepository::new(&state.db);
-    repo.set("log_level", &level)
-        .map_err(|e| AppError::DatabaseError(e.to_string()))
+    Ok(())
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -278,8 +303,32 @@ pub async fn reset_general_settings(state: State<'_, AppState>) -> AppResult<OkR
         "auto_refresh_on_startup",
     ];
     for key in &keys_to_reset {
-        let _ = repo.delete(key);
+        repo.delete(key).map_err(|e| {
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "settings.reset.delete.failed",
+                layer = "backend",
+                area = "settings",
+                outcome = "failed",
+                key = %key,
+                error = %e,
+                "failed to reset setting"
+            );
+            AppError::DatabaseError(e.to_string())
+        })?;
     }
+    crate::logging::set_level("info").map_err(|e| {
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "settings.reset.log_level_refresh.failed",
+            layer = "backend",
+            area = "settings",
+            outcome = "failed",
+            error = %e,
+            "failed to reset runtime log level"
+        );
+        AppError::Unexpected(e)
+    })?;
 
     Ok(OkResponse {
         ok: true,

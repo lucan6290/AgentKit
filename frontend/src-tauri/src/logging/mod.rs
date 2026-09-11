@@ -7,6 +7,7 @@ use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::filter::{filter_fn, LevelFilter};
 use tracing_subscriber::fmt;
 use tracing_subscriber::prelude::*;
+use tracing_subscriber::reload;
 
 use crate::contracts::FrontendLogPayload;
 
@@ -16,14 +17,20 @@ const MAX_STRING_LEN: usize = 4_096;
 const MAX_REDACTION_DEPTH: usize = 8;
 
 static LOG_GUARDS: OnceLock<Vec<WorkerGuard>> = OnceLock::new();
+static LEVEL_RELOAD_HANDLE: OnceLock<reload::Handle<LevelFilter, tracing_subscriber::Registry>> =
+    OnceLock::new();
 
 pub fn init(log_dir: &Path, configured_level: &str) {
     if let Err(err) = std::fs::create_dir_all(log_dir) {
-        eprintln!("failed to create log directory {}: {}", log_dir.display(), err);
+        eprintln!(
+            "failed to create log directory {}: {}",
+            log_dir.display(),
+            err
+        );
         return;
     }
 
-    let level_filter = parse_level_filter(configured_level);
+    let (level_filter, reload_handle) = reload::Layer::new(parse_level_filter(configured_level));
     let file_appender = tracing_appender::rolling::daily(log_dir, "skills-hub.jsonl");
     let error_appender = tracing_appender::rolling::daily(log_dir, "skills-hub-error.jsonl");
     let (file_writer, file_guard) = tracing_appender::non_blocking(file_appender);
@@ -35,8 +42,7 @@ pub fn init(log_dir: &Path, configured_level: &str) {
         .with_ansi(false)
         .with_target(true)
         .with_thread_ids(true)
-        .with_writer(file_writer)
-        .with_filter(level_filter);
+        .with_writer(file_writer);
 
     let stdout_layer = fmt::layer()
         .json()
@@ -44,8 +50,7 @@ pub fn init(log_dir: &Path, configured_level: &str) {
         .with_ansi(false)
         .with_target(true)
         .with_thread_ids(true)
-        .with_writer(std::io::stdout)
-        .with_filter(level_filter);
+        .with_writer(std::io::stdout);
 
     let error_layer = fmt::layer()
         .json()
@@ -60,15 +65,37 @@ pub fn init(log_dir: &Path, configured_level: &str) {
         eprintln!("failed to initialize log tracer: {}", err);
     }
 
-    if tracing_subscriber::registry()
+    match tracing_subscriber::registry()
+        .with(level_filter)
         .with(file_layer)
         .with(stdout_layer)
         .with(error_layer)
         .try_init()
-        .is_ok()
     {
-        let _ = LOG_GUARDS.set(vec![file_guard, error_guard]);
+        Ok(()) => {
+            if LOG_GUARDS.set(vec![file_guard, error_guard]).is_err() {
+                eprintln!("logging guards were already initialized");
+            }
+            if LEVEL_RELOAD_HANDLE.set(reload_handle).is_err() {
+                eprintln!("log level reload handle was already initialized");
+            }
+        }
+        Err(err) => eprintln!("failed to initialize tracing subscriber: {}", err),
     }
+}
+
+pub fn set_level(level: &str) -> Result<(), String> {
+    let level_filter = match level {
+        "debug" | "info" | "warn" | "error" => parse_level_filter(level),
+        _ => return Err(format!("invalid log level: {}", level)),
+    };
+
+    let handle = LEVEL_RELOAD_HANDLE
+        .get()
+        .ok_or_else(|| "logging has not been initialized".to_string())?;
+    handle
+        .reload(level_filter)
+        .map_err(|err| format!("failed to reload log level: {}", err))
 }
 
 pub fn emit_frontend_log(payload: FrontendLogPayload) {

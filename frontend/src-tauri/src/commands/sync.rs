@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use tauri::State;
 
 use crate::db::now_ms;
@@ -35,6 +37,8 @@ pub async fn sync_skill_to_tool(
 ) -> AppResult<()> {
     let scope = scope.unwrap_or_else(|| "global".to_string());
     let overwrite = overwrite_if_same_content.unwrap_or(true);
+    let started = Instant::now();
+    tracing::info!(target: crate::logging::app_target(), event = "sync.skill.started", layer = "backend", area = "sync", outcome = "started", skill_id = %skill_id, tool = %tool, scope = %scope, "skill sync started");
 
     let adapters = effective_tool_adapters(&state.db);
     let adapter = adapter::adapter_by_key(&adapters, &tool)
@@ -93,7 +97,7 @@ pub async fn sync_skill_to_tool(
         id: uuid::Uuid::new_v4().to_string(),
         skill_id: skill_id.clone(),
         tool: tool.clone(),
-        scope,
+        scope: scope.clone(),
         project_path,
         target_path,
         mode: if adapter.force_copy {
@@ -146,6 +150,7 @@ pub async fn sync_skill_to_tool(
             AppError::DatabaseError(e.to_string())
         })?;
 
+    tracing::info!(target: crate::logging::app_target(), event = "sync.skill.completed", layer = "backend", area = "sync", outcome = "success", skill_id = %skill_id, tool = %tool, duration_ms = started.elapsed().as_millis() as u64, "skill sync completed");
     Ok(())
 }
 
@@ -178,10 +183,13 @@ pub async fn unsync_skill_from_tool(
             AppError::DatabaseError(e.to_string())
         })?;
 
+    let started = Instant::now();
+    tracing::info!(target: crate::logging::app_target(), event = "sync.unsync.started", layer = "backend", area = "sync", outcome = "started", skill_id = %skill_id, tool = %tool, scope = %scope, "unsync started");
     if let Some(t) = target {
-        // Remove the synced path
-        let _ = crate::skills::sync_engine::unsync_target(&t.target_path);
-        // Delete from DB
+        crate::skills::sync_engine::unsync_target(&t.target_path).map_err(|e| {
+            tracing::warn!(target: crate::logging::app_target(), event = "sync.unsync.failed", layer = "backend", area = "sync", outcome = "failed", skill_id = %skill_id, tool = %tool, scope = %scope, target_path = %t.target_path, error = %e, duration_ms = started.elapsed().as_millis() as u64, "failed to remove synced target");
+            AppError::FileSystemError(e)
+        })?;
         targets_repo
             .delete(&skill_id, &tool, &scope, project_path.as_deref())
             .map_err(|e| {
@@ -200,6 +208,7 @@ pub async fn unsync_skill_from_tool(
                 AppError::DatabaseError(e.to_string())
             })?;
     }
+    tracing::info!(target: crate::logging::app_target(), event = "sync.unsync.completed", layer = "backend", area = "sync", outcome = "success", skill_id = %skill_id, tool = %tool, scope = %scope, duration_ms = started.elapsed().as_millis() as u64, "unsync completed");
 
     Ok(())
 }
@@ -218,6 +227,8 @@ pub async fn sync_suite_to_tool(
     // Suite sync: sync each sub-skill directory
     let scope = scope.unwrap_or_else(|| "global".to_string());
     let overwrite = overwrite_if_same_content.unwrap_or(true);
+    let started = Instant::now();
+    tracing::info!(target: crate::logging::app_target(), event = "sync.suite.started", layer = "backend", area = "sync", outcome = "started", skill_id = %skill_id, tool = %tool, scope = %scope, "suite sync started");
 
     let adapters = effective_tool_adapters(&state.db);
     let adapter = adapter::adapter_by_key(&adapters, &tool)
@@ -254,8 +265,22 @@ pub async fn sync_suite_to_tool(
     let now = now_ms();
     let targets_repo = SkillTargetsRepository::new(&state.db);
 
-    for entry in entries.filter_map(|e| e.ok()) {
-        if !entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false) {
+    for entry_result in entries {
+        let entry = match entry_result {
+            Ok(entry) => entry,
+            Err(error) => {
+                tracing::warn!(target: crate::logging::app_target(), event = "sync.suite.entry.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, tool = %tool, scope = %scope, error = %error, "skipping unreadable suite directory entry");
+                continue;
+            }
+        };
+        let file_type = match entry.file_type() {
+            Ok(file_type) => file_type,
+            Err(error) => {
+                tracing::warn!(target: crate::logging::app_target(), event = "sync.suite.entry.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, tool = %tool, scope = %scope, path = %entry.path().display(), error = %error, "skipping suite entry with unreadable file type");
+                continue;
+            }
+        };
+        if !file_type.is_dir() {
             continue;
         }
         let sub_path = entry.path();
@@ -336,7 +361,7 @@ pub async fn sync_suite_to_tool(
         id: uuid::Uuid::new_v4().to_string(),
         skill_id: skill_id.clone(),
         tool: tool.clone(),
-        scope,
+        scope: scope.clone(),
         project_path,
         target_path: suite_target_path.to_string_lossy().to_string(),
         mode: "suite".to_string(),
@@ -344,9 +369,10 @@ pub async fn sync_suite_to_tool(
         synced_at: Some(now),
         ..Default::default()
     };
-    targets_repo
-        .upsert(&suite_target)
-        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    targets_repo.upsert(&suite_target).map_err(|e| {
+        tracing::warn!(target: crate::logging::app_target(), event = "sync.suite.target_upsert.failed", layer = "backend", area = "sync", outcome = "failed", skill_id = %skill_id, tool = %tool, scope = %scope, duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to persist suite sync target");
+        AppError::DatabaseError(e.to_string())
+    })?;
 
     state
         .db
@@ -357,8 +383,12 @@ pub async fn sync_suite_to_tool(
             )?;
             Ok::<_, rusqlite::Error>(())
         })
-        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+        .map_err(|e| {
+            tracing::warn!(target: crate::logging::app_target(), event = "sync.suite.timestamp_update.failed", layer = "backend", area = "sync", outcome = "failed", skill_id = %skill_id, tool = %tool, scope = %scope, duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to update suite sync timestamp");
+            AppError::DatabaseError(e.to_string())
+        })?;
 
+    tracing::info!(target: crate::logging::app_target(), event = "sync.suite.completed", layer = "backend", area = "sync", outcome = "success", skill_id = %skill_id, tool = %tool, scope = %scope, duration_ms = started.elapsed().as_millis() as u64, "suite sync completed");
     Ok(())
 }
 
@@ -373,30 +403,37 @@ pub async fn unsync_suite_from_tool(
     let scope = scope.unwrap_or_else(|| "global".to_string());
 
     let targets_repo = SkillTargetsRepository::new(&state.db);
-    let deleted = targets_repo
-        .delete_suite_targets(&skill_id, &tool, &scope, project_path.as_deref())
-        .map_err(|e| {
-            tracing::warn!(
-                target: crate::logging::app_target(),
-                event = "sync.suite.targets_delete.failed",
-                layer = "backend",
-                area = "sync",
-                outcome = "failed",
-                skill_id = %skill_id,
-                tool = %tool,
-                scope = %scope,
-                error = %e,
-                "failed to delete suite sync targets"
-            );
-            AppError::DatabaseError(e.to_string())
-        })?;
-
-    for t in &deleted {
-        let _ = crate::skills::sync_engine::unsync_target(&t.target_path);
+    let started = Instant::now();
+    tracing::info!(target: crate::logging::app_target(), event = "sync.suite_unsync.started", layer = "backend", area = "sync", outcome = "started", skill_id = %skill_id, tool = %tool, scope = %scope, "suite unsync started");
+    let mut targets = targets_repo
+        .list_suite_sub_targets(&skill_id)
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?
+        .into_iter()
+        .filter(|target| {
+            target.tool == tool
+                && target.scope == scope
+                && target.project_path.as_deref() == project_path.as_deref()
+        })
+        .collect::<Vec<_>>();
+    if let Some(suite_target) = targets_repo
+        .get(&skill_id, &tool, &scope, project_path.as_deref())
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?
+    {
+        targets.push(suite_target);
     }
 
-    // Also delete the suite-level target
-    let _ = targets_repo.delete(&skill_id, &tool, &scope, project_path.as_deref());
+    for target in &targets {
+        crate::skills::sync_engine::unsync_target(&target.target_path).map_err(|e| {
+            tracing::warn!(target: crate::logging::app_target(), event = "sync.suite_unsync.failed", layer = "backend", area = "sync", outcome = "failed", skill_id = %skill_id, tool = %tool, scope = %scope, target_path = %target.target_path, error = %e, duration_ms = started.elapsed().as_millis() as u64, "failed to remove suite sync target");
+            AppError::FileSystemError(e)
+        })?;
+    }
+    for target in &targets {
+        targets_repo
+            .delete_by_id(&target.id)
+            .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    }
+    tracing::info!(target: crate::logging::app_target(), event = "sync.suite_unsync.completed", layer = "backend", area = "sync", outcome = "success", skill_id = %skill_id, tool = %tool, scope = %scope, target_count = targets.len(), duration_ms = started.elapsed().as_millis() as u64, "suite unsync completed");
 
     Ok(())
 }
@@ -461,8 +498,22 @@ pub async fn list_suite_sub_skills(
     let entries = std::fs::read_dir(source_dir)
         .map_err(|e| AppError::FileSystemError(format!("failed to read dir: {}", e)))?;
 
-    for entry in entries.filter_map(|e| e.ok()) {
-        if !entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false) {
+    for entry_result in entries {
+        let entry = match entry_result {
+            Ok(entry) => entry,
+            Err(error) => {
+                tracing::warn!(target: crate::logging::app_target(), event = "sync.suite_list.entry.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, error = %error, "skipping unreadable suite directory entry");
+                continue;
+            }
+        };
+        let file_type = match entry.file_type() {
+            Ok(file_type) => file_type,
+            Err(error) => {
+                tracing::warn!(target: crate::logging::app_target(), event = "sync.suite_list.entry.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, path = %entry.path().display(), error = %error, "skipping suite entry with unreadable file type");
+                continue;
+            }
+        };
+        if !file_type.is_dir() {
             continue;
         }
         let sub_path = entry.path();
@@ -487,6 +538,8 @@ pub async fn bulk_sync_skills(
     let skills_repo = SkillsRepository::new(&state.db);
     let targets_repo = SkillTargetsRepository::new(&state.db);
     let adapters = effective_tool_adapters(&state.db);
+    let started = Instant::now();
+    tracing::info!(target: crate::logging::app_target(), event = "sync.bulk.started", layer = "backend", area = "sync", outcome = "started", requested_skill_count = skill_ids.len(), "bulk sync started");
 
     let mut synced = 0usize;
     let mut skipped = 0usize;
@@ -499,12 +552,14 @@ pub async fn bulk_sync_skills(
         {
             Some(skill) => skill,
             None => {
+                tracing::warn!(target: crate::logging::app_target(), event = "sync.bulk.skill.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, reason = "missing", "skipping missing skill during bulk sync");
                 skipped += 1;
                 continue;
             }
         };
 
         if !skill.enabled {
+            tracing::warn!(target: crate::logging::app_target(), event = "sync.bulk.skill.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, reason = "disabled", "skipping disabled skill during bulk sync");
             skipped += 1;
             continue;
         }
@@ -515,6 +570,8 @@ pub async fn bulk_sync_skills(
 
         for target in &targets {
             let Some(adapter) = adapter::adapter_by_key(&adapters, &target.tool) else {
+                tracing::warn!(target: crate::logging::app_target(), event = "sync.bulk.target.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, tool = %target.tool, reason = "unknown_tool", "skipping target with unknown tool during bulk sync");
+                skipped += 1;
                 continue;
             };
             let target_path = std::path::PathBuf::from(&target.target_path);
@@ -526,11 +583,15 @@ pub async fn bulk_sync_skills(
                 adapter.force_copy,
             ) {
                 Ok(_) => synced += 1,
-                Err(e) => errors.push(format!("{}: {}", skill.name, e)),
+                Err(e) => {
+                    tracing::warn!(target: crate::logging::app_target(), event = "sync.bulk.item.failed", layer = "backend", area = "sync", outcome = "failed", skill_id = %skill_id, tool = %target.tool, target_path = %target.target_path, error = %e, "bulk sync item failed");
+                    errors.push(format!("{}: {}", skill.name, e));
+                }
             }
         }
     }
 
+    tracing::info!(target: crate::logging::app_target(), event = "sync.bulk.completed", layer = "backend", area = "sync", outcome = "success", synced, skipped, error_count = errors.len(), duration_ms = started.elapsed().as_millis() as u64, "bulk sync completed");
     Ok(serde_json::json!({
         "synced": synced,
         "skipped": skipped,

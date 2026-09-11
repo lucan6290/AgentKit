@@ -113,6 +113,7 @@ impl TaskManagerInner {
     fn log(&self, task_id: &str, message: &str) {
         if let Ok(mut tasks) = self.tasks.lock() {
             if let Some(task) = tasks.get_mut(task_id) {
+                tracing::info!(target: crate::logging::app_target(), event = "task.log", layer = "backend", area = "task", task_id = %task_id, task_kind = %task.kind, message = %message, "task log");
                 task.logs.push(message.to_string());
                 task.message = message.to_string();
                 // Keep only last 200 log entries
@@ -126,7 +127,9 @@ impl TaskManagerInner {
     fn set_progress(&self, task_id: &str, progress: u32, message: &str) {
         if let Ok(mut tasks) = self.tasks.lock() {
             if let Some(task) = tasks.get_mut(task_id) {
-                task.progress = progress.clamp(0, 100);
+                let progress = progress.clamp(0, 100);
+                tracing::info!(target: crate::logging::app_target(), event = "task.progress", layer = "backend", area = "task", task_id = %task_id, task_kind = %task.kind, progress, message = %message, "task progress updated");
+                task.progress = progress;
                 if !message.is_empty() {
                     task.message = message.to_string();
                 }
@@ -184,29 +187,41 @@ impl TaskManager {
         let inner = self.inner.clone();
         let tid = task_id.clone();
 
-        std::thread::Builder::new()
+        tracing::info!(target: crate::logging::app_target(), event = "task.submitted", layer = "backend", area = "task", outcome = "submitted", task_id = %task_id, task_kind = %kind, "background task submitted");
+        if let Err(err) = std::thread::Builder::new()
             .name(format!("skills-hub-task-{}", &tid[..8]))
             .spawn(move || {
                 Self::run_task(inner, tid, task_fn);
             })
-            .expect("failed to spawn task thread");
+        {
+            tracing::error!(target: crate::logging::app_target(), event = "task.spawn.failed", layer = "backend", area = "task", outcome = "failed", task_id = %task_id, task_kind = %kind, error = %err, "failed to spawn background task thread");
+            if let Ok(mut tasks) = self.inner.tasks.lock() {
+                if let Some(task) = tasks.get_mut(&task_id) {
+                    task.status = TaskStatus::Failed;
+                    task.error = Some(err.to_string());
+                    task.message = "failed to start".to_string();
+                    task.finished_at = Some(now_ms());
+                }
+            }
+        }
 
-        record
+        self.get(&task_id).unwrap_or(record)
     }
 
     fn run_task(inner: Arc<TaskManagerInner>, task_id: String, task_fn: TaskFn) {
-        // Mark as running and capture kind for error logging
-        let kind = {
+        let (kind, started_at) = {
             let mut tasks = inner.tasks.lock().unwrap();
             if let Some(task) = tasks.get_mut(&task_id) {
+                let started_at = now_ms();
                 task.status = TaskStatus::Running;
-                task.started_at = Some(now_ms());
+                task.started_at = Some(started_at);
                 task.message = "running".to_string();
-                task.kind.clone()
+                (task.kind.clone(), started_at)
             } else {
                 return;
             }
         };
+        tracing::info!(target: crate::logging::app_target(), event = "task.started", layer = "backend", area = "task", outcome = "started", task_id = %task_id, task_kind = %kind, "background task started");
 
         let ctx = TaskContext {
             manager: inner.clone(),
@@ -215,44 +230,59 @@ impl TaskManager {
 
         match task_fn(&ctx) {
             Ok(result) => {
-                let mut tasks = inner.tasks.lock().unwrap();
-                if let Some(task) = tasks.get_mut(&task_id) {
-                    if task.cancel_requested {
-                        task.status = TaskStatus::Canceled;
-                        task.message = "cancelled".to_string();
+                let finished_at = now_ms();
+                let duration_ms = (finished_at - started_at).max(0);
+                let canceled = {
+                    let mut tasks = inner.tasks.lock().unwrap();
+                    if let Some(task) = tasks.get_mut(&task_id) {
+                        let canceled = task.cancel_requested;
+                        if canceled {
+                            task.status = TaskStatus::Canceled;
+                            task.message = "cancelled".to_string();
+                        } else {
+                            task.status = TaskStatus::Succeeded;
+                            task.progress = 100;
+                            task.message = "completed".to_string();
+                            task.result = Some(result);
+                        }
+                        task.finished_at = Some(finished_at);
+                        canceled
                     } else {
-                        task.status = TaskStatus::Succeeded;
-                        task.progress = 100;
-                        task.message = "completed".to_string();
-                        task.result = Some(result);
+                        return;
                     }
-                    task.finished_at = Some(now_ms());
+                };
+                if canceled {
+                    tracing::info!(target: crate::logging::app_target(), event = "task.canceled", layer = "backend", area = "task", outcome = "canceled", task_id = %task_id, task_kind = %kind, duration_ms, "background task canceled");
+                } else {
+                    tracing::info!(target: crate::logging::app_target(), event = "task.completed", layer = "backend", area = "task", outcome = "success", task_id = %task_id, task_kind = %kind, duration_ms, "background task completed");
                 }
             }
             Err(err) => {
-                tracing::error!(
-                    target: crate::logging::app_target(),
-                    event = "task.run.failed",
-                    layer = "backend",
-                    area = "task",
-                    outcome = "failed",
-                    task_id = %task_id,
-                    task_kind = %kind,
-                    error = %err,
-                    "background task failed"
-                );
-                let mut tasks = inner.tasks.lock().unwrap();
-                if let Some(task) = tasks.get_mut(&task_id) {
-                    if task.cancel_requested || err.contains("cancelled") {
-                        task.status = TaskStatus::Canceled;
-                        task.message = err;
+                let finished_at = now_ms();
+                let duration_ms = (finished_at - started_at).max(0);
+                let canceled = {
+                    let mut tasks = inner.tasks.lock().unwrap();
+                    if let Some(task) = tasks.get_mut(&task_id) {
+                        let canceled = task.cancel_requested || err.contains("cancelled");
+                        if canceled {
+                            task.status = TaskStatus::Canceled;
+                            task.message = err.clone();
+                        } else {
+                            task.status = TaskStatus::Failed;
+                            task.error = Some(err.clone());
+                            task.message = "failed".to_string();
+                            task.logs.push(err.clone());
+                        }
+                        task.finished_at = Some(finished_at);
+                        canceled
                     } else {
-                        task.status = TaskStatus::Failed;
-                        task.error = Some(err.clone());
-                        task.message = "failed".to_string();
-                        task.logs.push(err);
+                        return;
                     }
-                    task.finished_at = Some(now_ms());
+                };
+                if canceled {
+                    tracing::info!(target: crate::logging::app_target(), event = "task.canceled", layer = "backend", area = "task", outcome = "canceled", task_id = %task_id, task_kind = %kind, duration_ms, "background task canceled");
+                } else {
+                    tracing::error!(target: crate::logging::app_target(), event = "task.run.failed", layer = "backend", area = "task", outcome = "failed", task_id = %task_id, task_kind = %kind, duration_ms, error = %err, "background task failed");
                 }
             }
         }
@@ -281,6 +311,7 @@ impl TaskManager {
                 _ => {
                     task.cancel_requested = true;
                     task.message = "cancellation requested".to_string();
+                    tracing::info!(target: crate::logging::app_target(), event = "task.cancel_requested", layer = "backend", area = "task", outcome = "requested", task_id = %task_id, task_kind = %task.kind, "task cancellation requested");
                     true
                 }
             }
@@ -297,6 +328,7 @@ impl TaskManager {
             if task.status == TaskStatus::Pending || task.status == TaskStatus::Running {
                 task.cancel_requested = true;
                 task.message = "cancellation requested".to_string();
+                tracing::info!(target: crate::logging::app_target(), event = "task.cancel_requested", layer = "backend", area = "task", outcome = "requested", task_id = %task.id, task_kind = %task.kind, "task cancellation requested");
                 count += 1;
             }
         }

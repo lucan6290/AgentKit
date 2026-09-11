@@ -63,6 +63,7 @@ const MAX_STRING_LENGTH = 4096
 const MAX_DEPTH = 8
 
 let currentLevel: LogLevel = import.meta.env.DEV ? 'debug' : 'info'
+let globalErrorLoggingInstalled = false
 
 export function isLogLevel(value: string): value is Exclude<LogLevel, 'silent'> {
   return value === 'debug' || value === 'info' || value === 'warn' || value === 'error'
@@ -74,6 +75,40 @@ export function setLoggerLevel(level: LogLevel) {
 
 export function getLoggerLevel(): LogLevel {
   return currentLevel
+}
+
+export function installGlobalErrorLogging() {
+  if (globalErrorLoggingInstalled || typeof window === 'undefined') return
+  globalErrorLoggingInstalled = true
+
+  window.addEventListener('error', (event) => {
+    logger.error(
+      {
+        event: 'frontend.window.error',
+        area: 'window',
+        outcome: 'failed',
+        message: event.message || 'Unhandled window error',
+        meta: {
+          filename: event.filename,
+          line: event.lineno,
+          column: event.colno,
+        },
+      },
+      event.error,
+    )
+  })
+
+  window.addEventListener('unhandledrejection', (event) => {
+    logger.error(
+      {
+        event: 'frontend.promise.unhandled_rejection',
+        area: 'window',
+        outcome: 'failed',
+        message: 'Unhandled promise rejection',
+      },
+      event.reason,
+    )
+  })
 }
 
 export const logger = {

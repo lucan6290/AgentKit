@@ -40,7 +40,12 @@ fn collect_files(base: &Path, current: &Path, entries: &mut Vec<FileEntry>) -> R
     let dir_entries = std::fs::read_dir(current)
         .map_err(|e| format!("failed to read dir {}: {}", current.display(), e))?;
 
-    let mut sorted: Vec<_> = dir_entries.filter_map(|e| e.ok()).collect();
+    let mut sorted = Vec::new();
+    for entry in dir_entries {
+        sorted.push(
+            entry.map_err(|e| format!("failed to read entry in {}: {}", current.display(), e))?,
+        );
+    }
     sorted.sort_by_key(|e| e.file_name());
 
     for entry in sorted {
@@ -60,7 +65,10 @@ fn collect_files(base: &Path, current: &Path, entries: &mut Vec<FileEntry>) -> R
                 .strip_prefix(base)
                 .map_err(|e| format!("strip prefix failed: {}", e))?;
             let rel_str = rel.to_string_lossy().replace('\\', "/");
-            let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+            let size = entry
+                .metadata()
+                .map_err(|e| format!("failed to read metadata for {}: {}", path.display(), e))?
+                .len();
             entries.push(FileEntry {
                 path: rel_str,
                 size,
@@ -94,12 +102,7 @@ pub fn read_file(community_path: impl AsRef<Path>, relative_path: &str) -> Resul
         return Err(format!("file too large (>1MB): {}", relative_path));
     }
 
-    String::from_utf8(content)
-        .map_err(|_| format!("file is not valid UTF-8: {}", relative_path))
-        .or_else(|_| {
-            let bytes = std::fs::read(&target).unwrap_or_default();
-            Ok(String::from_utf8_lossy(&bytes).to_string())
-        })
+    String::from_utf8(content).map_err(|_| format!("file is not valid UTF-8: {}", relative_path))
 }
 
 /// Write content to a file in a skill directory with path traversal protection.

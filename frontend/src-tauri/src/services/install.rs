@@ -1,6 +1,7 @@
 //! Skill installation service.
 
 use std::path::Path;
+use std::time::Instant;
 
 use serde::Serialize;
 
@@ -67,7 +68,10 @@ pub fn parse_skill_md(path: &Path) -> SkillFrontmatter {
 
     let content = match std::fs::read_to_string(&md_path) {
         Ok(c) => c,
-        Err(_) => return SkillFrontmatter::default(),
+        Err(error) => {
+            tracing::warn!(target: crate::logging::app_target(), event = "skills.install.skill_md_read.failed", layer = "backend", area = "install", path = %md_path.display(), error = %error, "failed to read SKILL.md during installation");
+            return SkillFrontmatter::default();
+        }
     };
 
     extract_frontmatter(&content)
@@ -140,24 +144,39 @@ pub fn compute_skill_file_stats(dir_path: &Path) -> (i64, i64) {
     let mut total_size: i64 = 0;
 
     fn walk(dir: &Path, count: &mut i64, size: &mut i64) {
-        if let Ok(entries) = std::fs::read_dir(dir) {
-            for entry in entries.filter_map(|e| e.ok()) {
-                let name = entry.file_name().to_string_lossy().to_string();
-                if crate::utils::IGNORE_NAMES.contains(&name.as_str()) {
+        let entries = match std::fs::read_dir(dir) {
+            Ok(entries) => entries,
+            Err(error) => {
+                tracing::warn!(target: crate::logging::app_target(), event = "skills.install.stats.scan.failed", layer = "backend", area = "install", path = %dir.display(), error = %error, "failed to scan skill directory for file stats");
+                return;
+            }
+        };
+        for entry_result in entries {
+            let entry = match entry_result {
+                Ok(entry) => entry,
+                Err(error) => {
+                    tracing::warn!(target: crate::logging::app_target(), event = "skills.install.stats.entry.failed", layer = "backend", area = "install", path = %dir.display(), error = %error, "failed to inspect skill directory entry");
                     continue;
                 }
-                let path = entry.path();
-                if path.is_symlink() {
-                    continue;
-                }
-                if path.is_dir() {
-                    walk(&path, count, size);
-                } else if path.is_file() {
-                    if let Ok(meta) = path.metadata() {
-                        *size += meta.len() as i64;
+            };
+            let name = entry.file_name().to_string_lossy().to_string();
+            if crate::utils::IGNORE_NAMES.contains(&name.as_str()) {
+                continue;
+            }
+            let path = entry.path();
+            if path.is_symlink() {
+                continue;
+            }
+            if path.is_dir() {
+                walk(&path, count, size);
+            } else if path.is_file() {
+                match path.metadata() {
+                    Ok(meta) => *size += meta.len() as i64,
+                    Err(error) => {
+                        tracing::warn!(target: crate::logging::app_target(), event = "skills.install.stats.metadata.failed", layer = "backend", area = "install", path = %path.display(), error = %error, "failed to read skill file metadata")
                     }
-                    *count += 1;
                 }
+                *count += 1;
             }
         }
     }
@@ -173,10 +192,17 @@ pub fn list_local_skills(base_path: &Path) -> Result<Vec<LocalSkillCandidate>, S
     }
 
     let mut candidates = Vec::new();
-    let mut entries: Vec<_> = std::fs::read_dir(base_path)
-        .map_err(|e| format!("failed to read dir: {}", e))?
-        .filter_map(|e| e.ok())
-        .collect();
+    let mut entries = Vec::new();
+    for entry_result in
+        std::fs::read_dir(base_path).map_err(|e| format!("failed to read dir: {}", e))?
+    {
+        match entry_result {
+            Ok(entry) => entries.push(entry),
+            Err(error) => {
+                tracing::warn!(target: crate::logging::app_target(), event = "skills.install.scan.entry.failed", layer = "backend", area = "install", path = %base_path.display(), error = %error, "failed to inspect local skill candidate entry")
+            }
+        }
+    }
     entries.sort_by_key(|e| e.file_name());
 
     for entry in entries {
@@ -267,7 +293,10 @@ pub fn install_local_skill(
     community_repo: Option<&Path>,
     source_type: &str,
 ) -> Result<InstallResult, String> {
+    let started = Instant::now();
+    tracing::info!(target: crate::logging::app_target(), event = "skills.install.started", layer = "backend", area = "install", outcome = "started", source = %source_path.display(), source_type = %source_type, "skill installation started");
     if !source_path.is_dir() {
+        tracing::warn!(target: crate::logging::app_target(), event = "skills.install.failed", layer = "backend", area = "install", outcome = "failed", source = %source_path.display(), source_type = %source_type, duration_ms = started.elapsed().as_millis() as u64, "skill installation source is not a directory");
         return Err(format!(
             "source is not a directory: {}",
             source_path.display()
@@ -289,8 +318,14 @@ pub fn install_local_skill(
     let (file_count, dir_size) = compute_skill_file_stats(source_path);
 
     if normalize_source_type(source_type) == "custom" {
-        let content = content_hash::hash_dir(source_path).ok();
-        return Ok(InstallResult {
+        let content = match content_hash::hash_dir(source_path) {
+            Ok(content) => Some(content),
+            Err(error) => {
+                tracing::warn!(target: crate::logging::app_target(), event = "skills.install.hash.failed", layer = "backend", area = "install", source = %source_path.display(), source_type = %source_type, error = %error, "failed to hash custom skill directory");
+                None
+            }
+        };
+        let result = InstallResult {
             skill_id,
             name: skill_name,
             community_path: source_path.to_string_lossy().to_string(),
@@ -300,7 +335,9 @@ pub fn install_local_skill(
             frontmatter: Some(fm),
             skill_file_count: Some(file_count),
             skill_dir_size: Some(dir_size),
-        });
+        };
+        tracing::info!(target: crate::logging::app_target(), event = "skills.install.completed", layer = "backend", area = "install", outcome = "success", source = %source_path.display(), target = %result.community_path, skill_id = %result.skill_id, source_type = %source_type, file_count, dir_size, duration_ms = started.elapsed().as_millis() as u64, "custom skill installation completed");
+        return Ok(result);
     }
 
     // Community install: copy to community repo
@@ -319,12 +356,21 @@ pub fn install_local_skill(
         target_dir = path_safety::safe_child_path(&community_base, &alt_name, "skill name")?;
     }
 
-    crate::filesystem::copy_directory(source_path, &target_dir)?;
+    crate::filesystem::copy_directory(source_path, &target_dir).map_err(|error| {
+        tracing::warn!(target: crate::logging::app_target(), event = "skills.install.failed", layer = "backend", area = "install", outcome = "failed", source = %source_path.display(), target = %target_dir.display(), skill_id = %skill_id, source_type = %source_type, duration_ms = started.elapsed().as_millis() as u64, error = %error, "failed to copy skill into community repository");
+        error
+    })?;
 
-    let content = content_hash::hash_dir(&target_dir).ok();
+    let content = match content_hash::hash_dir(&target_dir) {
+        Ok(content) => Some(content),
+        Err(error) => {
+            tracing::warn!(target: crate::logging::app_target(), event = "skills.install.hash.failed", layer = "backend", area = "install", source = %source_path.display(), target = %target_dir.display(), skill_id = %skill_id, source_type = %source_type, error = %error, "failed to hash installed skill directory");
+            None
+        }
+    };
     let (target_file_count, target_dir_size) = compute_skill_file_stats(&target_dir);
 
-    Ok(InstallResult {
+    let result = InstallResult {
         skill_id,
         name: skill_name,
         community_path: target_dir.to_string_lossy().to_string(),
@@ -334,7 +380,9 @@ pub fn install_local_skill(
         frontmatter: Some(fm),
         skill_file_count: Some(target_file_count),
         skill_dir_size: Some(target_dir_size),
-    })
+    };
+    tracing::info!(target: crate::logging::app_target(), event = "skills.install.completed", layer = "backend", area = "install", outcome = "success", source = %source_path.display(), target = %result.community_path, skill_id = %result.skill_id, source_type = %source_type, file_count = target_file_count, dir_size = target_dir_size, duration_ms = started.elapsed().as_millis() as u64, "community skill installation completed");
+    Ok(result)
 }
 
 /// Install a selected skill from a base path + subpath.
@@ -426,7 +474,11 @@ pub fn dedupe_install_result(
                 && !result.community_path.is_empty()
                 && result.community_path != existing.community_path
             {
-                let _ = crate::filesystem::remove_link_or_directory(&result.community_path);
+                if let Err(error) =
+                    crate::filesystem::remove_link_or_directory(&result.community_path)
+                {
+                    tracing::warn!(target: crate::logging::app_target(), event = "skills.install.duplicate_cleanup.failed", layer = "backend", area = "install", path = %result.community_path, existing_skill_id = %existing.id, error = %error, "failed to remove duplicate installed skill directory");
+                }
             }
             return Some(existing.id);
         }
