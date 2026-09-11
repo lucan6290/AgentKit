@@ -61,17 +61,13 @@ pub fn init(log_dir: &Path, configured_level: &str) {
         .with_writer(error_writer)
         .with_filter(filter_fn(|metadata| *metadata.level() <= Level::ERROR));
 
-    if let Err(err) = tracing_log::LogTracer::init() {
-        eprintln!("failed to initialize log tracer: {}", err);
-    }
-
-    match tracing_subscriber::registry()
-        .with(level_filter)
-        .with(file_layer)
-        .with(stdout_layer)
-        .with(error_layer)
-        .try_init()
-    {
+    match tracing::subscriber::set_global_default(
+        tracing_subscriber::registry()
+            .with(level_filter)
+            .with(file_layer)
+            .with(stdout_layer)
+            .with(error_layer),
+    ) {
         Ok(()) => {
             if LOG_GUARDS.set(vec![file_guard, error_guard]).is_err() {
                 eprintln!("logging guards were already initialized");
