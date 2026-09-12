@@ -287,7 +287,7 @@ export function useScopeManager(deps: UseScopeManagerDeps) {
       if (!synced) {
         try {
           const subs = await invoke<SuiteSubSkill[]>('list_suite_sub_skills', {
-            suite_skill_id: skill.id,
+            skill_id: skill.id,
           })
           if (subs.length > 0) {
             // 确认是套件，打开选择弹窗
@@ -483,11 +483,13 @@ export function useScopeManager(deps: UseScopeManagerDeps) {
       try {
         setActionMessage(t('suiteSync.syncingSuite', { name: skill.name, tool: toolLabel }))
         await invoke('sync_suite_to_tool', {
-          suite_skill_id: skill.id,
+          source_path: skill.community_path,
+          skill_id: skill.id,
           tool: toolId,
-          sub_skill_subpaths: selectedSubpaths,
+          name: skill.name,
           scope: skillScope,
           project_path: skillScope === 'project' ? projects[0] : undefined,
+          sub_skill_subpaths: selectedSubpaths,
         })
         const msg = t('suiteSync.suiteSynced', { count: selectedSubpaths.length })
         setActionMessage(msg)

@@ -215,10 +215,13 @@ pub async fn sync_suite_to_tool(
     scope: Option<String>,
     project_path: Option<String>,
     overwrite_if_same_content: Option<bool>,
+    sub_skill_subpaths: Option<Vec<String>>,
 ) -> AppResult<()> {
     // Suite sync: sync each sub-skill directory
     let scope = scope.unwrap_or_else(|| "global".to_string());
     let overwrite = overwrite_if_same_content.unwrap_or(true);
+    let allowed_subs: Option<std::collections::HashSet<String>> =
+        sub_skill_subpaths.map(|v| v.into_iter().collect());
     let started = Instant::now();
     tracing::info!(target: crate::logging::app_target(), event = "sync.suite.started", layer = "backend", area = "sync", outcome = "started", skill_id = %skill_id, tool = %tool, scope = %scope, "suite sync started");
 
@@ -280,6 +283,14 @@ pub async fn sync_suite_to_tool(
         }
 
         let sub_name = entry.file_name().to_string_lossy().to_string();
+
+        // If user selected specific sub-skills, skip unselected ones
+        if let Some(ref allowed) = allowed_subs {
+            if !allowed.contains(&sub_name) {
+                continue;
+            }
+        }
+
         let target_path_buf =
             safe_sync_target_path(&target_base, &sub_name, "skill", "suite sub-skill name")?;
         let target_path_str = target_path_buf.to_string_lossy().to_string();
@@ -502,10 +513,10 @@ pub async fn list_suite_sub_skills(
         if !sub_path.join("SKILL.md").exists() {
             continue;
         }
-        let name = entry.file_name().to_string_lossy().to_string();
+        let sub_name = entry.file_name().to_string_lossy().to_string();
         subs.push(serde_json::json!({
-            "name": name,
-            "path": sub_path.to_string_lossy().to_string(),
+            "name": sub_name,
+            "subpath": sub_name,
         }));
     }
 

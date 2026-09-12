@@ -1,10 +1,45 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+/// Serialize Option<String> (JSON string in DB) as a JSON object for the frontend.
+fn serialize_frontmatter_extra<S>(value: &Option<String>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match value {
+        Some(s) => {
+            let parsed: serde_json::Value =
+                serde_json::from_str(s).unwrap_or(serde_json::Value::Object(Default::default()));
+            parsed.serialize(serializer)
+        }
+        None => serializer.serialize_none(),
+    }
+}
+
+/// Deserialize a JSON object from the frontend back into an Option<String> (JSON string for DB).
+fn deserialize_frontmatter_extra<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value: Option<serde_json::Value> = Option::deserialize(deserializer)?;
+    match value {
+        Some(serde_json::Value::Null) | None => Ok(None),
+        Some(v) => serde_json::to_string(&v)
+            .map(Some)
+            .map_err(serde::de::Error::custom),
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Skill {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
+    #[serde(
+        serialize_with = "serialize_frontmatter_extra",
+        deserialize_with = "deserialize_frontmatter_extra",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
     pub frontmatter_extra: Option<String>,
     pub version: Option<String>,
     pub author: Option<String>,
