@@ -129,7 +129,15 @@ export function useSkills(
         invokeCommand<ToolStatusDto>('get_tool_status'),
         toolSkillsPromise,
       ])
-      setManagedSkills(skills)
+      // Merge: keep existing skills of the other source type, replace only the refreshed type
+      setManagedSkills((prev) => {
+        const otherType = sourceType === 'custom' ? 'community' : 'custom'
+        const otherSkills = prev.filter((s) => {
+          const normalized = s.source_type === 'custom' ? 'custom' : 'community'
+          return normalized === otherType
+        })
+        return [...otherSkills, ...skills]
+      })
       setTags(tagResult)
       setToolStatus(status)
       if (status.newly_installed.length > 0) {
