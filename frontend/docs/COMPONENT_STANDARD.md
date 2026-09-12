@@ -36,7 +36,7 @@
 - `successToastMessage`：成功消息，`useEffect` 监听后通过 toast 显示
 
 提供的核心函数：
-- `setError(message)`：设置错误（自动触发 toast）
+- `setError(message, error?)`：设置错误（自动触发 toast），catch 块中应传入 error 对象
 - `setActionMessage(message)` / `setSuccessToastMessage(message)`
 - `toggleLanguage()`：切换中/英文
 - `formatErrorMessage(err)`：使用 `parseErrorDetail()` 解析后端错误为 i18n key
@@ -94,7 +94,7 @@ Hook 接收依赖时使用两种风格，根据参数数量选择：
 ```typescript
 export function useSkills(
   t: TFunction,
-  setError: (msg: string) => void,
+  setError: (msg: string, error?: unknown) => void,
   setSuccessToastMessage: (msg: string) => void,
 )
 ```
@@ -107,7 +107,7 @@ interface UseTagActionsParams {
   loadManagedSkills: () => Promise<void>
   loadTags: (source: SkillSource) => Promise<void>
   activeSkillSource: SkillSource
-  setError: (msg: string) => void
+  setError: (msg: string, error?: unknown) => void
   setSuccessToastMessage: (msg: string) => void
   setActionMessage: (msg: string | null) => void
   selectedTagIds: number[]

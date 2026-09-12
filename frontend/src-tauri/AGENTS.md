@@ -107,7 +107,7 @@ impl<'a> SkillsRepository<'a> {
 
 - Tauri command 返回的 DTO/响应结构体，序列化为 JSON 传给前端
 - 使用 `#[serde(flatten)]` 平铺 model 字段（如 `ManagedSkillDto` 平铺 `Skill` + 补充 tags/targets/usage）
-- 通用响应：`OkResponse`、`OkPathResponse`、`OkRemovedResponse`、`PickFolderResult`
+- 通用响应：`OkResponse`、`OkPathResponse`、`OkRemovedResponse`
 
 ### 3.7 数据库层（`db/`）
 

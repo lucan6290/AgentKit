@@ -23,7 +23,7 @@ command 只做**参数解析和编排**：接收前端参数 → 调用 Reposito
 | `onboarding.rs` | 引导 | `get_onboarding_plan` |
 | `tasks.rs` | 后台任务 | `get_task_list`, `get_task`, `cancel_task` |
 | `update.rs` | 自动更新 | `check_update`, `do_update` |
-| `misc.rs` | 杂项 | `pick_folder`, `cancel_current_operation`, `reorder`, `open_new_window`, `create_new_window` |
+| `misc.rs` | 杂项 | `cancel_current_operation`, `reorder`, `open_new_window`, `create_new_window` |
 
 ## 硬规则
 
