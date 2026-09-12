@@ -190,13 +190,230 @@ pub struct SyncCapabilities {
 
 // ── Installation Detection ────────────────────────────────────────────
 
-/// Check if a tool is installed by verifying its detect directory exists.
+/// Extra installation indicators beyond the home config directory.
+/// For tools that commonly leave residual config directories after uninstall,
+/// we require at least one of these paths to also exist.
+/// Paths support environment variables via %VAR% syntax (Windows) or $VAR (Unix).
+/// Relative paths are resolved against the home directory (same as detect_dir).
+struct ExtraIndicator {
+    /// Tool key to apply these indicators to.
+    tool_key: &'static str,
+    /// Additional paths that must exist (at least one) to confirm installation.
+    /// Supports:
+    ///   - Absolute paths
+    ///   - %APPDATA%/..., %LOCALAPPDATA%/... (Windows env vars)
+    ///   - Paths starting with ~/ or relative to home
+    paths: &'static [&'static str],
+    /// If true, require the detect dir to contain files/subdirs beyond
+    /// just a "skills" folder to avoid empty-residual false positives.
+    require_content: bool,
+}
+
+/// Tools that need extra verification beyond home config directory presence.
+/// This prevents false positives from leftover config directories after uninstall.
+static EXTRA_INDICATORS: &[ExtraIndicator] = &[
+    // Electron-based IDEs — leave %APPDATA% data dir when installed
+    ExtraIndicator { tool_key: "trae", paths: &["%APPDATA%/Trae"], require_content: false },
+    ExtraIndicator { tool_key: "trae_cn", paths: &["%APPDATA%/Trae CN", "%APPDATA%/TRAE SOLO CN"], require_content: false },
+    ExtraIndicator { tool_key: "cursor", paths: &["%APPDATA%/Cursor", "%LOCALAPPDATA%/Programs/Cursor"], require_content: false },
+    ExtraIndicator { tool_key: "windsurf", paths: &["%APPDATA%/Windsurf"], require_content: false },
+    // CLI tools — installed via npm/cargo/brew, leave cmd in PATH or global npm
+    ExtraIndicator { tool_key: "claude_code", paths: &["%APPDATA%/npm/claude.cmd", "claude"], require_content: false },
+    ExtraIndicator { tool_key: "codex", paths: &["%APPDATA%/Codex", "%APPDATA%/npm/codex.cmd", "%USERPROFILE%/.codex/auth.json"], require_content: false },
+    ExtraIndicator { tool_key: "github_copilot", paths: &["%APPDATA%/npm/copilot.cmd", "%LOCALAPPDATA%/Programs/GitHub Copilot"], require_content: true },
+    // VS Code / IDE extensions — need actual extension installed or full CLI
+    ExtraIndicator { tool_key: "cline", paths: &["%USERPROFILE%/.vscode/extensions/*cline*", "%APPDATA%/Code/User/globalStorage/*cline*"], require_content: true },
+    ExtraIndicator { tool_key: "continue", paths: &["%APPDATA%/Continue", "%USERPROFILE%/.continue/config.yaml"], require_content: false },
+    ExtraIndicator { tool_key: "codebuddy", paths: &["%APPDATA%/CodeBuddy", "%LOCALAPPDATA%/CodeBuddyExtension"], require_content: true },
+    ExtraIndicator { tool_key: "qoder", paths: &["%APPDATA%/Qoder", "%LOCALAPPDATA%/Programs/Qoder", "%LOCALAPPDATA%/.qoder"], require_content: false },
+    ExtraIndicator { tool_key: "roo_code", paths: &["%APPDATA%/Roo Code", "%USERPROFILE%/.vscode/extensions/*roo*"], require_content: true },
+    ExtraIndicator { tool_key: "kilo_code", paths: &["%APPDATA%/Kilo Code", "%USERPROFILE%/.vscode/extensions/*kilo*"], require_content: true },
+    ExtraIndicator { tool_key: "goose", paths: &["%APPDATA%/npm/goose.cmd", "goose"], require_content: false },
+    ExtraIndicator { tool_key: "gemini_cli", paths: &["%APPDATA%/npm/gemini.cmd", "gemini"], require_content: false },
+];
+
+/// Expand environment variables in a path (%VAR% on Windows, $VAR on Unix).
+fn expand_env_vars(path_str: &str) -> String {
+    let mut result = path_str.to_string();
+    // Expand %VAR% patterns (Windows style)
+    let mut i = 0;
+    while let Some(start) = result[i..].find('%') {
+        let start = i + start;
+        if let Some(end) = result[start + 1..].find('%') {
+            let end = start + 1 + end;
+            let var_name = &result[start + 1..end];
+            if let Ok(val) = std::env::var(var_name) {
+                result = format!("{}{}{}", &result[..start], val, &result[end + 1..]);
+                i = start + val.len();
+            } else {
+                i = end + 1;
+            }
+        } else {
+            break;
+        }
+    }
+    result
+}
+
+/// Resolve an indicator path (supports env vars, ~/ prefix, absolute paths).
+fn resolve_indicator_path(template: &str) -> PathBuf {
+    let expanded = expand_env_vars(template);
+    let p = PathBuf::from(&expanded);
+    if p.is_absolute() {
+        return p;
+    }
+    // Handle ~/ prefix
+    if expanded.starts_with("~/") || expanded.starts_with("~\\") {
+        let after = &expanded[2..];
+        return home_dir().join(after);
+    }
+    home_dir().join(p)
+}
+
+/// Check if a path exists, supporting simple glob suffix (*/suffix or prefix*/)
+/// for VS Code extension directories.
+fn path_with_glob_exists(path: &Path) -> bool {
+    let path_str = path.to_string_lossy().to_string();
+    if !path_str.contains('*') {
+        return path.exists();
+    }
+    // Simple glob: handle * as a single wildcard in a path component
+    // Find the component containing *
+    let components: Vec<_> = path_str.split(|c| c == '\\' || c == '/').collect();
+    for (i, comp) in components.iter().enumerate() {
+        if comp.contains('*') {
+            // Build the prefix path up to (but not including) this component
+            let prefix: String = if i == 0 {
+                String::new()
+            } else {
+                components[..i].join(std::path::MAIN_SEPARATOR_STR)
+            };
+            let prefix_path = if prefix.is_empty() {
+                PathBuf::from(std::path::MAIN_SEPARATOR_STR)
+            } else {
+                PathBuf::from(&prefix)
+            };
+            if !prefix_path.exists() {
+                return false;
+            }
+            let pattern = comp.replace('*', "");
+            if let Ok(entries) = std::fs::read_dir(&prefix_path) {
+                for entry in entries.flatten() {
+                    let name = entry.file_name().to_string_lossy().to_string();
+                    // Match: *suffix or prefix*
+                    if (comp.starts_with('*') && name.ends_with(&pattern))
+                        || (comp.ends_with('*') && name.starts_with(&pattern))
+                        || (comp.starts_with('*') && comp.ends_with('*') && name.contains(&pattern[1..pattern.len()-1]))
+                    {
+                        // If there are more components after the wildcard, check they exist
+                        if i + 1 < components.len() {
+                            let rest: String = components[i+1..].join(std::path::MAIN_SEPARATOR_STR);
+                            if entry.path().join(&rest).exists() {
+                                return true;
+                            }
+                        } else {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+    }
+    false
+}
+
+/// Check if the detect directory has meaningful content beyond just a skills folder.
+/// Returns true if the directory exists and contains files/subdirs other than "skills".
+fn detect_dir_has_content(detect_path: &Path) -> bool {
+    let dir = match std::fs::read_dir(detect_path) {
+        Ok(d) => d,
+        Err(_) => return false,
+    };
+    for entry in dir.flatten() {
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name != "skills" && !name.starts_with('.') {
+            return true;
+        }
+    }
+    // Also check if there's a .lock or .config file
+    for entry in std::fs::read_dir(detect_path).into_iter().flatten().flatten() {
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name.starts_with('.') && name != "." && name != ".." && name != ".gitkeep" {
+            if entry.file_type().map(|ft| ft.is_file()).unwrap_or(false) {
+                // Has a dotfile like .skill-lock.json — that's real content
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Check if a tool is installed.
+///
+/// First verifies the detect (config) directory exists in the home folder.
+/// For tools with known uninstall-residue issues, additionally requires at least one
+/// extra indicator (AppData program dir, npm global cmd, etc.) to confirm real installation.
 pub fn is_tool_installed(adapter: &ToolAdapter) -> bool {
     if adapter.relative_detect_dir.is_empty() {
         return false;
     }
     let detect_path = resolve_detect_path(adapter);
-    Path::new(&detect_path).exists()
+    let detect_dir = Path::new(&detect_path);
+    if !detect_dir.exists() {
+        return false;
+    }
+
+    // Look up extra indicators for this tool
+    if let Some(indicator) = EXTRA_INDICATORS.iter().find(|e| e.tool_key == adapter.tool_key) {
+        // Check require_content: if set, detect_dir must have real content beyond just "skills"
+        if indicator.require_content && !detect_dir_has_content(detect_dir) {
+            return false;
+        }
+        // Check extra paths: at least one must exist
+        for tmpl in indicator.paths {
+            let resolved = resolve_indicator_path(tmpl);
+            // For simple command names (no separators), check PATH
+            if !tmpl.contains('/') && !tmpl.contains('\\') && !tmpl.contains('%') {
+                if which::exists(tmpl) {
+                    return true;
+                }
+                continue;
+            }
+            if path_with_glob_exists(&resolved) {
+                return true;
+            }
+        }
+        // None of the extra indicators matched
+        return false;
+    }
+
+    // No extra indicators defined — directory existence is sufficient
+    true
+}
+
+/// Minimal which/where helper: check if an executable is found in PATH.
+mod which {
+    pub fn exists(name: &str) -> bool {
+        std::env::var_os("PATH").is_some_and(|paths| {
+            std::env::split_paths(&paths).any(|dir| {
+                let mut path = dir.join(name);
+                if path.exists() {
+                    return true;
+                }
+                path.set_extension("exe");
+                if path.exists() {
+                    return true;
+                }
+                path.set_extension("cmd");
+                if path.exists() {
+                    return true;
+                }
+                path.set_extension("ps1");
+                path.exists()
+            })
+        })
+    }
 }
 
 // ── Skills Dir Sharing ────────────────────────────────────────────────
