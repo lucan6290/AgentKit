@@ -6,6 +6,7 @@ import {
   RefreshCw,
   Search,
   Shield,
+  ShieldCheck,
   Trash2,
   ChevronLeft,
   ChevronRight,
@@ -19,6 +20,13 @@ import {
   Copy,
   FolderOpen,
   Zap,
+  Activity,
+  Layers,
+  ListRestart,
+  Sparkles,
+  DatabaseZap,
+  Eraser,
+  History,
 } from 'lucide-react'
 import type { TFunction } from 'i18next'
 import {
@@ -47,18 +55,19 @@ type MaintenanceAction = {
   label_key: string
   desc_key: string
   danger: boolean
+  icon: typeof Shield
 }
 
 const MAINTENANCE_ACTIONS: MaintenanceAction[] = [
-  { key: 'integrity_check', label_key: 'db.integrityCheck', desc_key: 'db.integrityCheckDesc', danger: false },
-  { key: 'vacuum', label_key: 'db.vacuum', desc_key: 'db.vacuumDesc', danger: false },
-  { key: 'analyze', label_key: 'db.analyze', desc_key: 'db.analyzeDesc', danger: false },
-  { key: 'wal_checkpoint', label_key: 'db.walCheckpoint', desc_key: 'db.walCheckpointDesc', danger: false },
-  { key: 'reindex', label_key: 'db.reindex', desc_key: 'db.reindexDesc', danger: false },
-  { key: 'optimize', label_key: 'db.optimize', desc_key: 'db.optimizeDesc', danger: false },
-  { key: 'clear_cache', label_key: 'db.clearCache', desc_key: 'db.clearCacheDesc', danger: true },
-  { key: 'clear_discovered', label_key: 'db.clearDiscovered', desc_key: 'db.clearDiscoveredDesc', danger: true },
-  { key: 'clear_usage', label_key: 'db.clearUsage', desc_key: 'db.clearUsageDesc', danger: true },
+  { key: 'integrity_check', label_key: 'db.integrityCheck', desc_key: 'db.integrityCheckDesc', danger: false, icon: ShieldCheck },
+  { key: 'vacuum', label_key: 'db.vacuum', desc_key: 'db.vacuumDesc', danger: false, icon: Zap },
+  { key: 'analyze', label_key: 'db.analyze', desc_key: 'db.analyzeDesc', danger: false, icon: Activity },
+  { key: 'wal_checkpoint', label_key: 'db.walCheckpoint', desc_key: 'db.walCheckpointDesc', danger: false, icon: Layers },
+  { key: 'reindex', label_key: 'db.reindex', desc_key: 'db.reindexDesc', danger: false, icon: ListRestart },
+  { key: 'optimize', label_key: 'db.optimize', desc_key: 'db.optimizeDesc', danger: false, icon: Sparkles },
+  { key: 'clear_cache', label_key: 'db.clearCache', desc_key: 'db.clearCacheDesc', danger: true, icon: Eraser },
+  { key: 'clear_discovered', label_key: 'db.clearDiscovered', desc_key: 'db.clearDiscoveredDesc', danger: true, icon: DatabaseZap },
+  { key: 'clear_usage', label_key: 'db.clearUsage', desc_key: 'db.clearUsageDesc', danger: true, icon: History },
 ]
 
 const FRAG_WARN_THRESHOLD = 20
@@ -592,28 +601,71 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
   )
 
   // ── Render: Maintenance Tab ──
-  const renderMaintenance = () => (
-    <div className="db-maintenance">
-      <div className="db-maint-actions">
-        {MAINTENANCE_ACTIONS.map((act) => (
-          <div key={act.key} className={`db-maint-card ${act.danger ? 'danger' : ''}`}>
-            <div className="db-maint-info">
-              <div className="db-maint-title">{t(act.label_key)}</div>
-              <div className="db-maint-desc">{t(act.desc_key)}</div>
-            </div>
-            <button
-              className={`btn-secondary ${act.danger ? 'btn-danger' : ''}`}
-              onClick={() => handleMaintenanceAction(act.key)}
-              disabled={actionLoading !== null}
-              type="button"
-            >
-              {actionLoading === act.key ? <RefreshCw size={14} className="db-spin" /> : t('db.execute')}
-            </button>
-          </div>
-        ))}
-      </div>
+  const renderMaintenance = () => {
+    const safeActions = MAINTENANCE_ACTIONS.filter((a) => !a.danger)
+    const dangerActions = MAINTENANCE_ACTIONS.filter((a) => a.danger)
 
-      <div className="db-maint-divider" />
+    return (
+      <div className="db-maintenance">
+        <div className="db-maint-group">
+          <div className="db-maint-group-header">
+            <Shield size={14} />
+            <span>{t('db.maintGroupSafe')}</span>
+          </div>
+          <div className="db-maint-actions">
+            {safeActions.map((act) => (
+              <div key={act.key} className="db-maint-card">
+                <div className="db-maint-info">
+                  <div className="db-maint-title">
+                    <act.icon size={16} className="db-maint-title-icon" />
+                    {t(act.label_key)}
+                  </div>
+                  <div className="db-maint-desc">{t(act.desc_key)}</div>
+                </div>
+                <button
+                  className="btn-secondary"
+                  onClick={() => handleMaintenanceAction(act.key)}
+                  disabled={actionLoading !== null}
+                  type="button"
+                >
+                  {actionLoading === act.key ? <RefreshCw size={14} className="db-spin" /> : <act.icon size={14} className="db-maint-btn-icon" />}
+                  {t(act.label_key)}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="db-maint-group">
+          <div className="db-maint-group-header danger">
+            <AlertTriangle size={14} />
+            <span>{t('db.maintGroupDanger')}</span>
+          </div>
+          <div className="db-maint-actions">
+            {dangerActions.map((act) => (
+              <div key={act.key} className="db-maint-card danger">
+                <div className="db-maint-info">
+                  <div className="db-maint-title">
+                    <act.icon size={16} className="db-maint-title-icon" />
+                    {t(act.label_key)}
+                  </div>
+                  <div className="db-maint-desc">{t(act.desc_key)}</div>
+                </div>
+                <button
+                  className="btn-secondary btn-danger"
+                  onClick={() => handleMaintenanceAction(act.key)}
+                  disabled={actionLoading !== null}
+                  type="button"
+                >
+                  {actionLoading === act.key ? <RefreshCw size={14} className="db-spin" /> : <act.icon size={14} className="db-maint-btn-icon" />}
+                  {t(act.label_key)}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="db-maint-divider" />
 
       <div className="db-maint-card">
         <div className="db-maint-info">
@@ -698,7 +750,8 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
         )}
       </div>
     </div>
-  )
+    )
+  }
 
   return (
     <div className="settings-v2-section settings-v2-db-section">

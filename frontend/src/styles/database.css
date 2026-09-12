@@ -456,6 +456,26 @@
 }
 
 /* Maintenance */
+.db-maint-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.db-maint-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 4px 2px;
+}
+
+.db-maint-group-header.danger {
+  color: var(--status-error);
+}
+
 .db-maint-actions {
   display: flex;
   flex-direction: column;
