@@ -231,8 +231,8 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
     try {
       await navigator.clipboard.writeText(overview.db_path)
       showSuccess(t('db.copied'))
-    } catch {
-      showError(t('copyFailed'))
+    } catch (error) {
+      showError(t('copyFailed'), error)
     }
   }, [overview, t])
 

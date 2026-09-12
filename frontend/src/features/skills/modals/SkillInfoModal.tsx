@@ -63,8 +63,8 @@ const SkillInfoModal = ({
     try {
       await navigator.clipboard.writeText(value)
       showSuccess(t('copied'))
-    } catch {
-      showError(t('copyFailed'))
+    } catch (error) {
+      showError(t('copyFailed'), error)
     }
   }
 

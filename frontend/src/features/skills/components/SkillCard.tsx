@@ -78,8 +78,8 @@ const SkillCard = ({
     try {
       await navigator.clipboard.writeText(copyValue)
       showSuccess(t('copied'))
-    } catch {
-      showError(t('copyFailed'))
+    } catch (error) {
+      showError(t('copyFailed'), error)
     }
   }
 

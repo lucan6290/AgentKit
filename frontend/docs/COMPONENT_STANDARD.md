@@ -42,6 +42,8 @@
 - `formatErrorMessage(err)`：使用 `parseErrorDetail()` 解析后端错误为 i18n key
 - `showActionErrors(result, fallbackKey)`：批量处理操作结果中的错误
 
+> **注意**：组件中的错误提示应优先使用 `lib/uiFeedback.ts` 的 `showError(message, error)` 函数，而非 `setError`。`showError` 支持传入 error 对象，用户可复制结构化诊断详情，便于调试。
+
 ### 2.2 ModalContext（`src/context/ModalContext.tsx`）
 
 管理的状态：
@@ -173,7 +175,7 @@ const handleConfirmDelete = useCallback(async () => {
     setPendingDeleteTag(null)
     setSuccessToastMessage(t('tagDeleted'))
   } catch (err) {
-    setError(err instanceof Error ? err.message : String(err))
+    showError(t('tagDeleteFailed'), err)
   } finally {
     setLoading(false)
     setLoadingStartAt(null)
@@ -186,7 +188,7 @@ const handleConfirmDelete = useCallback(async () => {
 - `setLoading(true)` + `setLoadingStartAt(Date.now())` + `setActionMessage(...)` 在 try 顶部
 - `setLoading(false)` + `setLoadingStartAt(null)` + `setActionMessage(null)` 在 finally 中
 - 变更成功后调用 `loadManagedSkills()` / `loadTags()` 刷新数据（无缓存库，手动 re-fetch）
-- 错误通过 `setError` 传递（内部调用 `parseErrorDetail` 解析并显示 toast）
+- 错误通过 `showError(message, error)` 显示（来自 `lib/uiFeedback.ts`），支持复制结构化诊断详情
 
 ### 4.2 乐观更新 + 回退（拖拽排序模式）
 
@@ -198,12 +200,12 @@ const reorderSkills = useCallback(async (items: ReorderItem[]) => {
   setManagedSkills(prev => /* 按新顺序重排 */)
   try {
     await apiReorder('skills', items)
-  } catch {
+  } catch (err) {
     // 失败时全量重载
     await loadManagedSkills()
-    setError(t('errors.reorderFailed'))
+    showError(t('errors.reorderFailed'), err)
   }
-}, [loadManagedSkills, setError])
+}, [loadManagedSkills, showError])
 ```
 
 ### 4.3 Loading 状态线程传递
@@ -248,6 +250,31 @@ const handleRefreshSkills = useCallback(async () => {
   }
 }, [/* deps */])
 ```
+
+### 4.5 错误处理规范（`lib/uiFeedback.ts`）
+
+- **统一使用** `showError(message, error)` 显示错误 toast，`showSuccess(message)` 显示成功 toast
+- catch 块中**必须**传入 error 对象作为第二参数，以支持"复制诊断详情"功能：
+
+```typescript
+// ✅ 正确：传入 error 对象
+} catch (error) {
+  showError(t('copyFailed'), error)
+}
+
+// ❌ 错误：未传入 error 对象，无法复制诊断详情
+} catch {
+  showError(t('copyFailed'))
+}
+```
+
+- 非异常场景的校验提示（如"请输入 RESET 确认"）可以只传 message，无需 error 参数
+
+### 4.6 文件/文件夹选择规范
+
+- **必须**使用 `lib/pickFolder.ts` 的 `pickFolder()` 或 `pickFile()` 选择文件/文件夹
+- **禁止**使用 HTML `<input type="file">` — Tauri webview 中 `File` 对象没有 `path` 属性，无法获取文件路径
+- 用户取消选择时返回 `null`，调用方应提前 return，不应显示错误
 
 ## 5. 组件模式
 

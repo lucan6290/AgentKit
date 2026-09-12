@@ -182,7 +182,7 @@ const handleDelete = useCallback(async () => {
     await loadManagedSkills()
     setSuccessToastMessage(t('success'))
   } catch (err) {
-    setError(err instanceof Error ? err.message : String(err))
+    showError(t('deleteFailed'), err)
   } finally {
     setLoading(false)
     setLoadingStartAt(null)
@@ -191,7 +191,7 @@ const handleDelete = useCallback(async () => {
 }, [/* deps */])
 ```
 
-`setError` 来自 `AppStateContext`，内部调用 `parseErrorDetail` 解析错误码并显示 toast。
+`showError` 来自 `lib/uiFeedback.ts`，支持传入 error 对象以提供可复制的结构化诊断详情。
 
 ## 5. DTO 类型管理
 
@@ -315,13 +315,16 @@ const result = await invoke<{ new_path: string }>('set_community_repo_path', { p
 
 ## 7. 辅助工具
 
-### 7.1 `pickFolder`（`lib/pickFolder.ts`）
+### 7.1 `pickFolder` / `pickFile`（`lib/pickFolder.ts`）
 
 ```typescript
 export async function pickFolder(promptTitle: string): Promise<string | null>
+export async function pickFile(promptTitle: string): Promise<string | null>
 ```
 
-调用 Rust `pick_folder` 命令打开系统原生文件夹选择对话框。Rust 命令不可用时回退到 `window.prompt()` 文本输入。
+调用 `@tauri-apps/plugin-dialog` 的 `open()` 打开系统原生对话框，返回选中的路径（用户取消时返回 `null`）。
+
+**禁止**使用 HTML `<input type="file">` 选择文件——Tauri webview 中 `File` 对象没有 `path` 属性，无法获取文件路径。
 
 ### 7.2 `formatSize`（`lib/utils.ts`）
 
@@ -437,7 +440,6 @@ export function formatSize(bytes: number): string
 | `cancel_task` | `{ task_id }` | `boolean` | — |
 | `check_update` | — | `CheckUpdateResult` | `checkUpdate()` |
 | `do_update` | — | `PerformUpdateResult` | `performUpdate()` |
-| `pick_folder` | — | `{ path: string \| null }` | `pickFolder()` |
 | `cancel_current_operation` | — | `void` | `useImportFlow` hook 内 `invoke` |
 | `reorder` | `{ entity, items }` | `void` | `reorder()` |
 | `open_new_window` | — | `void` | — |

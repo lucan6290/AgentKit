@@ -251,8 +251,8 @@ const SettingsPage = ({
     try {
       await navigator.clipboard.writeText(path)
       showSuccess(t('copied'))
-    } catch {
-      showError(t('copyFailed'))
+    } catch (error) {
+      showError(t('copyFailed'), error)
     }
   }
 
