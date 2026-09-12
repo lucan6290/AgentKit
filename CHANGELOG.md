@@ -4,6 +4,23 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-12
+
+### Added
+- 全新 AgentKit 品牌 Logo（蓝色 AK 字母组合 + 连接节点），统一图标组件库，全项目图标引用迁移
+- 更新弹窗支持 Markdown 渲染更新日志，新增「前往官网」按钮在系统浏览器中打开 Releases 下载页
+- 新增 `open_external_url` Rust 命令，用于在系统默认浏览器打开外链
+
+### Changed
+- 应用更新体验优化：启动 2 秒后延迟自动检查，禁用 Tauri 内置弹窗改用自定义 UI，Windows 安装模式改为 passive
+- 更新弹窗三按钮布局（取消/前往官网/立即更新），下载过程实时显示进度条和百分比
+
+### Fixed
+- 修复套件同步参数不匹配与 `frontmatter_extra` 序列化问题
+- 修复 `update_skill_source_url` 返回不完整 DTO 导致 tags/targets 为 undefined 的 TypeError
+- 修正本地构建脚本 `build.ps1` 中的项目路径为 AgentKit
+- 修复更新弹窗中外链在 Tauri webview 内打开的问题
+
 ## [0.3.0] - 2026-09-12
 
 ### Added
