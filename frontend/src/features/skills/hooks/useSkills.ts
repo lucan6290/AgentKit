@@ -47,7 +47,19 @@ export function useSkills(
         'get_managed_skills',
         Object.keys(params).length > 0 ? params : undefined,
       )
-      setManagedSkills(result)
+      if (sourceType) {
+        // Merge: keep existing skills of the other source type, replace only the loaded type
+        setManagedSkills((prev) => {
+          const otherType = sourceType === 'custom' ? 'community' : 'custom'
+          const otherSkills = prev.filter((s) => {
+            const normalized = s.source_type === 'custom' ? 'custom' : 'community'
+            return normalized === otherType
+          })
+          return [...otherSkills, ...result]
+        })
+      } else {
+        setManagedSkills(result)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err), err)
     }
