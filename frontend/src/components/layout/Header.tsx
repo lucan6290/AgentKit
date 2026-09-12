@@ -169,14 +169,14 @@ const Header = ({
           <img
             className="brand-logo brand-logo-light"
             src={logoLight}
-            alt="Skills Hub"
+            alt="AgentKit"
             width={32}
             height={32}
           />
           <img
             className="brand-logo brand-logo-dark"
             src={logoDark}
-            alt="Skills Hub"
+            alt="AgentKit"
             width={32}
             height={32}
           />

@@ -261,7 +261,7 @@ const UpdatePanel = ({ t }: UpdatePanelProps) => {
       {(() => {
         const repoUrl = result?.release_url
           ? (result.release_url.match(/https:\/\/github\.com\/[^/]+\/[^/]+/)?.[0] ?? result.release_url)
-          : 'https://github.com/lucan6290/skills-hub'
+          : 'https://github.com/lucan6290/agentkit'
         return (
           <div className="settings-v2-item">
             <div className="settings-v2-item-info">
@@ -294,7 +294,7 @@ const UpdatePanel = ({ t }: UpdatePanelProps) => {
           </div>
         </div>
         <a
-          href={result?.release_url ?? 'https://github.com/lucan6290/skills-hub/releases'}
+          href={result?.release_url ?? 'https://github.com/lucan6290/agentkit/releases'}
           target="_blank"
           rel="noopener noreferrer"
           className="settings-v2-pill-btn"

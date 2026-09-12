@@ -444,12 +444,12 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ─── Deep Link handler (skillshub://) ──────────
+  // ─── Deep Link handler (agentkit://) ──────────
   useEffect(() => {
     const handleDeepLink = (url: string) => {
-      // skillshub://skill/{id} → 打开 skill 详情
-      // skillshub://import → 打开导入界面
-      const match = url.match(/^skillshub:\/\/([^/]+)(?:\/(.+))?/)
+      // agentkit://skill/{id} → 打开 skill 详情
+      // agentkit://import → 打开导入界面
+      const match = url.match(/^agentkit:\/\/([^/]+)(?:\/(.+))?/)
       if (!match) return
       const [, action, param] = match
       if (action === 'skill' && param) {

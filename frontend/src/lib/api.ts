@@ -1,5 +1,5 @@
 /**
- * Skills Hub 前端 API 适配层
+ * AgentKit 前端 API 适配层
  * 通过 Tauri invoke 调用 Rust 后端
  *
  * 命名规范：所有参数直接使用 snake_case，与后端字段名完全一致，禁止转换。

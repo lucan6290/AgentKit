@@ -1,7 +1,7 @@
 export const resources = {
   en: {
     translation: {
-      appName: 'Skills Hub',
+      appName: 'AgentKit',
       brand: {
         skills: 'Skills',
         hub: 'Hub',
@@ -126,7 +126,7 @@ export const resources = {
         groupSystem: 'System',
         autostartTitle: 'Launch at Startup',
         autostartToggle: 'Enable launch at startup',
-        autostartDesc: 'Automatically start Skills Hub when you log in to your computer.',
+        autostartDesc: 'Automatically start AgentKit when you log in to your computer.',
         closeBehaviorTitle: 'Close Behavior',
         closeBehaviorDesc: 'Choose what happens when you close the main window.',
         closeMinimizeToTray: 'Minimize to Tray',
@@ -742,7 +742,7 @@ export const resources = {
   },
   zh: {
     translation: {
-      appName: 'Skills Hub',
+      appName: 'AgentKit',
       brand: {
         skills: 'Skills',
         hub: 'Hub',
@@ -867,7 +867,7 @@ export const resources = {
         groupSystem: '系统',
         autostartTitle: '开机启动',
         autostartToggle: '启用开机启动',
-        autostartDesc: '登录电脑时自动启动 Skills Hub。',
+        autostartDesc: '登录电脑时自动启动 AgentKit。',
         closeBehaviorTitle: '关闭行为',
         closeBehaviorDesc: '选择关闭主窗口时的行为。',
         closeMinimizeToTray: '最小化到托盘',
