@@ -298,7 +298,7 @@ function AppContent() {
       await loadManagedSkills()
       await loadTags(modal.activeSkillSource)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setLoading(false)
       setLoadingStartAt(null)
@@ -316,7 +316,7 @@ function AppContent() {
       setBulkMode(false)
       await loadManagedSkills()
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setLoading(false)
       setLoadingStartAt(null)
@@ -337,7 +337,7 @@ function AppContent() {
       await loadManagedSkills()
       await loadTags(modal.activeSkillSource)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setLoading(false)
       setLoadingStartAt(null)

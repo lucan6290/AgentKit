@@ -21,7 +21,7 @@ interface UseAddSkillDeps {
   loadTags: (sourceType?: 'custom' | 'community') => Promise<void>
   isSkillNameTaken: (name: string, sourceType?: string) => boolean
   showActionErrors: (errors: { title: string; message: string }[]) => void
-  setError: (msg: string) => void
+  setError: (msg: string, error?: unknown) => void
   loading: boolean
   setLoading: (v: boolean) => void
   setLoadingStartAt: (v: number | null) => void
@@ -106,7 +106,7 @@ export function useAddSkill(deps: UseAddSkillDeps) {
       if (!path) return
       setLocalPath(path)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     }
   }, [setError, t])
 
@@ -255,7 +255,7 @@ export function useAddSkill(deps: UseAddSkillDeps) {
         return
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setLoading(false)
       setLoadingStartAt(null)

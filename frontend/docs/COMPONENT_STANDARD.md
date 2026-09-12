@@ -269,6 +269,19 @@ const handleRefreshSkills = useCallback(async () => {
 ```
 
 - 非异常场景的校验提示（如"请输入 RESET 确认"）可以只传 message，无需 error 参数
+- hooks 层通过 `setError(msg, error)` 间接调用 `showError`，同样需要传入 error 对象：
+
+```typescript
+// ✅ 正确：hooks 中传入 error 对象
+} catch (err) {
+  setError(err instanceof Error ? err.message : String(err), err)
+}
+
+// ❌ 错误：未传入 error 对象
+} catch (err) {
+  setError(err instanceof Error ? err.message : String(err))
+}
+```
 
 ### 4.6 文件/文件夹选择规范
 

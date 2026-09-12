@@ -8,7 +8,7 @@ interface UseTagActionsParams {
   loadManagedSkills: () => Promise<void>
   loadTags: (source: SkillSource) => Promise<void>
   activeSkillSource: SkillSource
-  setError: (msg: string) => void
+  setError: (msg: string, error?: unknown) => void
   setSuccessToastMessage: (msg: string) => void
   setActionMessage: (msg: string | null) => void
   selectedTagIds: number[]
@@ -49,7 +49,7 @@ export function useTagActions(params: UseTagActionsParams) {
         await loadTags(activeSkillSource)
         setSuccessToastMessage(t('tagCreated'))
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
       }
     },
     [loadTags, activeSkillSource, setSuccessToastMessage, t, setError],
@@ -68,7 +68,7 @@ export function useTagActions(params: UseTagActionsParams) {
         await loadTags(activeSkillSource)
         setSuccessToastMessage(t('tagRenamed'))
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
       }
     },
     [
@@ -110,7 +110,7 @@ export function useTagActions(params: UseTagActionsParams) {
       setPendingDeleteTag(null)
       setSuccessToastMessage(t('tagDeleted'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setLoading(false)
       setLoadingStartAt(null)

@@ -10,7 +10,7 @@ type AppState = {
 }
 
 type AppStateActions = {
-  setError: (msg: string) => void
+  setError: (msg: string, error?: unknown) => void
   setActionMessage: (msg: string | null) => void
   setSuccessToastMessage: (msg: string) => void
   toggleLanguage: () => void
@@ -79,9 +79,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   // 错误 toast：在 setError 调用时直接展示并清空 loading 状态，避免 effect 内 setState
   const setError = useCallback(
-    (msg: string) => {
+    (msg: string, error?: unknown) => {
       const formatted = formatErrorMessage(msg)
-      if (formatted) showError(formatted, msg, { duration: 2600 })
+      if (formatted) showError(formatted, error ?? msg, { duration: 2600 })
       setActionMessage(null)
     },
     [formatErrorMessage],

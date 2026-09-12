@@ -8,7 +8,7 @@ interface UseSkillActionsParams {
   loadManagedSkills: () => Promise<void>
   loadTags: (source: SkillSource) => Promise<void>
   activeSkillSource: SkillSource
-  setError: (msg: string) => void
+  setError: (msg: string, error?: unknown) => void
   setSuccessToastMessage: (msg: string) => void
   setActionMessage: (msg: string | null) => void
   setSkillScopeState: (
@@ -67,7 +67,7 @@ export function useSkillActions(params: UseSkillActionsParams) {
         await loadTags(activeSkillSource)
         setPendingDeleteId(null)
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
       } finally {
         setPendingDeleteId(null)
         setLoadingStartAt(null)
@@ -100,7 +100,7 @@ export function useSkillActions(params: UseSkillActionsParams) {
         closeEditTags()
         setSuccessToastMessage(t('tagsUpdated'))
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
       } finally {
         setLoading(false)
         setLoadingStartAt(null)

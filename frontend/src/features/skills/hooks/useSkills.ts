@@ -26,7 +26,7 @@ type ToolSkillSnapshot = {
  */
 export function useSkills(
   t: TFunction,
-  setError: (msg: string) => void,
+  setError: (msg: string, error?: unknown) => void,
   setSuccessToastMessage: (msg: string) => void,
 ) {
   const { invoke } = useApi()
@@ -49,7 +49,7 @@ export function useSkills(
       )
       setManagedSkills(result)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     }
   }, [setError])
 
@@ -65,7 +65,7 @@ export function useSkills(
       )
       setTags(result)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     }
   }, [invoke, setError])
 
@@ -140,7 +140,7 @@ export function useSkills(
       }
       setSuccessToastMessage(t('refreshSuccess'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     } finally {
       setRefreshingSkills(false)
     }
@@ -324,7 +324,7 @@ export function useSkills(
       try {
         await skillService.setSkillEnabled(skillId, enabled)
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
         await loadManagedSkills()
       }
     },
@@ -345,7 +345,7 @@ export function useSkills(
         await apiReorder('skills', items)
       } catch (err) {
         // 失败时重新加载
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
         await loadManagedSkills()
       }
     },
@@ -363,7 +363,7 @@ export function useSkills(
       try {
         await apiReorder('tags', items)
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
         await loadTags()
       }
     },

@@ -25,7 +25,7 @@ interface UseScopeManagerDeps {
   setSkillScopeState: React.Dispatch<React.SetStateAction<SkillScopeState>>
   managedSkills: ManagedSkill[]
   loadManagedSkills: (refresh?: boolean) => Promise<void>
-  setError: (msg: string) => void
+  setError: (msg: string, error?: unknown) => void
   setActionMessage: (msg: string | null) => void
   setSuccessToastMessage: (msg: string) => void
 }
@@ -127,7 +127,7 @@ export function useScopeManager(deps: UseScopeManagerDeps) {
       if (!path) return undefined
       return path
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
       return undefined
     }
   }, [scopeModalSkill, setError, t])
@@ -231,7 +231,7 @@ export function useScopeManager(deps: UseScopeManagerDeps) {
           }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
         return
       } finally {
         setLoading(false)
@@ -322,7 +322,7 @@ export function useScopeManager(deps: UseScopeManagerDeps) {
           setActionMessage(null)
           await loadManagedSkills()
         } catch (err) {
-          setError(err instanceof Error ? err.message : String(err))
+          setError(err instanceof Error ? err.message : String(err), err)
         } finally {
           setLoading(false)
           setLoadingStartAt(null)
@@ -496,7 +496,7 @@ export function useScopeManager(deps: UseScopeManagerDeps) {
         setSuiteSyncState(null)
         await loadManagedSkills()
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
       } finally {
         setLoading(false)
         setLoadingStartAt(null)

@@ -18,7 +18,7 @@ interface UseImportFlowDeps {
   loadManagedSkills: (refresh?: boolean) => Promise<void>
   isSkillNameTaken: (name: string) => boolean
   showActionErrors: (errors: { title: string; message: string }[]) => void
-  setError: (msg: string) => void
+  setError: (msg: string, error?: unknown) => void
   setActionMessage: (msg: string | null) => void
   setSuccessToastMessage: (msg: string) => void
 }
@@ -70,7 +70,7 @@ export function useImportFlow(deps: UseImportFlowDeps) {
       setVariantChoice(defaultChoice)
       return result
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
       return null
     } finally {
       if (showLoading) setLoading(false)
@@ -246,7 +246,7 @@ export function useImportFlow(deps: UseImportFlowDeps) {
       }
       return true
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
       return false
     } finally {
       setLoading(false)

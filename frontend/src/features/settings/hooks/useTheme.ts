@@ -13,7 +13,7 @@ const THEME_STORAGE_KEY = 'skills-theme'
 export function useTheme(
   t: TFunction,
   loadManagedSkills: (refresh?: boolean, sourceType?: 'custom' | 'community') => Promise<void>,
-  setError: (msg: string) => void,
+  setError: (msg: string, error?: unknown) => void,
 ) {
   const { invoke } = useApi()
   const [themePreference, setThemePreference] = useState<'system' | 'light' | 'dark'>(() => {
@@ -67,12 +67,12 @@ export function useTheme(
     invoke<string>('get_community_repo_path')
       .then((path) => setStoragePath(path))
       .catch((err) => {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
       })
     invoke<string>('get_custom_repo_path')
       .then((path) => setCustomRepoPath(path))
       .catch((err) => {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(err instanceof Error ? err.message : String(err), err)
       })
   }, [invoke, setError])
 
@@ -92,7 +92,7 @@ export function useTheme(
       await loadManagedSkills()
       showSuccess(t('settings.saved'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     }
   }, [invoke, loadManagedSkills, setError, t])
 
@@ -106,7 +106,7 @@ export function useTheme(
       showSuccess(t('settings.saved'))
       if (result.empty) showInfo(t('settings.emptyDirHint'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     }
   }, [invoke, loadManagedSkills, setError, t])
 
@@ -115,7 +115,7 @@ export function useTheme(
       await invoke<{ ok: boolean }>('open_settings_folder', { path })
       showSuccess(t('settings.openedFolder'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err), err)
     }
   }, [invoke, setError, t])
 
