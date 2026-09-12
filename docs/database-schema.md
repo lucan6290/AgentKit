@@ -1,11 +1,11 @@
 # 数据库表结构
 
-Skills Hub 使用 **SQLite** 数据库，文件名为 `skills_hub.db`。数据库位置按平台：
+AgentKit 使用 **SQLite** 数据库，文件名为 `agentkit.db`。数据库位置按平台：
 
-- Windows: `%APPDATA%/skills-hub/skills_hub.db`
-- macOS: `~/Library/Application Support/skills-hub/skills_hub.db`
-- Linux: `~/.local/share/skills-hub/skills_hub.db`
-- 便携模式: `<exe_dir>/data/skills_hub.db`
+- Windows: `%APPDATA%/agentkit/agentkit.db`
+- macOS: `~/Library/Application Support/agentkit/agentkit.db`
+- Linux: `~/.local/share/agentkit/agentkit.db`
+- 便携模式: `<exe_dir>/data/agentkit.db`
 
 Schema 采用自愈模式（self-healing），应用启动时通过幂等 DDL 确保所有表和列存在，无版本号信任。
 
@@ -129,8 +129,8 @@ Skills 与 Tags 的多对多关联表。
 
 | 键名 | 值示例 | 用途 |
 |---|---|---|
-| `community_repo_path` | `/absolute/path/to/.skillshub` | 社区仓库存储目录 |
-| `custom_repo_path` | `/absolute/path/to/.skills-hub-custom` | 自制 Skill 存储目录 |
+| `community_repo_path` | `/absolute/path/to/.agentkit` | 社区仓库存储目录 |
+| `custom_repo_path` | `/absolute/path/to/.agentkit-custom` | 自制 Skill 存储目录 |
 | `default_sync_tools` | `["claude_code", "cursor"]` | 新建同步操作时的默认工具列表（JSON 数组） |
 
 ---

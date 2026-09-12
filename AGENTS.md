@@ -1,4 +1,4 @@
-# Skills Hub - 项目规范
+# AgentKit - 项目规范
 
 > 中文 | [English](docs/AGENTS.en.md)
 
@@ -8,7 +8,7 @@
 
 ## 概述
 
-Skills Hub 是一款跨平台桌面应用（React 19 + Rust Tauri），用于管理 AI Agent Skills 并将其同步到 44 款 AI 编程工具。核心理念："一次安装，处处同步。"
+AgentKit 是一款跨平台桌面应用（React 19 + Rust Tauri），用于管理 AI Agent Skills 并将其同步到 44 款 AI 编程工具。核心理念："一次安装，处处同步。"
 
 ## 技术栈
 
@@ -23,7 +23,7 @@ Skills Hub 是一款跨平台桌面应用（React 19 + Rust Tauri），用于管
 ### 目录结构（高层）
 
 ```
-skills-hub/
+agentkit/
 ├── frontend/          # React 前端 → 详见 frontend/AGENTS.md
 │   └── src-tauri/     # Rust Tauri 后端
 ├── docs/              # 共享文档（数据库 schema 等）
@@ -83,7 +83,7 @@ skills-hub/
 1. **本地自动提交**：每当有文件改动，立即在本地执行 `git add` + `git commit`，确保每次变更都有记录。
 2. **禁止推送远程**：所有提交仅保留在本地仓库，除非用户明确要求，否则绝不执行 `git push`。
 3. **提交规范**：提交消息格式为 `类型: 简要描述`（中文描述），单次提交只包含一个功能/一个修复。
-4. **默认仓库与分支**：默认远程仓库为 `origin`（`https://github.com/lucan6290/skills-hub.git`），默认分支为 `main`。
+4. **默认仓库与分支**：默认远程仓库为 `origin`（`https://github.com/lucan6290/agentkit.git`），默认分支为 `main`。
 
 ## 网络代理规范
 

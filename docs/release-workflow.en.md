@@ -2,7 +2,7 @@
 
 > [中文完整版](release-workflow.md) | English
 
-This document summarizes the release gates for Skills Hub. The Chinese guide is the source of truth and contains the complete PowerShell commands and recovery procedures.
+This document summarizes the release gates for AgentKit. The Chinese guide is the source of truth and contains the complete PowerShell commands and recovery procedures.
 
 ## Release checklist
 

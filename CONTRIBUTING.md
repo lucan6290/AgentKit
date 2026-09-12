@@ -2,12 +2,12 @@
 
 > 中文 | [English](docs/CONTRIBUTING.en.md)
 
-感谢你参与 Skills Hub！欢迎修复问题、补充测试、改进文档和翻译，也欢迎提出有明确使用场景的新功能。参与前请阅读 [行为准则](CODE_OF_CONDUCT.md)。
+感谢你参与 AgentKit！欢迎修复问题、补充测试、改进文档和翻译，也欢迎提出有明确使用场景的新功能。参与前请阅读 [行为准则](CODE_OF_CONDUCT.md)。
 
 ## 先选择合适的渠道
 
 - 使用问题与故障排查：先看 [支持指南](SUPPORT.md) 和 [README](README.md)
-- 可复现的 Bug：搜索 [已有 Issues](https://github.com/lucan6290/skills-hub/issues)，没有重复项再提交 Bug 表单
+- 可复现的 Bug：搜索 [已有 Issues](https://github.com/lucan6290/agentkit/issues)，没有重复项再提交 Bug 表单
 - 新功能或较大的设计变更：先通过功能请求说明问题、使用场景和替代方案，达成共识后再实现
 - 安全漏洞：按照 [安全策略](SECURITY.md) 私密报告，不要创建公开 Issue 或公开 PoC
 - 小型文档修正可直接提交 PR；Issue 和讨论均可使用中文或英文

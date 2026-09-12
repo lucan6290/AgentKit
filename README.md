@@ -1,4 +1,4 @@
-# Skills Hub
+# AgentKit
 
 > 中文 | [English](docs/README.en.md)
 
@@ -40,7 +40,7 @@ npm run tauri dev
 
 `npm run tauri dev` 会同时启动 Vite 开发服务器（http://127.0.0.1:5173）和 Tauri 桌面窗口，并监听 Rust 代码变更热重载。
 
-> **关于更新签名密钥**：应用集成了 `tauri-plugin-updater`，Tauri 要求 `tauri.conf.json` 中 `plugins.updater.pubkey` 必须存在，否则插件初始化会 panic。**公钥已提交到仓库**，开发者克隆后无需额外配置即可启动。私钥保存在 `.tauri/skills-hub.key`（已加入 `.gitignore`），仅维护者在构建签名发布包时需要。
+> **关于更新签名密钥**：应用集成了 `tauri-plugin-updater`，Tauri 要求 `tauri.conf.json` 中 `plugins.updater.pubkey` 必须存在，否则插件初始化会 panic。**公钥已提交到仓库**，开发者克隆后无需额外配置即可启动。私钥保存在 `.tauri/agentkit.key`（已加入 `.gitignore`），仅维护者在构建签名发布包时需要。
 
 ### 构建生产版本
 
@@ -126,7 +126,7 @@ git push origin v0.x.x
 ## 项目结构
 
 ```
-skills-hub/
+agentkit/
 ├── frontend/               # React 19 + Vite 前端
 │   ├── src/
 │   │   ├── lib/                    # api.ts、errors.ts、pickFolder.ts、utils.ts
@@ -206,11 +206,11 @@ skills-hub/
 
 ## 常见问题
 
-- **Skills 存储在哪里？** Community Repo 默认位于 `~/.skillshub`（可在设置中修改）。
+- **Skills 存储在哪里？** Community Repo 默认位于 `~/.agentkit`（可在设置中修改）。
 - **标签有什么用？** 标签帮助你查找和组织 skills，不会改变 skill 同步的位置或哪些工具可以使用它。
 - **什么是项目级同步？** Skill 仍然只在 Community Repo 中存储一次，但其同步目标是某个选定的项目目录，例如 `<project>/.agents/skills`、`<project>/.claude/skills` 或其他工具特定的项目 skills 路径。
-- **为什么同步到 Cursor 总是使用 copy？** Cursor 目前不支持基于 symlink/junction 的 skills 目录，因此 Skills Hub 在同步到 Cursor 时强制使用目录复制。
-- **为什么同步有时会回退到 copy？** Skills Hub 优先使用 symlink/junction，但在某些系统上（尤其是 Windows）symlink 可能受限，此时回退为目录复制。
+- **为什么同步到 Cursor 总是使用 copy？** Cursor 目前不支持基于 symlink/junction 的 skills 目录，因此 AgentKit 在同步到 Cursor 时强制使用目录复制。
+- **为什么同步有时会回退到 copy？** AgentKit 优先使用 symlink/junction，但在某些系统上（尤其是 Windows）symlink 可能受限，此时回退为目录复制。
 
 ## 开源协议
 

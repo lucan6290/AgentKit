@@ -28,7 +28,7 @@ frontend/npm run build
 
 当前窗口参数来自 `backend/desktop.py`：
 
-- 标题：`Skills Hub`
+- 标题：`AgentKit`
 - 默认尺寸：`1200 x 800`
 - 最小尺寸：`900 x 600`
 

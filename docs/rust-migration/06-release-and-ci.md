@@ -4,7 +4,7 @@
 
 将当前 Python/PyInstaller 发布流程替换为 Tauri/Rust 发布流程，同时保留当前用户需要的三种 Windows 交付形态：
 
-- `SkillsHub.exe`
+- `AgentKit.exe`
 - Portable ZIP
 - NSIS 安装包
 
@@ -74,7 +74,7 @@
 Portable ZIP 至少包含：
 
 ```text
-SkillsHub.exe
+AgentKit.exe
 icon.ico（如最终产物仍需要）
 portable.flag
  data/

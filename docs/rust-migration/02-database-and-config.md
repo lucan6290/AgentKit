@@ -2,7 +2,7 @@
 
 ## 1. 目标
 
-使用 `rusqlite` 在 Rust 中读取和写入现有 `skills_hub.db`，保持当前用户数据、数据目录和数据库行为兼容。
+使用 `rusqlite` 在 Rust 中读取和写入现有 `agentkit.db`，保持当前用户数据、数据目录和数据库行为兼容。
 
 本工作包不重新设计 schema，不改变用户数据格式，不迁移文件同步逻辑。
 
@@ -17,15 +17,15 @@
 当前数据库文件名：
 
 ```text
-skills_hub.db
+agentkit.db
 ```
 
 当前 schema 表清单以 `docs/database-schema.md` 和 `SkillStore.ensure_schema` 的实际 SQL 为准。文档与代码冲突时，以 `store.py` 为准并记录差异。
 
 当前数据目录行为：
 
-- Windows 安装版：`%APPDATA%/skills-hub/skills_hub.db`
-- Portable：`<exe_dir>/data/skills_hub.db`
+- Windows 安装版：`%APPDATA%/agentkit/agentkit.db`
+- Portable：`<exe_dir>/data/agentkit.db`
 - macOS/Linux 路径虽然已有文档说明，但不属于首个 Windows 验收范围，仍需保留清晰的未实现/待验证标记。
 
 ## 3. 允许修改范围
@@ -60,7 +60,7 @@ Select-String -Path backend/core/db/store.py -Pattern "CREATE TABLE|CREATE INDEX
 ```text
 docs/database-schema.md
 backend/core/db/store.py
-backend/skills_hub.db（只读检查，不修改）
+backend/agentkit.db（只读检查，不修改）
 ```
 
 必须记录：
@@ -158,7 +158,7 @@ repository 返回领域 model 或 DTO，不返回 HTTP 状态码。
 - 外键约束；
 - reset 需要明确确认。
 
-禁止测试直接修改仓库内的 `backend/skills_hub.db`。
+禁止测试直接修改仓库内的 `backend/agentkit.db`。
 
 ## 6. 验收标准
 

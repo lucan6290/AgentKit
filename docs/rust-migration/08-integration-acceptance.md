@@ -55,7 +55,7 @@ cargo test
 
 ### 数据库
 
-- 旧 `skills_hub.db` 原位读取；
+- 旧 `agentkit.db` 原位读取；
 - skills、tags、targets、settings、scope preferences 保持；
 - schema 初始化幂等；
 - 数据库维护和 reset 有确认机制；

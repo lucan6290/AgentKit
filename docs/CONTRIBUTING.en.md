@@ -2,12 +2,12 @@
 
 > [中文版本](../CONTRIBUTING.md) | English
 
-Thank you for contributing to Skills Hub! Bug fixes, tests, documentation, translations, and well-scoped feature proposals are welcome. Please follow our [Code of Conduct](CODE_OF_CONDUCT.en.md).
+Thank you for contributing to AgentKit! Bug fixes, tests, documentation, translations, and well-scoped feature proposals are welcome. Please follow our [Code of Conduct](CODE_OF_CONDUCT.en.md).
 
 ## Choose the right channel
 
 - Usage and troubleshooting: read the [Support Guide](SUPPORT.en.md) and [README](README.en.md)
-- Reproducible bugs: search [existing Issues](https://github.com/lucan6290/skills-hub/issues) before submitting a bug form
+- Reproducible bugs: search [existing Issues](https://github.com/lucan6290/agentkit/issues) before submitting a bug form
 - Features or substantial design changes: describe the problem, use case, and alternatives in an issue before implementing
 - Security vulnerabilities: follow the [Security Policy](SECURITY.en.md) privately; do not open a public issue or publish a PoC
 - Small documentation fixes can go straight to a PR; Chinese and English are welcome in issues and discussions

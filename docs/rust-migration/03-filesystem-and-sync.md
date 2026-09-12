@@ -2,7 +2,7 @@
 
 ## 1. 目标
 
-将 Skills Hub 最核心的本地文件操作从 Python 迁移到 Rust，保持 Windows 下的路径安全、symlink/junction/copy fallback 和 global/project scope 行为。
+将 AgentKit 最核心的本地文件操作从 Python 迁移到 Rust，保持 Windows 下的路径安全、symlink/junction/copy fallback 和 global/project scope 行为。
 
 这是高风险工作包，必须先迁移路径安全和纯文件操作，再迁移业务同步编排。
 
@@ -142,7 +142,7 @@ Windows 实现单独放在平台模块中；不要把 Windows API 调用散落�
 
 ### 4.6 保护非托管文件
 
-unsync 和覆盖操作必须确认目标是否由 Skills Hub 创建或记录：
+unsync 和覆盖操作必须确认目标是否由 AgentKit 创建或记录：
 
 - 不删除普通用户目录；
 - 不跟随未知符号链接删除目标内容；

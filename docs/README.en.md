@@ -1,4 +1,4 @@
-# Skills Hub
+# AgentKit
 
 > [中文版本](../README.md) | English
 
@@ -120,7 +120,7 @@ After pushing the tag, GitHub Actions will automatically build the exe, ZIP, and
 ## Project Structure
 
 ```
-skills-hub/
+agentkit/
 ├── frontend/               # React 19 + Vite frontend
 │   ├── src/
 │   │   ├── lib/                    # api.ts, errors.ts, pickFolder.ts, utils.ts
@@ -202,11 +202,11 @@ Project-level skills directories are relative to the chosen project root. Tools 
 
 ## FAQ
 
-- **Where are skills stored?** The Community Repo defaults to `~/.skillshub` (configurable in Settings).
+- **Where are skills stored?** The Community Repo defaults to `~/.agentkit` (configurable in Settings).
 - **What are tags for?** Tags help you find and organize skills; they don't change where skills are synced or which tools can use them.
 - **What is project-level sync?** A skill is still stored once in the Community Repo, but its sync target is a specific project directory — e.g. `<project>/.agents/skills`, `<project>/.claude/skills`, or other tool-specific project skills paths.
-- **Why does syncing to Cursor always use copy?** Cursor currently does not support symlink/junction-based skills directories, so Skills Hub forces directory copy when syncing to Cursor.
-- **Why does sync sometimes fall back to copy?** Skills Hub prefers symlink/junction, but on some systems (especially Windows) symlinks may be restricted, in which case it falls back to directory copy.
+- **Why does syncing to Cursor always use copy?** Cursor currently does not support symlink/junction-based skills directories, so AgentKit forces directory copy when syncing to Cursor.
+- **Why does sync sometimes fall back to copy?** AgentKit prefers symlink/junction, but on some systems (especially Windows) symlinks may be restricted, in which case it falls back to directory copy.
 
 ## License
 

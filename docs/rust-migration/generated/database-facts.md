@@ -42,7 +42,7 @@
 
 ## 迁移前必须验证
 
-- 使用 Python 版本生成的真实 `skills_hub.db` 做只读对照，不能只用全新空库。
+- 使用 Python 版本生成的真实 `agentkit.db` 做只读对照，不能只用全新空库。
 - 核对表、列、索引、外键、默认值和自愈 DDL 的执行顺序。
 - 验证数据库路径、Portable/安装版数据目录和现有 `docs/database-schema.md` 是否一致。
 - Rust migration 不得修改现有 schema 语义；如果必须新增版本迁移，单独记录原因、SQL 和回滚方案。

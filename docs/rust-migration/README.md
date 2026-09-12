@@ -2,7 +2,7 @@
 
 > 适用分支：`main-Rust`
 >
-> 目标：将 Skills Hub 从 `Python + FastAPI + pywebview + PyInstaller` 迁移为 Windows 优先的 `Tauri 2 + Rust + React + TypeScript 5.x` 桌面应用。
+> 目标：将 AgentKit 从 `Python + FastAPI + pywebview + PyInstaller` 迁移为 Windows 优先的 `Tauri 2 + Rust + React + TypeScript 5.x` 桌面应用。
 >
 > 本目录是实施依据，不是当前代码规范的替代品。实施前仍必须遵守根目录、`frontend/` 和 `backend/` 下的 `AGENTS.md`。
 

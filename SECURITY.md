@@ -15,8 +15,8 @@
 
 **不要在公开 Issue、PR、讨论或日志附件中披露未修复漏洞、可利用的 PoC 或敏感信息。**
 
-1. 若仓库 Security 页面提供 **Report a vulnerability**，可通过 [GitHub 私密漏洞报告](https://github.com/lucan6290/skills-hub/security/advisories/new) 提交
-2. 若入口不可见、未启用或无法使用，请发邮件至 `lucan6290@gmail.com`，建议主题为 `[Security] Skills Hub - 简要描述`
+1. 若仓库 Security 页面提供 **Report a vulnerability**，可通过 [GitHub 私密漏洞报告](https://github.com/lucan6290/agentkit/security/advisories/new) 提交
+2. 若入口不可见、未启用或无法使用，请发邮件至 `lucan6290@gmail.com`，建议主题为 `[Security] AgentKit - 简要描述`
 
 本文件不代表 GitHub 私密报告功能已经开启；该功能由仓库管理员在 GitHub 设置中管理。普通使用问题请看 [支持指南](SUPPORT.md)。
 
@@ -35,7 +35,7 @@
 
 重点关注导入和同步过程中的路径穿越、越界读写、符号链接处理、命令注入、Tauri 权限绕过、凭据泄露，以及更新包真实性校验等问题。
 
-- Skill 与提示词是由用户选择导入的内容，并不因被 Skills Hub 管理而自动可信；请先审查来源和内容
+- Skill 与提示词是由用户选择导入的内容，并不因被 AgentKit 管理而自动可信；请先审查来源和内容
 - 仍欢迎报告恶意 Skill、仓库文件、链接或外部输入突破应用预期路径 / 权限边界的问题，不能仅因它发生在本机就排除
 - 第三方依赖的漏洞若能影响当前项目，请提供受影响版本和实际调用场景；也可同步报告上游
 - UI 错误、一般崩溃、性能或功能请求通常走普通 Issue；无法判断是否涉及安全时，优先私密报告

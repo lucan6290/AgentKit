@@ -2,15 +2,15 @@
 
 > 中文 | [English](docs/SUPPORT.en.md)
 
-本指南用于 Skills Hub 的安装、使用与故障排查。贡献代码请阅读 [贡献指南](CONTRIBUTING.md)；漏洞和敏感信息请使用 [私密安全报告渠道](SECURITY.md)。
+本指南用于 AgentKit 的安装、使用与故障排查。贡献代码请阅读 [贡献指南](CONTRIBUTING.md)；漏洞和敏感信息请使用 [私密安全报告渠道](SECURITY.md)。
 
 ## 到哪里提问
 
 | 情况 | 入口 |
 |---|---|
-| 安装、使用或同步问题 | 先查 [README](README.md) 与 [已有 Issues](https://github.com/lucan6290/skills-hub/issues)；仍无法解决时提交使用问题 |
-| 能稳定复现的 Bug | 使用 [Bug 报告表单](https://github.com/lucan6290/skills-hub/issues/new?template=bug_report.yml) |
-| 功能建议 | 使用 [功能请求表单](https://github.com/lucan6290/skills-hub/issues/new?template=feature_request.yml)，说明使用场景和替代方案 |
+| 安装、使用或同步问题 | 先查 [README](README.md) 与 [已有 Issues](https://github.com/lucan6290/agentkit/issues)；仍无法解决时提交使用问题 |
+| 能稳定复现的 Bug | 使用 [Bug 报告表单](https://github.com/lucan6290/agentkit/issues/new?template=bug_report.yml) |
+| 功能建议 | 使用 [功能请求表单](https://github.com/lucan6290/agentkit/issues/new?template=feature_request.yml)，说明使用场景和替代方案 |
 | 安全漏洞、凭据泄露 | 阅读 [SECURITY.md](SECURITY.md)，不要公开报告 |
 | 骚扰或社区行为问题 | 按 [行为准则](CODE_OF_CONDUCT.md) 中的渠道私密联系 |
 
@@ -18,7 +18,7 @@
 
 ## 提问前先检查
 
-1. 记录应用版本或构建提交、操作系统与架构，并核对 [发布页面](https://github.com/lucan6290/skills-hub/releases) 和 [变更日志](CHANGELOG.md)
+1. 记录应用版本或构建提交、操作系统与架构，并核对 [发布页面](https://github.com/lucan6290/agentkit/releases) 和 [变更日志](CHANGELOG.md)
 2. 搜索是否已有相同问题；已有时补充环境和最小复现，不要重复开 Issue
 3. 使用临时目录与不含个人信息的示例 Skill 重现，确认是安装、导入、同步、编辑还是某个工具读取失败
 4. 同步问题记录目标 AI 工具、global / project 范围、路径类型，以及已知的 symlink / junction / copy 状态；不知道的项目可以注明未知
@@ -43,7 +43,7 @@
 
 ## 下载和自动更新
 
-- 优先使用本仓库 [Releases](https://github.com/lucan6290/skills-hub/releases) 中维护者正式发布的附件，不使用来源不明的重新打包文件
+- 优先使用本仓库 [Releases](https://github.com/lucan6290/agentkit/releases) 中维护者正式发布的附件，不使用来源不明的重新打包文件
 - 当前 Release 工作流构建 Windows NSIS 和 MSI 安装包；macOS / Linux 开发需按 Tauri 前置条件自行构建，不代表已提供对应的预编译发行包
 - 自动更新失败时，保留错误信息并按上述格式报告；可在确认版本和来源后手动安装正式发布的安装包，不要绕过签名校验
 - 发布页缺少文件或仍为 Draft 时，不代表发布已完成；维护者应按 [发布工作流](docs/release-workflow.md) 核验产物

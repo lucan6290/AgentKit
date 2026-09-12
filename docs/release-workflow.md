@@ -1,8 +1,8 @@
 # Release Workflow — Agent 发布工作流
 
-> 本文件定义 Agent 执行 Skills Hub 版本发布的完整标准流程。Agent 收到发布指令后，必须严格按本文件顺序执行，不得跳步。
+> 本文件定义 Agent 执行 AgentKit 版本发布的完整标准流程。Agent 收到发布指令后，必须严格按本文件顺序执行，不得跳步。
 >
-> **路径规则**：所有命令块在执行前确保当前目录为项目根目录（`e:\A-Code\skills-hub`）。使用 `pushd`/`popd` 切换子目录，避免 `cd` 链式依赖。
+> **路径规则**：所有命令块在执行前确保当前目录为项目根目录（`e:\A-Code\agentkit`）。使用 `pushd`/`popd` 切换子目录，避免 `cd` 链式依赖。
 >
 > **PowerShell 注意事项**：
 > - 反引号 `` ` `` 续行符后面**不能有空格**，必须紧跟换行符
@@ -42,25 +42,25 @@ Write-Host "密钥密码（务必保存）：$KEY_PASSWORD"
 # 生成密钥对（--ci 跳过交互提示）
 pushd frontend
 $env:CI = "true"
-npx tauri signer generate -w "$env:USERPROFILE\.tauri\skills-hub.key" -p $KEY_PASSWORD
+npx tauri signer generate -w "$env:USERPROFILE\.tauri\agentkit.key" -p $KEY_PASSWORD
 popd
 ```
 
 产物：
-- 私钥：`~/.tauri/skills-hub.key`（**保密，绝不提交到仓库**）
-- 公钥：`~/.tauri/skills-hub.key.pub`
+- 私钥：`~/.tauri/agentkit.key`（**保密，绝不提交到仓库**）
+- 公钥：`~/.tauri/agentkit.key.pub`
 
 **第 2 步：把公钥写入 `tauri.conf.json`**
 
-将 `plugins.updater.pubkey` 更新为 `skills-hub.key.pub` 文件的完整内容。
+将 `plugins.updater.pubkey` 更新为 `agentkit.key.pub` 文件的完整内容。
 
 **第 3 步：配置 GitHub Secrets**
 
-在 `https://github.com/lucan6290/skills-hub/settings/secrets/actions` 添加两个 Secret：
+在 `https://github.com/lucan6290/agentkit/settings/secrets/actions` 添加两个 Secret：
 
 | Name | Value |
 |------|-------|
-| `TAURI_SIGNING_PRIVATE_KEY` | `skills-hub.key` 文件**完整内容**（含首尾注释行） |
+| `TAURI_SIGNING_PRIVATE_KEY` | `agentkit.key` 文件**完整内容**（含首尾注释行） |
 | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | 第 1 步生成的密码 |
 
 **第 4 步：确认 `.gitignore` 已兜底**
@@ -86,7 +86,7 @@ popd
 
 ```powershell
 # 必须在项目根目录
-Get-Location  # 应输出包含 skills-hub 的路径
+Get-Location  # 应输出包含 agentkit 的路径
 ```
 
 ### 1.2 检查 git 状态
@@ -100,7 +100,7 @@ git remote -v
 检查项：
 - 当前分支必须是 `main`
 - 工作区必须干净（`git status --porcelain` 无输出）。若有未提交改动，询问用户是否先提交或 stash，**不得擅自处理用户的未提交改动**
-- 远程仓库 `origin` 指向 `https://github.com/lucan6290/skills-hub.git`
+- 远程仓库 `origin` 指向 `https://github.com/lucan6290/agentkit.git`
 
 ### 1.3 检查网络/代理
 
@@ -411,11 +411,11 @@ git push origin "$TAG_NAME"
 推送成功后，Agent 向用户报告以下信息，**不通过 API 轮询 CI 状态**（避免未认证请求 60 次/小时的限流问题）：
 
 1. **CI 监控地址**：告知用户在浏览器打开以下页面查看构建进度：
-   - Actions 页面：`https://github.com/lucan6290/skills-hub/actions`
+   - Actions 页面：`https://github.com/lucan6290/agentkit/actions`
    - Release CI 由 tag push 触发（`v*`），在 Windows runner 上构建，通常需要 10-25 分钟
 
 2. **构建成功后操作**：
-   - GitHub Releases 页面：`https://github.com/lucan6290/skills-hub/releases`
+   - GitHub Releases 页面：`https://github.com/lucan6290/agentkit/releases`
    - CI 创建的是 **Draft Release**，需要用户在 Releases 页面手动点 **"Publish release"** 才会正式发布
    - CI 构建产物包含：NSIS 安装包（`.exe`）和 MSI 安装包（`.msi`）
 

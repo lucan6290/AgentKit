@@ -8,9 +8,9 @@ This guide covers installation, usage, and troubleshooting. See [Contributing](C
 
 | Topic | Channel |
 |---|---|
-| Installation, usage, or sync | Read the [README](README.en.md) and search [Issues](https://github.com/lucan6290/skills-hub/issues), then open a usage question if needed |
-| Reproducible bug | Use the [bug report form](https://github.com/lucan6290/skills-hub/issues/new?template=bug_report.yml) |
-| Feature proposal | Use the [feature request form](https://github.com/lucan6290/skills-hub/issues/new?template=feature_request.yml); explain the use case and alternatives |
+| Installation, usage, or sync | Read the [README](README.en.md) and search [Issues](https://github.com/lucan6290/agentkit/issues), then open a usage question if needed |
+| Reproducible bug | Use the [bug report form](https://github.com/lucan6290/agentkit/issues/new?template=bug_report.yml) |
+| Feature proposal | Use the [feature request form](https://github.com/lucan6290/agentkit/issues/new?template=feature_request.yml); explain the use case and alternatives |
 | Vulnerability or exposed credentials | Follow [SECURITY.en.md](SECURITY.en.md), not a public issue |
 | Harassment or community conduct | Use the private channel in the [Code of Conduct](CODE_OF_CONDUCT.en.md) |
 
@@ -18,7 +18,7 @@ Use public issues for ordinary questions so others can learn from the outcome. T
 
 ## Before reporting
 
-1. Record the application version or build commit, OS, and architecture; review [Releases](https://github.com/lucan6290/skills-hub/releases) and the [changelog](../CHANGELOG.md)
+1. Record the application version or build commit, OS, and architecture; review [Releases](https://github.com/lucan6290/agentkit/releases) and the [changelog](../CHANGELOG.md)
 2. Search for duplicates and add useful environment details or a minimal reproduction to an existing issue
 3. Reproduce with a disposable skill and temporary directory; identify whether installation, import, sync, editing, or the target tool is failing
 4. For sync issues, record the target tool, global/project scope, path structure, and symlink/junction/copy mode if known
@@ -43,7 +43,7 @@ If sensitive evidence is needed, contact the maintainer privately to agree on mi
 
 ## Downloads and updates
 
-- Prefer attachments officially published by maintainers in this repository's [Releases](https://github.com/lucan6290/skills-hub/releases), not unknown repackaged binaries
+- Prefer attachments officially published by maintainers in this repository's [Releases](https://github.com/lucan6290/agentkit/releases), not unknown repackaged binaries
 - The current release workflow builds Windows NSIS and MSI installers. macOS/Linux development requires platform prerequisites and a local build; this does not promise prebuilt releases for those platforms
 - Keep the error details when automatic updates fail. After checking the source and version, a published installer can be used for manual installation; do not bypass signature verification
 - Missing assets or a Draft Release do not mean a release is ready. Maintainers should follow the [release workflow](release-workflow.en.md)

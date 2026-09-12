@@ -15,8 +15,8 @@ Reports against older versions are still welcome. State the version and whether 
 
 **Do not disclose an unpatched vulnerability, exploitable PoC, or sensitive evidence in a public issue, PR, discussion, or attachment.**
 
-1. If the repository's Security page offers **Report a vulnerability**, use [GitHub private vulnerability reporting](https://github.com/lucan6290/skills-hub/security/advisories/new)
-2. If that option is unavailable, disabled, or inaccessible, email `lucan6290@gmail.com` with a subject such as `[Security] Skills Hub - short description`
+1. If the repository's Security page offers **Report a vulnerability**, use [GitHub private vulnerability reporting](https://github.com/lucan6290/agentkit/security/advisories/new)
+2. If that option is unavailable, disabled, or inaccessible, email `lucan6290@gmail.com` with a subject such as `[Security] AgentKit - short description`
 
 This document does not assert that private reporting is enabled; repository administrators manage that GitHub setting. For ordinary questions, see [Support](SUPPORT.en.md).
 
@@ -35,7 +35,7 @@ Do not include real tokens, private keys, databases, third-party personal inform
 
 Relevant issues include path traversal, unintended filesystem access, symlink handling, command injection, Tauri permission bypasses, credential exposure, and update authenticity verification.
 
-- User-imported skills and prompts do not become trustworthy merely because Skills Hub manages them; review their sources and contents
+- User-imported skills and prompts do not become trustworthy merely because AgentKit manages them; review their sources and contents
 - Malicious skills, repository files, links, or external inputs that bypass intended path/permission boundaries are in scope; local execution alone does not exclude a vulnerability
 - Report dependency vulnerabilities that affect this project with the affected version and actual usage context; also consider notifying upstream
 - UI defects, ordinary crashes, performance issues, and feature proposals generally belong in public issues. When uncertain about security impact, report privately first

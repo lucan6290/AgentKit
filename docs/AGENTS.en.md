@@ -1,4 +1,4 @@
-# Skills Hub - Project Conventions
+# AgentKit - Project Conventions
 
 > [中文版本](../AGENTS.md) | English
 
@@ -8,7 +8,7 @@ This file is the project's navigation entry point (the Agent's first map). Only 
 
 ## Overview
 
-Skills Hub is a cross-platform desktop application (React 19 + Rust Tauri) for managing AI Agent Skills and syncing them to 44 AI coding tools. Core philosophy: *"Install once, sync everywhere."*
+AgentKit is a cross-platform desktop application (React 19 + Rust Tauri) for managing AI Agent Skills and syncing them to 44 AI coding tools. Core philosophy: *"Install once, sync everywhere."*
 
 ## Tech Stack
 
@@ -23,7 +23,7 @@ Skills Hub is a cross-platform desktop application (React 19 + Rust Tauri) for m
 ### Directory Structure (high-level)
 
 ```
-skills-hub/
+agentkit/
 ├── frontend/          # React frontend → see frontend/AGENTS.md
 │   └── src-tauri/     # Rust Tauri backend
 ├── docs/              # Cross-cutting docs (database schema, naming conventions, English translations)
@@ -85,4 +85,4 @@ When receiving a task, first determine its type, then read the corresponding mod
 1. **Auto-commit locally**: Whenever files change (add, modify, delete), immediately run `git add` + `git commit` locally to ensure every change is recorded.
 2. **No remote push**: All commits stay in the local repository. Never execute `git push` unless the user explicitly requests it.
 3. **Commit convention**: Commit message format is `type: brief description` (in Chinese), with each commit covering exactly one feature or one fix.
-4. **Default remote & branch**: The default remote is `origin` (`https://github.com/lucan6290/skills-hub.git`), and the default branch is `main`.
+4. **Default remote & branch**: The default remote is `origin` (`https://github.com/lucan6290/agentkit.git`), and the default branch is `main`.

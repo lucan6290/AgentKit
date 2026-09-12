@@ -18,13 +18,13 @@
 | 后端语言 | Rust | 负责 command、SQLite、文件系统、同步、工具适配、任务和更新。 |
 | 前端 | 继续 React + TypeScript | 迁移重点是通信层和桌面能力，不在本任务中重写 UI。 |
 | 前后端通信 | Tauri `invoke` 和事件 | command 参数/返回 DTO 跨边界统一使用 `snake_case`。 |
-| 数据库 | 继续使用现有 SQLite 文件和 schema | 先原位兼容 `skills_hub.db`，禁止借重构之名重新设计表结构。 |
+| 数据库 | 继续使用现有 SQLite 文件和 schema | 先原位兼容 `agentkit.db`，禁止借重构之名重新设计表结构。 |
 | 发布形态 | Windows exe、Portable ZIP、NSIS | 具体 bundle 配置和安装行为以实际 Tauri 构建产物为准。 |
 | Python 生命周期 | 迁移阶段保留，验收通过后再删除 | Python 是行为基线，不允许在 Rust 尚未通过对照测试时删除。 |
 
 ## 3. 必须保留的行为边界
 
-- 现有用户数据目录和 `skills_hub.db` 不得因为迁移而静默换位置。
+- 现有用户数据目录和 `agentkit.db` 不得因为迁移而静默换位置。
 - Portable 模式使用 exe 同目录的 `data/`；安装版规则以当前 `backend/core/config.py` 和真实运行结果为准。
 - 用户输入的 source、target、project、repo 和 skill file path 必须经过统一路径安全检查。
 - 同步目标优先级、symlink/junction/copy fallback、scope、suite skill 和 unsync 保护必须以 Python 实现和测试为准。
@@ -56,7 +56,7 @@
 ### 5.2 数据回滚
 
 - 所有数据库测试使用副本或临时目录，不直接操作用户正式数据库。
-- 任何 schema 迁移前复制 `skills_hub.db` 并记录文件 hash。
+- 任何 schema 迁移前复制 `agentkit.db` 并记录文件 hash。
 - Rust 版本默认只执行已经验证过的兼容迁移；新迁移必须先 dry-run/备份，再提交。
 - Portable/安装版升级失败时保留旧 exe 和用户数据目录，不能用空库覆盖旧库。
 
