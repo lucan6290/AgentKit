@@ -67,7 +67,7 @@ pub fn create_new_window(app: &AppHandle) -> AppResult<()> {
     );
 
     WebviewWindowBuilder::new(app, &label, WebviewUrl::default())
-        .title("Skills Hub")
+        .title("AgentKit")
         .inner_size(1200.0, 800.0)
         .min_inner_size(900.0, 600.0)
         .center()

@@ -7,13 +7,13 @@
 //! # Release setup (required for `do_update` to actually install)
 //!
 //! The native updater needs a signed `latest.json` manifest and a signing key:
-//! 1. Generate a keypair: `npm run tauri signer generate -w ~/.tauri/skills-hub.key`
+//! 1. Generate a keypair: `npm run tauri signer generate -w ~/.tauri/agentkit.key`
 //!    (keep `TAURI_PRIVATE_KEY` / `TAURI_KEY_PASSWORD` as CI secrets; never commit them).
 //! 2. Add to `tauri.conf.json`:
 //!    ```json
 //!    "plugins": { "updater": {
 //!      "active": true,
-//!      "endpoints": ["https://github.com/lucan6290/skills-hub/releases/latest/download/latest.json"],
+//!      "endpoints": ["https://github.com/lucan6290/agentkit/releases/latest/download/latest.json"],
 //!      "pubkey": "<the public key from step 1>"
 //!    }}
 //!    ```
@@ -25,9 +25,9 @@ use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 pub const GITHUB_OWNER: &str = "lucan6290";
-pub const GITHUB_REPO: &str = "skills-hub";
-pub const RELEASES_PAGE: &str = "https://github.com/lucan6290/skills-hub/releases";
-pub const CHANGELOG_URL: &str = "https://github.com/lucan6290/skills-hub/blob/main/CHANGELOG.md";
+pub const GITHUB_REPO: &str = "agentkit";
+pub const RELEASES_PAGE: &str = "https://github.com/lucan6290/agentkit/releases";
+pub const CHANGELOG_URL: &str = "https://github.com/lucan6290/agentkit/blob/main/CHANGELOG.md";
 
 /// 成功结果缓存时长（发布信息很少变化，缓存 30 分钟）。
 const CACHE_TTL_SUCCESS: Duration = Duration::from_secs(30 * 60);
@@ -250,7 +250,7 @@ fn build_response(
                         urls.setup = download_url.to_string();
                     } else if name.contains("Portable") {
                         urls.portable = download_url.to_string();
-                    } else if name == "SkillsHub.exe" {
+                    } else if name == "AgentKit.exe" {
                         urls.exe = download_url.to_string();
                     }
                 }
@@ -288,7 +288,7 @@ fn build_response(
 fn fetch_release_info(url: &str) -> Result<GithubRelease, String> {
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
-        .user_agent("SkillsHub-Update-Checker")
+        .user_agent("AgentKit-Update-Checker")
         .build()
         .map_err(|e| format!("failed to create HTTP client: {}", e))?;
 

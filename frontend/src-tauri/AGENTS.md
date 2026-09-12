@@ -181,7 +181,7 @@ return Err(AppError::InvalidInput(format!("...")));
 |------|------|
 | `tauri_plugin_single_instance` | 单实例 + Deep Link 转发 |
 | `tauri_plugin_autostart` | 开机自启 |
-| `tauri_plugin_deep_link` | `skillshub://` 协议处理 |
+| `tauri_plugin_deep_link` | `agentkit://` 协议处理 |
 | `tauri_plugin_notification` | 系统通知 |
 | `tauri_plugin_updater` | 自动更新 |
 | `tauri_plugin_global_shortcut` | 全局快捷键 `Ctrl+Shift+Space` |

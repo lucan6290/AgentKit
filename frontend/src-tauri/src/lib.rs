@@ -28,7 +28,7 @@ pub fn run() {
     // Install a panic hook so that crashes are captured in the dedicated error
     // log file. Without this, panics only print to stderr and are lost in a
     // GUI application.
-    let error_log_path = log_dir.join("skills-hub-error.log");
+    let error_log_path = log_dir.join("agentkit-error.log");
     std::panic::set_hook(Box::new(move |panic_info| {
         use std::io::Write;
         let now = time::OffsetDateTime::now_utc();
@@ -132,7 +132,7 @@ pub fn run() {
                 area = "app",
                 outcome = "started",
                 log_level = %log_level,
-                "Skills Hub starting"
+                "AgentKit starting"
             );
             tracing::info!(
                 target: crate::logging::app_target(),
@@ -336,7 +336,7 @@ pub fn run() {
                 }
             }
 
-            // Register the skillshub:// scheme at runtime on Windows/Linux.
+            // Register the agentkit:// scheme at runtime on Windows/Linux.
             // macOS uses the Info.plist entry generated from the config.
             #[cfg(any(windows, target_os = "linux"))]
             {
@@ -404,7 +404,7 @@ pub fn run() {
                 layer = "backend",
                 area = "app",
                 outcome = "success",
-                "Skills Hub started"
+                "AgentKit started"
             );
             Ok(())
         })
@@ -518,9 +518,9 @@ pub fn run() {
                 area = "app",
                 outcome = "failed",
                 error = %e,
-                "failed to run Skills Hub"
+                "failed to run AgentKit"
             );
-            panic!("failed to run Skills Hub: {}", e);
+            panic!("failed to run AgentKit: {}", e);
         });
 }
 
@@ -535,7 +535,7 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         "building system tray"
     );
     let version = app.package_info().version.to_string();
-    let version_label = format!("Skills Hub v{}", version);
+    let version_label = format!("AgentKit v{}", version);
 
     let menu = Menu::new(app)?;
 
@@ -623,7 +623,7 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
     TrayIconBuilder::with_id("main-tray")
         .icon(icon)
         .menu(&menu)
-        .tooltip("Skills Hub")
+        .tooltip("AgentKit")
         .on_menu_event(|app, event| {
             let id = event.id().as_ref();
             tracing::debug!(
@@ -688,7 +688,7 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                         outcome = "started",
                         "tray open website clicked"
                     );
-                    open_url("https://github.com/lucan6290/skills-hub");
+                    open_url("https://github.com/lucan6290/agentkit");
                 }
                 "open_app_dir" => open_app_directory(app, AppDir::App),
                 "open_data_dir" => open_app_directory(app, AppDir::Data),

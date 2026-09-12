@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Skills Hub",
+  "productName": "AgentKit",
   "version": "../package.json",
-  "identifier": "com.lucan.skillshub",
+  "identifier": "com.lucan.agentkit",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://127.0.0.1:5173",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Skills Hub",
+        "title": "AgentKit",
         "width": 1200,
         "height": 800,
         "minWidth": 900,
@@ -37,8 +37,8 @@
     "fileAssociations": [
       {
         "ext": ["skill"],
-        "name": "Skills Hub Skill",
-        "description": "Skills Hub skill package",
+        "name": "AgentKit Skill",
+        "description": "AgentKit skill package",
         "role": "Editor"
       }
     ],
@@ -55,12 +55,12 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["skillshub"]
+        "schemes": ["agentkit"]
       }
     },
     "updater": {
       "endpoints": [
-        "https://github.com/lucan6290/skills-hub/releases/latest/download/latest.json"
+        "https://github.com/lucan6290/agentkit/releases/latest/download/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE0MDlFRUZFREY1NkVGNkMKUldSczcxYmYvdTRKcEgvaU50ODlzUldWbi8wa3NJSktjc0UyUm91SFVSYTVHd3N6M1k2c3VqM3oK"
     }

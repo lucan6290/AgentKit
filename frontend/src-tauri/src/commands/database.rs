@@ -268,7 +268,7 @@ pub async fn db_export(app: tauri::AppHandle, state: State<'_, AppState>) -> App
     })?;
 
     let db_path = crate::config::default_db_path();
-    let default_name = format!("skills_hub_backup_{}.db", local_timestamp());
+    let default_name = format!("agentkit_backup_{}.db", local_timestamp());
 
     let file_path = app
         .dialog()

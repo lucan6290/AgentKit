@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
 
-pub const DB_FILE_NAME: &str = "skills_hub.db";
+pub const DB_FILE_NAME: &str = "agentkit.db";
 
-pub const LEGACY_APP_IDENTIFIERS: &[&str] = &["com.tauri.dev", "com.tauri.dev.skillshub"];
+pub const LEGACY_APP_IDENTIFIERS: &[&str] = &["com.tauri.dev", "com.tauri.dev.skillshub", "com.lucan.skillshub"];
 
 /// Specification for a prompt file that an AI tool uses.
 #[derive(Debug, Clone)]
@@ -651,15 +651,15 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
     map
 }
 
-/// Root directory: ~/.skills-hub
+/// Root directory: ~/.agentkit
 pub fn resolve_root_dir() -> PathBuf {
     let home = env::var("USERPROFILE")
         .or_else(|_| env::var("HOME"))
         .unwrap_or_else(|_| ".".to_string());
-    PathBuf::from(home).join(".skills-hub")
+    PathBuf::from(home).join(".agentkit")
 }
 
-/// Data directory: ~/.skills-hub/data
+/// Data directory: ~/.agentkit/data
 pub fn resolve_data_dir() -> PathBuf {
     resolve_root_dir().join("data")
 }

@@ -11,7 +11,7 @@ use tracing_subscriber::reload;
 
 use crate::contracts::FrontendLogPayload;
 
-const APP_TARGET: &str = "skills_hub";
+const APP_TARGET: &str = "agentkit";
 const FRONTEND_TARGET: &str = "frontend";
 const MAX_STRING_LEN: usize = 4_096;
 const MAX_REDACTION_DEPTH: usize = 8;
@@ -31,8 +31,8 @@ pub fn init(log_dir: &Path, configured_level: &str) {
     }
 
     let (level_filter, reload_handle) = reload::Layer::new(parse_level_filter(configured_level));
-    let file_appender = tracing_appender::rolling::daily(log_dir, "skills-hub.jsonl");
-    let error_appender = tracing_appender::rolling::daily(log_dir, "skills-hub-error.jsonl");
+    let file_appender = tracing_appender::rolling::daily(log_dir, "agentkit.jsonl");
+    let error_appender = tracing_appender::rolling::daily(log_dir, "agentkit-error.jsonl");
     let (file_writer, file_guard) = tracing_appender::non_blocking(file_appender);
     let (error_writer, error_guard) = tracing_appender::non_blocking(error_appender);
 

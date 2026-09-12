@@ -319,12 +319,12 @@ mod tests {
     #[test]
     fn test_path_starts_with() {
         assert!(path_starts_with(
-            "/home/user/.skillshub/skill1",
-            "/home/user/.skillshub"
+            "/home/user/.agentkit/skill1",
+            "/home/user/.agentkit"
         ));
         assert!(!path_starts_with(
             "/home/user/.skillshub-evil/skill1",
-            "/home/user/.skillshub"
+            "/home/user/.agentkit"
         ));
     }
 

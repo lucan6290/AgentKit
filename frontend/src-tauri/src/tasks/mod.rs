@@ -189,7 +189,7 @@ impl TaskManager {
 
         tracing::info!(target: crate::logging::app_target(), event = "task.submitted", layer = "backend", area = "task", outcome = "submitted", task_id = %task_id, task_kind = %kind, "background task submitted");
         if let Err(err) = std::thread::Builder::new()
-            .name(format!("skills-hub-task-{}", &tid[..8]))
+            .name(format!("agentkit-task-{}", &tid[..8]))
             .spawn(move || {
                 Self::run_task(inner, tid, task_fn);
             })

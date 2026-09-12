@@ -1,17 +1,17 @@
 [package]
-name = "skills-hub"
+name = "agentkit"
 version = "0.2.4"
-description = "Skills Hub desktop application"
-authors = ["Skills Hub contributors"]
+description = "AgentKit desktop application"
+authors = ["AgentKit contributors"]
 edition = "2021"
 rust-version = "1.77.2"
 
 [lib]
-name = "skills_hub_lib"
+name = "agentkit_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
-name = "skills-hub"
+name = "agentkit"
 path = "src/main.rs"
 
 [build-dependencies]

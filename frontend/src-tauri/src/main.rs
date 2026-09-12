@@ -1,5 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    skills_hub_lib::run();
+    agentkit_lib::run();
 }

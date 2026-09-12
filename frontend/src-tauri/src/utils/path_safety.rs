@@ -206,7 +206,7 @@ mod tests {
 
     #[test]
     fn require_path_within_rejects_parent_escape() {
-        let base = std::env::temp_dir().join("skills_hub_test_base");
+        let base = std::env::temp_dir().join("agentkit_test_base");
         let _ = std::fs::create_dir_all(&base);
         let escape = base.join("..").join("outside");
         assert!(require_path_within(&escape, &base, "test").is_err());
@@ -215,7 +215,7 @@ mod tests {
 
     #[test]
     fn require_path_within_accepts_child() {
-        let base = std::env::temp_dir().join("skills_hub_test_base2");
+        let base = std::env::temp_dir().join("agentkit_test_base2");
         let _ = std::fs::create_dir_all(&base);
         let child = base.join("child");
         assert!(require_path_within(&child, &base, "test").is_ok());
@@ -224,7 +224,7 @@ mod tests {
 
     #[test]
     fn safe_child_path_joins() {
-        let base = std::env::temp_dir().join("skills_hub_test_base3");
+        let base = std::env::temp_dir().join("agentkit_test_base3");
         let _ = std::fs::create_dir_all(&base);
         let child = safe_child_path(&base, "child", "test").unwrap();
         assert_eq!(child, base.join("child"));
@@ -233,7 +233,7 @@ mod tests {
 
     #[test]
     fn safe_child_path_rejects_parent_escape() {
-        let base = std::env::temp_dir().join("skills_hub_test_base4");
+        let base = std::env::temp_dir().join("agentkit_test_base4");
         let _ = std::fs::create_dir_all(&base);
         assert!(safe_child_path(&base, "..", "test").is_err());
         let _ = std::fs::remove_dir_all(&base);
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn is_path_within_same_path() {
-        let base = std::env::temp_dir().join("skills_hub_within_test");
+        let base = std::env::temp_dir().join("agentkit_within_test");
         let _ = std::fs::create_dir_all(&base);
         assert!(is_path_within(&base, &base));
         let _ = std::fs::remove_dir_all(&base);
@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn is_path_within_child() {
-        let base = std::env::temp_dir().join("skills_hub_within_test2");
+        let base = std::env::temp_dir().join("agentkit_within_test2");
         let _ = std::fs::create_dir_all(&base);
         let child = base.join("sub").join("deep");
         assert!(is_path_within(&child, &base));
@@ -278,8 +278,8 @@ mod tests {
 
     #[test]
     fn is_path_within_rejects_sibling() {
-        let base = std::env::temp_dir().join("skills_hub_within_test3");
-        let sibling = std::env::temp_dir().join("skills_hub_within_test3_sibling");
+        let base = std::env::temp_dir().join("agentkit_within_test3");
+        let sibling = std::env::temp_dir().join("agentkit_within_test3_sibling");
         assert!(!is_path_within(&sibling, &base));
     }
 }

@@ -526,7 +526,7 @@ mod tests {
 
     #[test]
     fn safe_sync_target_path_sanitizes_windows_invalid_name_chars() {
-        let base = std::env::temp_dir().join("skills_hub_sync_target_path_test");
+        let base = std::env::temp_dir().join("agentkit_sync_target_path_test");
         let base_str = base.to_string_lossy().to_string();
 
         let target = safe_sync_target_path(
@@ -546,7 +546,7 @@ mod tests {
 
     #[test]
     fn safe_sync_target_path_uses_custom_fallback() {
-        let base = std::env::temp_dir().join("skills_hub_sync_suite_path_test");
+        let base = std::env::temp_dir().join("agentkit_sync_suite_path_test");
         let base_str = base.to_string_lossy().to_string();
 
         let target = safe_sync_target_path(&base_str, "...", "suite", "suite name").unwrap();

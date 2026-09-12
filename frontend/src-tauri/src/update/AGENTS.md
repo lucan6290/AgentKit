@@ -19,7 +19,7 @@
 | 常量/类型 | 说明 |
 |-----------|------|
 | `GITHUB_OWNER` | `"lucan6290"` |
-| `GITHUB_REPO` | `"skills-hub"` |
+| `GITHUB_REPO` | `"agentkit"` |
 | `RELEASES_PAGE` | GitHub Releases 页面 URL |
 | `CHANGELOG_URL` | CHANGELOG.md URL |
 | `CheckUpdateResponse` | 检查结果：current/latest version、update_available、release_notes、download_urls、error |
@@ -30,7 +30,7 @@
 
 1. **本模块只做检查，不做安装**——`check_for_update` 返回信息，`do_update` 由 `commands/update.rs` 调用原生 updater
 2. **版本比较** 使用 `compare_versions`（简单 semver 比较：`split('.')` → `Vec<u32>` 比较）
-3. **GitHub API 调用** 使用 `reqwest::blocking::Client`，10 秒超时，User-Agent: `SkillsHub-Update-Checker`
+3. **GitHub API 调用** 使用 `reqwest::blocking::Client`，10 秒超时，User-Agent: `AgentKit-Update-Checker`
 4. **网络错误友好提示**：超时 → "网络连接超时"，SSL → "SSL 握手失败"，其他 → "网络错误"
 5. **API 限流处理**：HTTP 403 返回 "GitHub API rate limited"
 6. **失败不崩溃**：`check_for_update` 出错时返回 `CheckUpdateResponse`（`error` 字段设置），不 panic
