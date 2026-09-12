@@ -7,7 +7,7 @@ use crate::db::Database;
 pub const DEFAULT_COMMUNITY_REPO_NAME: &str = "community-skills";
 
 /// Resolve the Community Repo path.
-/// Priority: DB setting > ~/.agentkit/agentkit/community-skills (default).
+/// Priority: DB setting > ~/.agentkit/skills/community-skills (default).
 pub fn resolve_community_repo_path(db: &Database) -> PathBuf {
     use crate::repositories::SettingsRepository;
     let repo = SettingsRepository::new(db);
@@ -22,7 +22,7 @@ pub fn resolve_community_repo_path(db: &Database) -> PathBuf {
 }
 
 /// Resolve the custom skill repo path.
-/// Priority: DB setting > ~/.agentkit/agentkit/custom-skills (default).
+/// Priority: DB setting > ~/.agentkit/skills/custom-skills (default).
 pub fn resolve_custom_repo_path(db: &Database) -> PathBuf {
     use crate::repositories::SettingsRepository;
     let repo = SettingsRepository::new(db);
@@ -36,9 +36,9 @@ pub fn resolve_custom_repo_path(db: &Database) -> PathBuf {
     base_dir().join("custom-skills")
 }
 
-/// Repo base directory: ~/.agentkit/agentkit
+/// Repo base directory: ~/.agentkit/skills
 fn base_dir() -> PathBuf {
-    crate::config::resolve_root_dir().join("agentkit")
+    crate::config::resolve_root_dir().join("skills")
 }
 
 /// Ensure the community repo directory exists.

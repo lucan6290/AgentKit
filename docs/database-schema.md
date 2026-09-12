@@ -129,8 +129,8 @@ Skills 与 Tags 的多对多关联表。
 
 | 键名 | 值示例 | 用途 |
 |---|---|---|
-| `community_repo_path` | `/absolute/path/to/.agentkit` | 社区仓库存储目录 |
-| `custom_repo_path` | `/absolute/path/to/.agentkit-custom` | 自制 Skill 存储目录 |
+| `community_repo_path` | `/absolute/path/to/.agentkit/skills/community-skills` | 社区仓库存储目录 |
+| `custom_repo_path` | `/absolute/path/to/.agentkit/skills/custom-skills` | 自制 Skill 存储目录 |
 | `default_sync_tools` | `["claude_code", "cursor"]` | 新建同步操作时的默认工具列表（JSON 数组） |
 
 ---

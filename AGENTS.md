@@ -45,6 +45,23 @@ agentkit/
 - Rust 后端使用 `AppError` 枚举定义结构化错误
 - 前端通过 try-catch 捕获，使用 sonner toast 展示
 
+### 用户数据目录结构
+
+应用运行时数据存储在 `~/.agentkit/` 下，按资源类型分目录：
+
+```
+~/.agentkit/
+├── skills/                # 技能资源
+│   ├── community-skills/   # 社区技能仓库
+│   └── custom-skills/     # 自制技能仓库
+├── mcp/                   # MCP 资源（预留，未来扩展）
+├── data/                  # 应用数据
+│   ├── agentkit.db         # SQLite 数据库
+│   └── logs/               # 日志文件
+```
+
+**扩展规则**：新增资源类型时，在 `~/.agentkit/` 下创建对应的顶层目录（如 `prompts/`），不要嵌套在已有目录下。路径解析统一通过 `config::resolve_root_dir()` 作为根。
+
 ## 全局命名规范（跨端强制）
 
 **强制遵守** [docs/naming-conventions.md](docs/naming-conventions.md)，核心原则：

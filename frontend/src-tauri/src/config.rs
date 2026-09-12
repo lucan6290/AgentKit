@@ -665,7 +665,7 @@ pub fn resolve_data_dir() -> PathBuf {
 }
 
 /// Migrate legacy data directory from ~/.skills-hub to ~/.agentkit.
-/// Also renames the inner `skillshub` subdirectory to `agentkit`.
+/// Also renames the inner `skillshub` or `agentkit` subdirectory to `skills`.
 /// Only runs if the old directory exists and the new one does not.
 pub fn migrate_legacy_data_dir() {
     let home = env::var("USERPROFILE")
@@ -697,18 +697,18 @@ pub fn migrate_legacy_data_dir() {
         );
     }
 
-    // Step 2: Rename ~/.agentkit/skillshub → ~/.agentkit/agentkit (if old exists, new doesn't)
-    let old_inner = new_root.join("skillshub");
-    let new_inner = new_root.join("agentkit");
-    if old_inner.exists() && !new_inner.exists() {
-        if let Err(e) = std::fs::rename(&old_inner, &new_inner) {
+    // Step 2: Rename ~/.agentkit/skillshub → ~/.agentkit/skills (if old exists, new doesn't)
+    let skills_dir = new_root.join("skills");
+    let old_skillshub = new_root.join("skillshub");
+    if old_skillshub.exists() && !skills_dir.exists() {
+        if let Err(e) = std::fs::rename(&old_skillshub, &skills_dir) {
             tracing::warn!(
                 target: crate::logging::app_target(),
                 event = "migrate.inner_dir.failed",
                 layer = "backend",
                 area = "config",
                 error = %e,
-                "failed to rename ~/.agentkit/skillshub to ~/.agentkit/agentkit"
+                "failed to rename ~/.agentkit/skillshub to ~/.agentkit/skills"
             );
         } else {
             tracing::info!(
@@ -716,7 +716,30 @@ pub fn migrate_legacy_data_dir() {
                 event = "migrate.inner_dir.success",
                 layer = "backend",
                 area = "config",
-                "migrated inner directory from skillshub to agentkit"
+                "migrated inner directory from skillshub to skills"
+            );
+        }
+    }
+
+    // Step 3: Rename ~/.agentkit/agentkit → ~/.agentkit/skills (if old exists, new doesn't)
+    let old_agentkit = new_root.join("agentkit");
+    if old_agentkit.exists() && !skills_dir.exists() {
+        if let Err(e) = std::fs::rename(&old_agentkit, &skills_dir) {
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "migrate.inner_dir.failed",
+                layer = "backend",
+                area = "config",
+                error = %e,
+                "failed to rename ~/.agentkit/agentkit to ~/.agentkit/skills"
+            );
+        } else {
+            tracing::info!(
+                target: crate::logging::app_target(),
+                event = "migrate.inner_dir.success",
+                layer = "backend",
+                area = "config",
+                "migrated inner directory from agentkit to skills"
             );
         }
     }
