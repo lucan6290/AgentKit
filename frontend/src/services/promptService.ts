@@ -42,6 +42,18 @@ export const promptService = {
     })
   },
 
+  updatePromptFileLink(
+    linkId: string,
+    filePath: string,
+    writeBackEnabled: boolean,
+  ): Promise<PromptFileLink> {
+    return invokeCommand('update_prompt_file_link', {
+      link_id: linkId,
+      file_path: filePath,
+      write_back_enabled: writeBackEnabled,
+    })
+  },
+
   unlinkPromptFile(linkId: string): Promise<void> {
     return invokeCommand('unlink_prompt_file', { link_id: linkId })
   },

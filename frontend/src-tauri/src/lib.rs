@@ -508,6 +508,7 @@ pub fn run() {
             crate::commands::prompts::scan_tool_prompt_files,
             crate::commands::prompts::import_prompt_file,
             crate::commands::prompts::create_prompt_file_link,
+            crate::commands::prompts::update_prompt_file_link,
             crate::commands::prompts::unlink_prompt_file,
             crate::commands::prompts::refresh_prompt_file_link,
             crate::commands::prompts::write_prompt_to_file,

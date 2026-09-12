@@ -13,5 +13,5 @@ pub use onboarding::{build_onboarding_plan, OnboardingGroup, OnboardingPlan, Onb
 pub use prompts::{
     create_prompt, create_prompt_file_link, delete_prompt, duplicate_prompt, import_prompt_file,
     list_prompts, refresh_prompt_file_link, scan_tool_prompt_files, unlink_prompt_file, update_prompt,
-    write_prompt_to_file,
+    update_prompt_file_link, write_prompt_to_file,
 };

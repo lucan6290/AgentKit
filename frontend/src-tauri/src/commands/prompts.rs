@@ -74,6 +74,16 @@ pub async fn unlink_prompt_file(state: State<'_, AppState>, link_id: String) -> 
 }
 
 #[tauri::command(rename_all = "snake_case")]
+pub async fn update_prompt_file_link(
+    state: State<'_, AppState>,
+    link_id: String,
+    file_path: String,
+    write_back_enabled: bool,
+) -> AppResult<PromptFileLink> {
+    services::update_prompt_file_link(&state.db, &link_id, file_path, write_back_enabled)
+}
+
+#[tauri::command(rename_all = "snake_case")]
 pub async fn refresh_prompt_file_link(
     state: State<'_, AppState>,
     link_id: String,

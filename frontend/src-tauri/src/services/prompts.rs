@@ -166,6 +166,27 @@ pub fn create_prompt_file_link(
     Ok(link)
 }
 
+pub fn update_prompt_file_link(
+    db: &Database,
+    link_id: &str,
+    file_path: String,
+    write_back_enabled: bool,
+) -> AppResult<PromptFileLink> {
+    let repo = PromptFileLinksRepository::new(db);
+    require_link(&repo, link_id)?;
+    let path = Path::new(&file_path);
+    let exists_on_disk = crate::filesystem::exists(path);
+    let content_hash = if exists_on_disk {
+        Some(hash_file(path)?)
+    } else {
+        None
+    };
+    repo.update_link(link_id, &file_path, write_back_enabled)?;
+    repo.update_sync_state(link_id, content_hash.as_deref(), exists_on_disk, Some(now_ms()))?;
+    let updated = require_link(&repo, link_id)?;
+    Ok(updated)
+}
+
 pub fn unlink_prompt_file(db: &Database, link_id: &str) -> AppResult<()> {
     let repo = PromptFileLinksRepository::new(db);
     require_link(&repo, link_id)?;

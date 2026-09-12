@@ -84,6 +84,22 @@ impl<'a> PromptFileLinksRepository<'a> {
             Ok(())
         })
     }
+
+    pub fn update_link(
+        &self,
+        id: &str,
+        file_path: &str,
+        write_back_enabled: bool,
+    ) -> AppResult<()> {
+        let now = now_ms();
+        self.db.with_conn_mut(|conn| {
+            conn.execute(
+                "UPDATE prompt_file_links SET file_path = ?1, write_back_enabled = ?2, updated_at = ?3 WHERE id = ?4",
+                rusqlite::params![file_path, write_back_enabled as i64, now, id],
+            )?;
+            Ok(())
+        })
+    }
 }
 
 fn map_link(row: &rusqlite::Row<'_>) -> rusqlite::Result<PromptFileLink> {
