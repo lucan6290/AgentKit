@@ -109,14 +109,28 @@ fn home_dir() -> PathBuf {
     }
 }
 
+/// Normalize path separators to the platform's native separator.
+/// Config paths use `/` internally; on Windows they must be converted to `\`.
+fn normalize_separators(path: String) -> String {
+    #[cfg(windows)]
+    {
+        path.replace('/', "\\")
+    }
+    #[cfg(not(windows))]
+    {
+        path
+    }
+}
+
 /// Resolve the global skills directory path for a tool adapter.
 pub fn resolve_default_path(adapter: &ToolAdapter) -> String {
     let configured = expand_tilde(&adapter.relative_skills_dir);
     let p = PathBuf::from(&configured);
     if p.is_absolute() {
-        return configured;
+        return normalize_separators(configured);
     }
-    home_dir().join(p).to_string_lossy().to_string()
+    let joined = home_dir().join(p).to_string_lossy().to_string();
+    normalize_separators(joined)
 }
 
 /// Resolve the detect directory path for a tool adapter.
@@ -124,9 +138,10 @@ fn resolve_detect_path(adapter: &ToolAdapter) -> String {
     let configured = expand_tilde(&adapter.relative_detect_dir);
     let p = PathBuf::from(&configured);
     if p.is_absolute() {
-        return configured;
+        return normalize_separators(configured);
     }
-    home_dir().join(p).to_string_lossy().to_string()
+    let joined = home_dir().join(p).to_string_lossy().to_string();
+    normalize_separators(joined)
 }
 
 /// Return the project-relative skills directory.
@@ -140,10 +155,11 @@ fn project_relative_skills_dir(adapter: &ToolAdapter) -> &str {
 /// Resolve the project-level skills directory path.
 pub fn resolve_project_path(adapter: &ToolAdapter, project_root: &str) -> String {
     let rel = project_relative_skills_dir(adapter);
-    PathBuf::from(project_root)
+    let joined = PathBuf::from(project_root)
         .join(rel)
         .to_string_lossy()
-        .to_string()
+        .to_string();
+    normalize_separators(joined)
 }
 
 /// Whether the tool supports project-scope skills.
