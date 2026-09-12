@@ -623,7 +623,7 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
                   <div className="db-maint-desc">{t(act.desc_key)}</div>
                 </div>
                 <button
-                  className="btn-secondary"
+                  className="btn btn-secondary"
                   onClick={() => handleMaintenanceAction(act.key)}
                   disabled={actionLoading !== null}
                   type="button"
@@ -652,7 +652,7 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
                   <div className="db-maint-desc">{t(act.desc_key)}</div>
                 </div>
                 <button
-                  className="btn-secondary btn-danger"
+                  className="btn btn-secondary btn-danger"
                   onClick={() => handleMaintenanceAction(act.key)}
                   disabled={actionLoading !== null}
                   type="button"
@@ -676,7 +676,7 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
           <div className="db-maint-desc">{t('db.exportBackupDesc')}</div>
         </div>
         <button
-          className="btn-secondary"
+          className="btn btn-secondary"
           onClick={handleExport}
           type="button"
         >
@@ -694,7 +694,7 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
           <div className="db-maint-desc">{t('db.importBackupDesc')}</div>
         </div>
         <button
-          className="btn-secondary"
+          className="btn btn-secondary"
           onClick={handleImport}
           type="button"
         >
@@ -715,7 +715,7 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
         </div>
         {!showResetConfirm ? (
           <button
-            className="btn-secondary btn-danger"
+            className="btn btn-secondary btn-danger"
             onClick={() => setShowResetConfirm(true)}
             type="button"
           >
@@ -732,7 +732,7 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
               onChange={(e) => setResetConfirm(e.target.value)}
             />
             <button
-              className="btn-secondary btn-danger"
+              className="btn btn-secondary btn-danger"
               onClick={handleReset}
               disabled={actionLoading !== null}
               type="button"
@@ -740,7 +740,7 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
               {actionLoading === 'reset' ? <RefreshCw size={14} className="db-spin" /> : t('db.confirm')}
             </button>
             <button
-              className="btn-secondary"
+              className="btn btn-secondary"
               onClick={() => { setShowResetConfirm(false); setResetConfirm('') }}
               type="button"
             >
@@ -842,14 +842,14 @@ const DatabasePanel = ({ t }: DatabasePanelProps) => {
             </div>
             <div className="db-confirm-actions">
               <button
-                className="btn-secondary"
+                className="btn btn-secondary"
                 onClick={() => setShowVacuumConfirm(false)}
                 type="button"
               >
                 {t('db.cancel')}
               </button>
               <button
-                className="btn-secondary btn-danger"
+                className="btn btn-secondary btn-danger"
                 onClick={() => {
                   setShowVacuumConfirm(false)
                   handleMaintenanceAction('vacuum')
