@@ -81,12 +81,26 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec {
-            file_name: "CLAUDE.md",
-            scope: "both",
-            global_rel: Some(".claude/CLAUDE.md"),
-            project_rel: Some("CLAUDE.md")
-        }]
+        vec![
+            PromptFileSpec {
+                file_name: "CLAUDE.md",
+                scope: "both",
+                global_rel: Some(".claude/CLAUDE.md"),
+                project_rel: Some("CLAUDE.md")
+            },
+            PromptFileSpec {
+                file_name: "AGENTS.md",
+                scope: "both",
+                global_rel: Some(".claude/AGENTS.md"),
+                project_rel: Some("AGENTS.md")
+            },
+            PromptFileSpec {
+                file_name: "README.md",
+                scope: "project",
+                global_rel: None,
+                project_rel: Some("README.md")
+            }
+        ]
     );
     add_tool!(
         "codex",
@@ -98,12 +112,26 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec {
-            file_name: "AGENTS.md",
-            scope: "project",
-            global_rel: None,
-            project_rel: Some("AGENTS.md")
-        }]
+        vec![
+            PromptFileSpec {
+                file_name: "CLAUDE.md",
+                scope: "both",
+                global_rel: Some(".codex/CLAUDE.md"),
+                project_rel: Some("CLAUDE.md")
+            },
+            PromptFileSpec {
+                file_name: "AGENTS.md",
+                scope: "both",
+                global_rel: Some(".codex/AGENTS.md"),
+                project_rel: Some("AGENTS.md")
+            },
+            PromptFileSpec {
+                file_name: "README.md",
+                scope: "project",
+                global_rel: None,
+                project_rel: Some("README.md")
+            }
+        ]
     );
     add_tool!(
         "opencode",
@@ -442,12 +470,32 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec {
-            file_name: ".traerules",
-            scope: "project",
-            global_rel: None,
-            project_rel: Some(".traerules")
-        }]
+        vec![
+            PromptFileSpec {
+                file_name: ".traerules",
+                scope: "project",
+                global_rel: None,
+                project_rel: Some(".traerules")
+            },
+            PromptFileSpec {
+                file_name: "CLAUDE.md",
+                scope: "both",
+                global_rel: Some(".trae-cn/CLAUDE.md"),
+                project_rel: Some("CLAUDE.md")
+            },
+            PromptFileSpec {
+                file_name: "AGENTS.md",
+                scope: "both",
+                global_rel: Some(".trae-cn/AGENTS.md"),
+                project_rel: Some("AGENTS.md")
+            },
+            PromptFileSpec {
+                file_name: "README.md",
+                scope: "project",
+                global_rel: None,
+                project_rel: Some("README.md")
+            }
+        ]
     );
     add_tool!(
         "zencoder",
