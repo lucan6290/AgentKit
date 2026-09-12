@@ -1,11 +1,11 @@
 blank_issues_enabled: true
 contact_links:
   - name: 使用与故障排查 / Usage and troubleshooting
-    url: https://github.com/lucan6290/skills-hub/blob/main/SUPPORT.md
+    url: https://github.com/lucan6290/agentkit/blob/main/SUPPORT.md
     about: 先查支持指南；使用问题可提交空白 Issue / Read the support guide; usage questions may use a blank issue
   - name: 私密安全报告 / Private security reports
-    url: https://github.com/lucan6290/skills-hub/security/policy
+    url: https://github.com/lucan6290/agentkit/security/policy
     about: 查看私密报告与邮件渠道，不要公开漏洞 / Use private reporting or email; do not disclose vulnerabilities publicly
   - name: 行为准则 / Code of Conduct
-    url: https://github.com/lucan6290/skills-hub/blob/main/CODE_OF_CONDUCT.md
+    url: https://github.com/lucan6290/agentkit/blob/main/CODE_OF_CONDUCT.md
     about: 社区行为问题的私密联系渠道 / Private contact for community conduct concerns

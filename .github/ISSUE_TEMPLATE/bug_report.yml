@@ -6,9 +6,9 @@ body:
     attributes:
       value: |
         支持中文或英文 / Chinese or English welcome.
-        请先阅读 [支持指南 / Support](https://github.com/lucan6290/skills-hub/blob/main/SUPPORT.md)。
+        请先阅读 [支持指南 / Support](https://github.com/lucan6290/agentkit/blob/main/SUPPORT.md)。
         **漏洞和凭据泄露不要公开报告 / Do not report vulnerabilities or exposed credentials publicly.**
-        请使用 [安全策略 / Security policy](https://github.com/lucan6290/skills-hub/security/policy) 中的私密渠道。
+        请使用 [安全策略 / Security policy](https://github.com/lucan6290/agentkit/security/policy) 中的私密渠道。
   - type: checkboxes
     id: checks
     attributes:
@@ -21,7 +21,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: Skills Hub 版本或提交 / Version or commit
+      label: AgentKit 版本或提交 / Version or commit
       placeholder: v0.2.3 / commit SHA
     validations:
       required: true

@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         支持中文或英文。大改动请先讨论再实现 / Chinese or English welcome. Discuss large changes before implementation.
-        不要提交敏感信息；漏洞请按 [安全策略 / Security policy](https://github.com/lucan6290/skills-hub/security/policy) 私密报告。
+        不要提交敏感信息；漏洞请按 [安全策略 / Security policy](https://github.com/lucan6290/agentkit/security/policy) 私密报告。
   - type: checkboxes
     id: checks
     attributes:
