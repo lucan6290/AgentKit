@@ -149,6 +149,14 @@ pub fn scan_and_register_community_repo(
         Some(p) => p.to_path_buf(),
         None => resolve_community_repo_path(db),
     };
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "scan.community.started",
+        layer = "backend",
+        area = "repo",
+        base_path = %base_path.display(),
+        "scanning community repo"
+    );
     scan_and_register_repo(db, &base_path, "community")
 }
 
@@ -161,6 +169,14 @@ pub fn scan_and_register_custom_repo(
         Some(p) => p.to_path_buf(),
         None => resolve_custom_repo_path(db),
     };
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "scan.custom.started",
+        layer = "backend",
+        area = "repo",
+        base_path = %base_path.display(),
+        "scanning custom repo"
+    );
     scan_and_register_repo(db, &base_path, "custom")
 }
 
@@ -170,6 +186,15 @@ fn scan_and_register_repo(
     source_type: &str,
 ) -> Result<usize, String> {
     if !base_path.is_dir() {
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "scan.repo.dir_not_found",
+            layer = "backend",
+            area = "repo",
+            source_type = source_type,
+            base_path = %base_path.display(),
+            "repo directory does not exist, skipping scan"
+        );
         return Ok(0);
     }
 
@@ -199,6 +224,7 @@ fn scan_and_register_repo(
     let mut items: Vec<PathBuf> = entries.filter_map(|e| e.ok()).map(|e| e.path()).collect();
     items.sort();
 
+    let total_items = items.len();
     for item in items {
         if !item.is_dir() {
             continue;
@@ -217,6 +243,18 @@ fn scan_and_register_repo(
             registered += 1;
         }
     }
+
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "scan.repo.completed",
+        layer = "backend",
+        area = "repo",
+        source_type = source_type,
+        base_path = %base_path.display(),
+        total_items = total_items,
+        registered = registered,
+        "scan completed"
+    );
 
     Ok(registered)
 }
@@ -365,10 +403,26 @@ pub fn sync_custom_repo_registry(
 
 /// Sync all repo registries.
 pub fn sync_all_repo_registries(db: &Database) -> Result<SyncResult, String> {
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "sync.all.started",
+        layer = "backend",
+        area = "repo",
+        "syncing all repo registries"
+    );
     let removed =
         remove_missing_community_repo_skills(db)? + remove_missing_custom_repo_skills(db)?;
     let registered =
         scan_and_register_community_repo(db, None)? + scan_and_register_custom_repo(db, None)?;
+    tracing::info!(
+        target: crate::logging::app_target(),
+        event = "sync.all.completed",
+        layer = "backend",
+        area = "repo",
+        removed = removed,
+        registered = registered,
+        "sync all completed"
+    );
     Ok(SyncResult {
         removed,
         registered,
