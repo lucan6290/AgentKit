@@ -233,7 +233,7 @@ Function PageReinstall
   nsis_tauri_utils::SemverCompare "${VERSION}" $R0
   Pop $R0
   ; 写入版本比较日志
-  FileOpen $R9 "$TEMP\skills-hub-install.log" a
+  FileOpen $R9 "$TEMP\agentkit-install.log" a
   ${If} $R9 != 0
     FileSeek $R9 0 END
     FileWrite $R9 "===== PageReinstall 版本比较 =====$\r$\n"
@@ -387,7 +387,7 @@ Function PageLeaveReinstall
     BringToFront
 
     ; 写入卸载退出码日志
-    FileOpen $R9 "$TEMP\skills-hub-install.log" a
+    FileOpen $R9 "$TEMP\agentkit-install.log" a
     ${If} $R9 != 0
       FileSeek $R9 0 END
       FileWrite $R9 "===== PageLeaveReinstall 卸载旧版本 =====$\r$\n"
@@ -537,8 +537,8 @@ Function .onInit
     ; GetDriveTypeW: 0=unknown, 1=no_root, 2=removable, 3=fixed, 4=remote, 5=cdrom, 6=ramdisk
     System::Call 'kernel32::GetDriveTypeW(w "D:\\") i .r0'
 
-    ; 写入安装日志到 $TEMP\skills-hub-install.log
-    FileOpen $R1 "$TEMP\skills-hub-install.log" a
+    ; 写入安装日志到 $TEMP\agentkit-install.log
+    FileOpen $R1 "$TEMP\agentkit-install.log" a
     ${If} $R1 != 0
       FileSeek $R1 0 END
       FileWrite $R1 "===== .onInit 路径判断 =====$\r$\n"
@@ -548,14 +548,14 @@ Function .onInit
     ${EndIf}
 
     ${If} $0 == 3
-      StrCpy $INSTDIR "D:\skills-hub"
+      StrCpy $INSTDIR "D:\agentkit"
       ${If} $R1 != 0
-        FileWrite $R1 "  判定: D 盘为固定硬盘，默认路径设为 D:\skills-hub$\r$\n"
+        FileWrite $R1 "  判定: D 盘为固定硬盘，默认路径设为 D:\agentkit$\r$\n"
       ${EndIf}
     ${Else}
-      StrCpy $INSTDIR "C:\skills-hub"
+      StrCpy $INSTDIR "C:\agentkit"
       ${If} $R1 != 0
-        FileWrite $R1 "  判定: D 盘不可用(type=$0)，默认路径设为 C:\skills-hub$\r$\n"
+        FileWrite $R1 "  判定: D 盘不可用(type=$0)，默认路径设为 C:\agentkit$\r$\n"
       ${EndIf}
     ${EndIf}
 
@@ -582,7 +582,7 @@ Section EarlyChecks
     ; If downgrading
     ${If} $R0 = -1
       ; 写入降级中止日志
-      FileOpen $R9 "$TEMP\skills-hub-install.log" a
+      FileOpen $R9 "$TEMP\agentkit-install.log" a
       ${If} $R9 != 0
         FileSeek $R9 0 END
         FileWrite $R9 "===== EarlyChecks 降级中止 =====$\r$\n"
@@ -615,7 +615,7 @@ Section WebView2
   ${EndIf}
 
   ; 写入 WebView2 检测日志
-  FileOpen $R9 "$TEMP\skills-hub-install.log" a
+  FileOpen $R9 "$TEMP\agentkit-install.log" a
   ${If} $R9 != 0
     FileSeek $R9 0 END
     FileWrite $R9 "===== WebView2 检测 =====$\r$\n"
@@ -636,7 +636,7 @@ Section WebView2
         NSISdl::download "https://go.microsoft.com/fwlink/p/?LinkId=2124703" "$TEMP\MicrosoftEdgeWebview2Setup.exe"
         Pop $0
         ; 写入下载结果日志
-        FileOpen $R9 "$TEMP\skills-hub-install.log" a
+        FileOpen $R9 "$TEMP\agentkit-install.log" a
         ${If} $R9 != 0
           FileSeek $R9 0 END
           FileWrite $R9 "  [WebView2] 下载Bootstrapper结果: $0$\r$\n"
@@ -675,7 +675,7 @@ Section WebView2
         ; $6 holds the path to the webview2 installer
         ExecWait "$6 ${WEBVIEW2INSTALLERARGS} /install" $1
         ; 写入安装退出码日志
-        FileOpen $R9 "$TEMP\skills-hub-install.log" a
+        FileOpen $R9 "$TEMP\agentkit-install.log" a
         ${If} $R9 != 0
           FileSeek $R9 0 END
           FileWrite $R9 "  [WebView2] 安装器退出码: $1$\r$\n"
@@ -693,7 +693,7 @@ Section WebView2
     !if "${MINIMUMWEBVIEW2VERSION}" != ""
       ${VersionCompare} "${MINIMUMWEBVIEW2VERSION}" "$4" $R0
       ; 写入版本检查日志
-      FileOpen $R9 "$TEMP\skills-hub-install.log" a
+      FileOpen $R9 "$TEMP\agentkit-install.log" a
       ${If} $R9 != 0
         FileSeek $R9 0 END
         FileWrite $R9 "  [WebView2] 最低版本要求: ${MINIMUMWEBVIEW2VERSION}$\r$\n"
@@ -717,7 +717,7 @@ Section WebView2
             ; Modified from "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft EdgeWebView\ModifyPath"
             ExecWait `"$R1" /install appguid=${WEBVIEW2APPGUID}&needsadmin=true` $1
             ; 写入更新退出码日志
-            FileOpen $R9 "$TEMP\skills-hub-install.log" a
+            FileOpen $R9 "$TEMP\agentkit-install.log" a
             ${If} $R9 != 0
               FileSeek $R9 0 END
               FileWrite $R9 "  [WebView2] 更新退出码: $1$\r$\n"
@@ -998,7 +998,7 @@ SectionEnd
 Function RestorePreviousInstallLocation
   ReadRegStr $4 SHCTX "${MANUPRODUCTKEY}" ""
   ; 写入安装日志
-  FileOpen $R9 "$TEMP\skills-hub-install.log" a
+  FileOpen $R9 "$TEMP\agentkit-install.log" a
   ${If} $R9 != 0
     FileSeek $R9 0 END
     FileWrite $R9 "  [RestorePreviousInstallLocation] 注册表读取路径: SHCTX\${MANUPRODUCTKEY}$\r$\n"
@@ -1008,7 +1008,7 @@ Function RestorePreviousInstallLocation
   StrCmp $4 "" +2 0
     StrCpy $INSTDIR $4
   ; 记录最终 INSTDIR
-  FileOpen $R9 "$TEMP\skills-hub-install.log" a
+  FileOpen $R9 "$TEMP\agentkit-install.log" a
   ${If} $R9 != 0
     FileSeek $R9 0 END
     ${If} $4 == ""

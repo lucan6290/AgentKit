@@ -66,6 +66,9 @@ pub fn run() {
         );
     }));
 
+    // Migrate legacy data directory (~/.skills-hub → ~/.agentkit) before any DB access.
+    crate::config::migrate_legacy_data_dir();
+
     // Read log level from DB before Tauri initializes (use a temporary connection).
     let log_level = {
         let db_path = crate::config::default_db_path();

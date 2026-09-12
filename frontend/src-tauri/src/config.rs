@@ -664,6 +664,64 @@ pub fn resolve_data_dir() -> PathBuf {
     resolve_root_dir().join("data")
 }
 
+/// Migrate legacy data directory from ~/.skills-hub to ~/.agentkit.
+/// Also renames the inner `skillshub` subdirectory to `agentkit`.
+/// Only runs if the old directory exists and the new one does not.
+pub fn migrate_legacy_data_dir() {
+    let home = env::var("USERPROFILE")
+        .or_else(|_| env::var("HOME"))
+        .unwrap_or_else(|_| ".".to_string());
+    let home = PathBuf::from(home);
+    let old_root = home.join(".skills-hub");
+    let new_root = resolve_root_dir();
+
+    // Step 1: Rename ~/.skills-hub → ~/.agentkit (if old exists, new doesn't)
+    if old_root.exists() && !new_root.exists() {
+        if let Err(e) = std::fs::rename(&old_root, &new_root) {
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "migrate.legacy_dir.failed",
+                layer = "backend",
+                area = "config",
+                error = %e,
+                "failed to rename ~/.skills-hub to ~/.agentkit"
+            );
+            return;
+        }
+        tracing::info!(
+            target: crate::logging::app_target(),
+            event = "migrate.legacy_dir.success",
+            layer = "backend",
+            area = "config",
+            "migrated data directory from ~/.skills-hub to ~/.agentkit"
+        );
+    }
+
+    // Step 2: Rename ~/.agentkit/skillshub → ~/.agentkit/agentkit (if old exists, new doesn't)
+    let old_inner = new_root.join("skillshub");
+    let new_inner = new_root.join("agentkit");
+    if old_inner.exists() && !new_inner.exists() {
+        if let Err(e) = std::fs::rename(&old_inner, &new_inner) {
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "migrate.inner_dir.failed",
+                layer = "backend",
+                area = "config",
+                error = %e,
+                "failed to rename ~/.agentkit/skillshub to ~/.agentkit/agentkit"
+            );
+        } else {
+            tracing::info!(
+                target: crate::logging::app_target(),
+                event = "migrate.inner_dir.success",
+                layer = "backend",
+                area = "config",
+                "migrated inner directory from skillshub to agentkit"
+            );
+        }
+    }
+}
+
 pub fn default_db_path() -> PathBuf {
     let data_dir = resolve_data_dir();
     std::fs::create_dir_all(&data_dir).ok();

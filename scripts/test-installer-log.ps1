@@ -1,7 +1,7 @@
-# Skills Hub NSIS 安装日志验证脚本
+# AgentKit NSIS 安装日志验证脚本
 # 用法: .\scripts\test-installer-log.ps1
 #
-# 模拟三种场景并检查 %TEMP%\skills-hub-install.log 的输出:
+# 模拟三种场景并检查 %TEMP%\agentkit-install.log 的输出:
 #   1. 首次安装 — 无注册表记录，验证路径判断、WebView2 检测等日志
 #   2. 升级安装 — 模拟已安装旧版本，验证版本比较、升级判定、路径恢复
 #   3. 降级安装 — 模拟已安装高版本，验证降级判定、静默中止日志
@@ -21,7 +21,7 @@ if (-not $Installer) {
     exit 1
 }
 
-# 从文件名提取版本号 (例: Skills Hub_0.1.1_x64-setup.exe → 0.1.1)
+# 从文件名提取版本号 (例: AgentKit_0.1.1_x64-setup.exe → 0.1.1)
 if ($Installer.Name -match '_(\d+\.\d+\.\d+)_') {
     $CurrentVersion = $Matches[1]
 } else {
@@ -29,8 +29,8 @@ if ($Installer.Name -match '_(\d+\.\d+\.\d+)_') {
     exit 1
 }
 
-$LogFile   = "$env:TEMP\skills-hub-install.log"
-$TestDir   = "$env:TEMP\skills-hub-test"
+$LogFile   = "$env:TEMP\agentkit-install.log"
+$TestDir   = "$env:TEMP\agentkit-test"
 $Results   = @()
 $StartTime = Get-Date
 
@@ -103,13 +103,13 @@ function Check-LogFileExists($description) {
 
 function Set-MockRegistry($version, $installDir) {
     # 设置模拟的注册表信息，用于升级/降级场景
-    $regPath = "HKLM:\SOFTWARE\com.lucan\skillshub"
+    $regPath = "HKLM:\SOFTWARE\com.lucan\agentkit"
     if (-not (Test-Path $regPath)) { New-Item $regPath -Force | Out-Null }
     Set-ItemProperty $regPath -Name "(default)" -Value $installDir
 
-    $uninstRegPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\com.lucan.skillshub"
+    $uninstRegPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\com.lucan.agentkit"
     if (-not (Test-Path $uninstRegPath)) { New-Item $uninstRegPath -Force | Out-Null }
-    Set-ItemProperty $uninstRegPath -Name "DisplayName"      -Value "Skills Hub"
+    Set-ItemProperty $uninstRegPath -Name "DisplayName"      -Value "AgentKit"
     Set-ItemProperty $uninstRegPath -Name "DisplayVersion"    -Value $version
     Set-ItemProperty $uninstRegPath -Name "Publisher"         -Value "lucan"
     Set-ItemProperty $uninstRegPath -Name "UninstallString"   -Value "`"$installDir\uninstall.exe`""
@@ -118,12 +118,12 @@ function Set-MockRegistry($version, $installDir) {
 
 function Clear-MockRegistry {
     Remove-Item "HKLM:\SOFTWARE\com.lucan" -Recurse -Force -ErrorAction SilentlyContinue
-    Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\com.lucan.skillshub" -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\com.lucan.agentkit" -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 function Cleanup-Environment {
     # 尝试卸载已安装的实例
-    $uninstKey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\com.lucan.skillshub"
+    $uninstKey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\com.lucan.agentkit"
     if (Test-Path $uninstKey) {
         $uninstStr = (Get-ItemProperty $uninstKey -Name "UninstallString" -ErrorAction SilentlyContinue).UninstallString
         if ($uninstStr) {
