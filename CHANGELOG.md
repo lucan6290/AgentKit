@@ -4,6 +4,35 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-12
+
+### Added
+- 为 trae_cn/claude_code/codex 三个工具内定 CLAUDE.md、AGENTS.md、README.md 提示词文件路径
+- 提示词界面新增「扫描工具文件」按钮，从预设路径扫描文件并自动存入数据库关联
+- 提示词新建对话框支持指定文件路径，自动读取内容并关联文件路径
+- 提示词列表显示已关联文件的图标标识
+- 添加构建脚本，自动加载签名密钥
+- GitHub Actions 添加 owner 限制条件，只有仓库所有者可触发部署和发布
+- 为仓库扫描函数添加关键 tracing 日志，便于调试扫描流程
+
+### Changed
+- 用户数据目录按资源类型重组，agentkit/skills → skills
+- 前端、Rust 后端、文档、官网、GitHub 配置中 Skills Hub 名称全面替换为 AgentKit
+- NSIS 脚本、测试脚本、数据目录迁移逻辑完成名称替换收尾
+- 移除官网页版本号，避免每次发版维护
+- 更新 updater 公钥为 agentkit.key.pub 对应的密钥
+
+### Fixed
+- 添加关联时自动填充已有文件路径和写回状态
+- 关联文件支持编辑更新而非重复创建，解决 UNIQUE 约束冲突
+- 修正检测路径规范化和 qoder/codebuddy 残留目录误判
+- 改进工具安装检测逻辑，避免残留配置目录误判
+- Windows 路径分隔符统一为反斜杠
+- 刷新技能时合并另一类型技能到状态，避免切换 tab 后技能数量变 0
+- loadManagedSkills 传入 sourceType 时合并另一类型技能，避免状态覆盖
+- 迁移 DB 中 skill 路径，避免刷新时技能丢失
+- 修复 GitHub Pages 部署工作流权限不足问题
+
 ## [0.2.4] - 2026-09-12
 
 ### Added
