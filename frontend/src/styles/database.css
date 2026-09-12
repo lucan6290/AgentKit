@@ -486,7 +486,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   padding: 14px 16px;
   background: var(--bg-panel);
   border: 1px solid var(--border-subtle);
@@ -499,6 +499,7 @@
 
 .db-maint-info {
   flex: 1;
+  min-width: 0;
 }
 
 .db-maint-title {
@@ -859,6 +860,13 @@
 .db-maint-card .btn-secondary {
   white-space: nowrap;
   flex-shrink: 0;
+  min-height: auto;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.db-maint-card .btn-secondary svg {
+  margin-right: 2px;
 }
 
 /* ── VACUUM confirm modal ── */
