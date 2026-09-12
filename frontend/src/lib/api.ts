@@ -285,3 +285,9 @@ export async function getAutoRefreshOnStartup(): Promise<boolean> {
 export async function setAutoRefreshOnStartup(enabled: boolean): Promise<void> {
   await invokeCommand('set_auto_refresh_on_startup', { enabled })
 }
+
+// ── 外部链接 ──────────────────────────────────────
+
+export async function openExternalUrl(url: string): Promise<void> {
+  await invokeCommand('open_external_url', { url })
+}

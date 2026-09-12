@@ -200,20 +200,23 @@ function AppContent() {
   useEffect(() => {
     if (hasAutoChecked.current) return
     hasAutoChecked.current = true
-    // Check auto-check setting, then check for update if enabled
-    getAutoCheckUpdate()
-      .then((enabled) => {
-        if (enabled) {
-          return checkUpdate().then((res) => {
-            if (res.update_available && !res.error) {
-              setUpdateResult(res)
-            }
-          })
-        }
-      })
-      .catch(() => {
-        // Silently ignore update check failures (network etc.)
-      })
+    // Delay 2s after startup, then check auto-check setting and look for updates
+    const timer = window.setTimeout(() => {
+      getAutoCheckUpdate()
+        .then((enabled) => {
+          if (enabled) {
+            return checkUpdate().then((res) => {
+              if (res.update_available && !res.error) {
+                setUpdateResult(res)
+              }
+            })
+          }
+        })
+        .catch(() => {
+          // Silently ignore update check failures (network etc.)
+        })
+    }, 2000)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const handleOpenUpdateDialog = useCallback(() => {

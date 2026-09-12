@@ -516,6 +516,7 @@ pub fn run() {
             crate::commands::misc::cancel_current_operation,
             crate::commands::misc::reorder,
             crate::commands::misc::open_new_window,
+            crate::commands::misc::open_external_url,
         ])
         .run(tauri::generate_context!())
         .unwrap_or_else(|e| {
@@ -877,7 +878,7 @@ fn open_app_directory(app: &tauri::AppHandle, dir: AppDir) {
 }
 
 /// Open a URL in the system default browser.
-fn open_url(url: &str) {
+pub(crate) fn open_url(url: &str) {
     tracing::info!(
         target: crate::logging::app_target(),
         event = "browser.open.started",

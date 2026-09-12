@@ -1,8 +1,10 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { ExternalLink, Loader2 } from '@/components/icons'
+import { ExternalLink, Globe, Loader2 } from '@/components/icons'
 import { listen } from '@tauri-apps/api/event'
 import type { TFunction } from 'i18next'
-import { performUpdate, type CheckUpdateResult } from '@/lib/api'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { performUpdate, openExternalUrl, type CheckUpdateResult } from '@/lib/api'
 import { showError } from '@/lib/uiFeedback'
 
 type UpdateDialogProps = {
@@ -32,6 +34,14 @@ const UpdateDialog = ({ open, result, t, onClose }: UpdateDialogProps) => {
       }
     }
   }, [open])
+
+  const handleGoWebsite = useCallback(() => {
+    if (!result?.release_url) return
+    openExternalUrl(result.release_url).catch(() => {
+      // Fallback: open in new tab (browser dev mode)
+      window.open(result.release_url, '_blank', 'noopener,noreferrer')
+    })
+  }, [result])
 
   const handleUpdate = useCallback(async () => {
     if (!result?.update_available) return
@@ -91,8 +101,6 @@ const UpdateDialog = ({ open, result, t, onClose }: UpdateDialogProps) => {
   const isDownloading = state === 'downloading'
   const isDone = state === 'done'
 
-  const downloadUrl = result.release_url
-
   return (
     <div className="modal-backdrop" onClick={isDownloading ? undefined : onClose}>
       <div className="update-dialog" onClick={(e) => e.stopPropagation()}>
@@ -100,21 +108,24 @@ const UpdateDialog = ({ open, result, t, onClose }: UpdateDialogProps) => {
           <div className="update-dialog-title">
             {t('update.versionReady', { version: result.latest_version })}
           </div>
-          <a
-            href={downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="update-dialog-download-btn"
-          >
-            <ExternalLink size={14} />
-            {t('update.goDownload')}
-          </a>
         </div>
 
         <div className="update-dialog-body">
-          <div className="update-dialog-version">{result.latest_version}</div>
+          <div className="update-dialog-version-row">
+            <span className="update-dialog-version-label">{t('update.currentVersion')}</span>
+            <span className="update-dialog-version-value">v{result.current_version}</span>
+            <span className="update-dialog-version-arrow">→</span>
+            <span className="update-dialog-version-value update-dialog-version-new">v{result.latest_version}</span>
+          </div>
           {result.release_notes ? (
-            <div className="update-dialog-notes">{result.release_notes}</div>
+            <div className="update-dialog-notes-section">
+              <div className="update-dialog-notes-title">{t('update.releaseNotes')}</div>
+              <div className="update-dialog-notes markdown-body">
+                <Markdown remarkPlugins={[remarkGfm]}>
+                  {result.release_notes}
+                </Markdown>
+              </div>
+            </div>
           ) : null}
         </div>
 
@@ -140,8 +151,18 @@ const UpdateDialog = ({ open, result, t, onClose }: UpdateDialogProps) => {
               onClick={onClose}
               disabled={isDownloading}
             >
-              {t('update.cancel')}
+              {isDone ? t('close') : t('update.cancel')}
             </button>
+            {!isDone && !isDownloading && (
+              <button
+                type="button"
+                className="update-dialog-website"
+                onClick={handleGoWebsite}
+              >
+                <Globe size={14} />
+                {t('update.goWebsite')}
+              </button>
+            )}
             <button
               type="button"
               className="update-dialog-update"
@@ -156,7 +177,10 @@ const UpdateDialog = ({ open, result, t, onClose }: UpdateDialogProps) => {
               ) : isDone ? (
                 t('update.restarting')
               ) : (
-                t('update.update')
+                <>
+                  <ExternalLink size={14} />
+                  {t('update.update')}
+                </>
               )}
             </button>
           </div>

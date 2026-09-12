@@ -80,3 +80,10 @@ pub fn create_new_window(app: &AppHandle) -> AppResult<()> {
 pub async fn open_new_window(app: AppHandle) -> AppResult<()> {
     create_new_window(&app)
 }
+
+/// Open an external URL in the system default browser.
+#[tauri::command(rename_all = "snake_case")]
+pub async fn open_external_url(url: String) -> AppResult<()> {
+    crate::open_url(&url);
+    Ok(())
+}
