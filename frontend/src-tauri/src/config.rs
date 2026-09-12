@@ -751,6 +751,112 @@ pub fn default_db_path() -> PathBuf {
     data_dir.join(DB_FILE_NAME)
 }
 
+/// Migrate DB paths from old directory names to `skills`.
+/// Updates `community_path` and `source_ref` in the `skills` table:
+/// - `~/.agentkit/agentkit/` → `~/.agentkit/skills/`
+/// - `~/.agentkit/skillshub/` → `~/.agentkit/skills/`
+/// Handles both `\` (Windows) and `/` (Unix) path separators.
+/// If a new-path entry already exists (from a prior scan), the old entry is deleted instead.
+pub fn migrate_db_skill_paths() {
+    let db_path = default_db_path();
+    if !db_path.exists() {
+        return;
+    }
+
+    let conn = match rusqlite::Connection::open(&db_path) {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::warn!(
+                target: crate::logging::app_target(),
+                event = "migrate.db_paths.open_failed",
+                layer = "backend",
+                area = "config",
+                error = %e,
+                "failed to open DB for path migration"
+            );
+            return;
+        }
+    };
+
+    // Replace patterns for both Windows (\) and Unix (/) separators.
+    // Each pair: (old_pattern, new_pattern)
+    let replacements: &[(&str, &str)] = &[
+        // Windows: agentkit → skills
+        (r"\.agentkit\agentkit\", r"\.agentkit\skills\"),
+        // Unix: agentkit → skills
+        ("/.agentkit/agentkit/", "/.agentkit/skills/"),
+        // Windows: skillshub → skills
+        (r"\.agentkit\skillshub\", r"\.agentkit\skills\"),
+        // Unix: skillshub → skills
+        ("/.agentkit/skillshub/", "/.agentkit/skills/"),
+    ];
+
+    let mut total_deleted = 0;
+    let mut total_updated = 0;
+
+    for (old_pat, new_pat) in replacements {
+        let like_pattern = format!("%{}%", old_pat);
+
+        // Step 1: Delete old-path entries whose new-path already exists (duplicates).
+        // This prevents UNIQUE constraint violations during the UPDATE.
+        let delete_sql = format!(
+            "DELETE FROM skills WHERE community_path LIKE ? AND REPLACE(community_path, ?, ?) IN (SELECT community_path FROM skills)"
+        );
+        match conn.execute(&delete_sql, rusqlite::params![&like_pattern, old_pat, new_pat]) {
+            Ok(count) => total_deleted += count,
+            Err(e) => {
+                tracing::warn!(
+                    target: crate::logging::app_target(),
+                    event = "migrate.db_paths.delete_failed",
+                    layer = "backend",
+                    area = "config",
+                    error = %e,
+                    pattern = old_pat,
+                    "failed to delete duplicate old-path entries"
+                );
+            }
+        }
+
+        // Step 2: Update remaining old-path entries to new path.
+        let update_sql = format!(
+            "UPDATE skills SET community_path = REPLACE(community_path, ?, ?), source_ref = REPLACE(source_ref, ?, ?) WHERE community_path LIKE ? OR source_ref LIKE ?"
+        );
+        match conn.execute(
+            &update_sql,
+            rusqlite::params![
+                old_pat, new_pat,
+                old_pat, new_pat,
+                &like_pattern, &like_pattern,
+            ],
+        ) {
+            Ok(count) => total_updated += count,
+            Err(e) => {
+                tracing::warn!(
+                    target: crate::logging::app_target(),
+                    event = "migrate.db_paths.update_failed",
+                    layer = "backend",
+                    area = "config",
+                    error = %e,
+                    pattern = old_pat,
+                    "failed to update DB paths"
+                );
+            }
+        }
+    }
+
+    if total_deleted > 0 || total_updated > 0 {
+        tracing::info!(
+            target: crate::logging::app_target(),
+            event = "migrate.db_paths.success",
+            layer = "backend",
+            area = "config",
+            deleted_duplicates = total_deleted,
+            updated_rows = total_updated,
+            "migrated DB skill paths from old directory names to 'skills'"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

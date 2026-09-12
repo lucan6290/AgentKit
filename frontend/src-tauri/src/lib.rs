@@ -73,6 +73,9 @@ pub fn run() {
     let log_level = {
         let db_path = crate::config::default_db_path();
         if let Ok(db) = crate::db::Database::new(&db_path) {
+            // Migrate DB skill paths (agentkit/skillshub → skills) after DB is available.
+            crate::config::migrate_db_skill_paths();
+
             let repo = crate::repositories::SettingsRepository::new(&db);
             repo.get("log_level")
                 .ok()
