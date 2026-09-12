@@ -75,13 +75,23 @@ impl<'a> MaintenanceRepository<'a> {
     }
 
     pub fn get_table_names(&self) -> AppResult<Vec<String>> {
-        self.db.with_conn(|conn| {
+        let names = self.db.with_conn(|conn| {
             let mut stmt = conn.prepare(
                 "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
             )?;
             let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
             rows.collect::<Result<Vec<_>, _>>()
-        })
+        })?;
+        tracing::debug!(
+            target: crate::logging::app_target(),
+            event = "database.table_names.fetched",
+            layer = "backend",
+            area = "database",
+            count = names.len(),
+            tables = ?names,
+            "fetched table names from sqlite_master"
+        );
+        Ok(names)
     }
 
     pub fn table_exists(&self, table: &str) -> AppResult<bool> {
