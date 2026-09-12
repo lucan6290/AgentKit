@@ -14,6 +14,7 @@
     "autostart:default",
     "deep-link:default",
     "notification:default",
-    "updater:default"
+    "updater:default",
+    "dialog:default"
   ]
 }

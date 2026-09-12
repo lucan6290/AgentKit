@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::{Skill, SkillTarget, SkillUsage, Tag};
+use crate::models::{Prompt, PromptFileLink, Skill, SkillTarget, SkillUsage, Tag};
 
 // ── Managed Skill DTO ───────────────────────────────────
 
@@ -14,6 +14,13 @@ pub struct ManagedSkillDto {
     pub targets: Vec<SkillTarget>,
     pub usage: Vec<SkillUsage>,
     pub is_suite: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PromptDto {
+    #[serde(flatten)]
+    pub prompt: Prompt,
+    pub file_links: Vec<PromptFileLink>,
 }
 
 // ── Health ──────────────────────────────────────────────
@@ -123,13 +130,6 @@ pub struct DbMaintenanceResult {
     pub action: String,
     pub message: String,
     pub integrity_result: Option<String>,
-}
-
-// ── Pick Folder ─────────────────────────────────────────
-
-#[derive(Debug, Clone, Serialize)]
-pub struct PickFolderResult {
-    pub path: Option<String>,
 }
 
 // ── Generic OK responses ────────────────────────────────

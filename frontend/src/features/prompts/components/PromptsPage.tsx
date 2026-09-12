@@ -1,484 +1,314 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import type { TFunction } from 'i18next'
 import {
+  Copy,
+  FilePlus2,
   FileText,
+  FolderOpen,
+  Link2,
+  Plus,
   RefreshCw,
   Save,
+  Search,
   Trash2,
-  AlertCircle,
-  CheckCircle,
-  ChevronRight,
-  Monitor,
-  FolderOpen,
+  Unlink,
+  Upload,
   X,
 } from 'lucide-react'
 import { promptService } from '@/services/promptService'
-import { logger } from '@/lib/logger'
+import { formatDisplayPath } from '@/lib/utils'
 import { showError, showSuccess } from '@/lib/uiFeedback'
-import type { PromptFileDto } from '../types'
+import { pickFile } from '@/lib/pickFolder'
+import type { Prompt, PromptFileLink } from '@/features/prompts/types'
 
 type PromptsPageProps = {
   t: TFunction
 }
 
-/** Map tool keys to human-readable display names */
-const TOOL_DISPLAY_NAMES: Record<string, string> = {
-  cursor: 'Cursor',
-  claude_code: 'Claude Code',
-  codex: 'Codex',
-  opencode: 'OpenCode',
-  antigravity: 'Antigravity',
-  amp: 'Amp',
-  kimi_cli: 'Kimi Code CLI',
-  augment: 'Augment',
-  openclaw: 'OpenClaw',
-  copaw: 'Copaw',
-  cline: 'Cline',
-  codebuddy: 'CodeBuddy',
-  command_code: 'Command Code',
-  continue: 'Continue',
-  crush: 'Crush',
-  junie: 'Junie',
-  iflow_cli: 'iFlow CLI',
-  kiro_cli: 'Kiro CLI',
-  kode: 'Kode',
-  mcpjam: 'MCPJam',
-  mistral_vibe: 'Mistral Vibe',
-  mux: 'Mux',
-  openclaude: 'OpenClaude IDE',
-  openhands: 'OpenHands',
-  pi: 'Pi',
-  qoder: 'Qoder',
-  qoderwork: 'QoderWork',
-  qwen_code: 'Qwen Code',
-  trae: 'Trae',
-  trae_cn: 'Trae CN',
-  zencoder: 'Zencoder',
-  neovate: 'Neovate',
-  pochi: 'Pochi',
-  adal: 'AdaL',
-  kilo_code: 'Kilo Code',
-  roo_code: 'Roo Code',
-  goose: 'Goose',
-  gemini_cli: 'Gemini CLI',
-  github_copilot: 'GitHub Copilot',
-  clawdbot: 'Clawdbot',
-  droid: 'Droid',
-  windsurf: 'Windsurf',
-  moltbot: 'MoltBot',
-  hermes_agent: 'Hermes Agent',
-}
-
-function getToolDisplayName(key: string): string {
-  return TOOL_DISPLAY_NAMES[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-}
+type ConfirmAction =
+  | { type: 'delete'; prompt: Prompt }
+  | { type: 'force-write'; link: PromptFileLink }
 
 const PromptsPage = ({ t }: PromptsPageProps) => {
-  const [promptFiles, setPromptFiles] = useState<PromptFileDto[]>([])
+  const [prompts, setPrompts] = useState<Prompt[]>([])
+  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [name, setName] = useState('')
+  const [content, setContent] = useState('')
+  const [savedName, setSavedName] = useState('')
+  const [savedContent, setSavedContent] = useState('')
   const [loading, setLoading] = useState(true)
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
-  const [editContent, setEditContent] = useState('')
-  const [originalContent, setOriginalContent] = useState('')
   const [saving, setSaving] = useState(false)
-  const [scanning, setScanning] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set())
+  const [busyLinkId, setBusyLinkId] = useState<string | null>(null)
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
+  const [showLinkDialog, setShowLinkDialog] = useState(false)
+  const [linkPath, setLinkPath] = useState('')
+  const [writeBackEnabled, setWriteBackEnabled] = useState(false)
 
-  const loadPromptFiles = useCallback(async () => {
+  const loadPrompts = useCallback(async () => {
     setLoading(true)
-    setError(null)
     try {
-      const files = await promptService.getPromptFiles()
-      setPromptFiles(files)
-      // Auto-expand all groups on first load
-      const tools = new Set(files.map((f) => f.tool))
-      setExpandedTools(tools)
-    } catch (err) {
-      setError(t('prompts.loadError'))
-      logger.error({
-        event: 'prompts.files.load.failed',
-        area: 'prompts',
-        outcome: 'failed',
-        message: 'Failed to load prompt files',
-      }, err)
+      const items = await promptService.listPrompts()
+      setPrompts(items)
+      setSelectedPromptId((current) => current && items.some((prompt) => prompt.id === current) ? current : null)
+    } catch (error) {
+      showError(t('prompts.loadError'), error)
     } finally {
       setLoading(false)
     }
   }, [t])
 
   useEffect(() => {
-    void loadPromptFiles()
-  }, [loadPromptFiles])
+    void loadPrompts()
+  }, [loadPrompts])
 
-  const handleScan = useCallback(async () => {
-    setScanning(true)
-    setError(null)
-    try {
-      await promptService.scanPromptFiles()
-      await loadPromptFiles()
-      showSuccess(t('prompts.scanDone'))
-    } catch (err) {
-      setError(t('prompts.scanError'))
-      showError(t('prompts.scanError'), err)
-      logger.error({
-        event: 'prompts.files.scan.failed',
-        area: 'prompts',
-        outcome: 'failed',
-        message: 'Failed to scan prompt files',
-      }, err)
-    } finally {
-      setScanning(false)
-    }
-  }, [loadPromptFiles, t])
+  const selectedPrompt = useMemo(
+    () => prompts.find((prompt) => prompt.id === selectedPromptId) ?? null,
+    [prompts, selectedPromptId],
+  )
 
-  const handleSelectFile = useCallback(async (file: PromptFileDto) => {
-    if (selectedFileId === file.id) {
-      setSelectedFileId(null)
-      setEditContent('')
-      setOriginalContent('')
-      return
-    }
-    setSelectedFileId(file.id)
-    if (!file.exists_on_disk) {
-      setEditContent('')
-      setOriginalContent('')
-      return
-    }
-    try {
-      const content = await promptService.readPromptFile(file.file_path)
-      setEditContent(content)
-      setOriginalContent(content)
-    } catch (err) {
-      showError(t('prompts.readError'), err)
-      setEditContent('')
-      setOriginalContent('')
-      logger.error({
-        event: 'prompts.file.read.failed',
-        area: 'prompts',
-        outcome: 'failed',
-        message: 'Failed to read prompt file',
-        meta: {
-          file_id: file.id,
-          file_name: file.file_name,
-          tool: file.tool,
-          scope: file.scope,
-        },
-      }, err)
-    }
-  }, [selectedFileId, t])
+  const filteredPrompts = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase()
+    if (!query) return prompts
+    return prompts.filter((prompt) => (
+      prompt.name.toLocaleLowerCase().includes(query) || prompt.content.toLocaleLowerCase().includes(query)
+    ))
+  }, [prompts, searchQuery])
 
-  const handleSave = useCallback(async () => {
-    const selectedFile = promptFiles.find((f) => f.id === selectedFileId)
-    if (!selectedFile) return
+  const hasChanges = name !== savedName || content !== savedContent
+
+  const selectPrompt = useCallback((prompt: Prompt) => {
+    setSelectedPromptId(prompt.id)
+    setName(prompt.name)
+    setContent(prompt.content)
+    setSavedName(prompt.name)
+    setSavedContent(prompt.content)
+  }, [])
+
+  const handleCreate = useCallback(async () => {
     setSaving(true)
     try {
-      await promptService.writePromptFile(selectedFile.file_path, editContent)
-      setOriginalContent(editContent)
-      showSuccess(t('prompts.saved'))
-      await loadPromptFiles()
-    } catch (err) {
-      showError(t('prompts.saveError'), err)
-      logger.error({
-        event: 'prompts.file.save.failed',
-        area: 'prompts',
-        outcome: 'failed',
-        message: 'Failed to save prompt file',
-        meta: {
-          file_id: selectedFile.id,
-          file_name: selectedFile.file_name,
-          tool: selectedFile.tool,
-          scope: selectedFile.scope,
-          content_length: editContent.length,
-        },
-      }, err)
+      const prompt = await promptService.createPrompt(t('prompts.untitled'), '')
+      setPrompts((current) => [prompt, ...current])
+      selectPrompt(prompt)
+    } catch (error) {
+      showError(t('prompts.createError'), error)
     } finally {
       setSaving(false)
     }
-  }, [editContent, loadPromptFiles, promptFiles, selectedFileId, t])
+  }, [selectPrompt, t])
 
-  const handleDelete = useCallback(async () => {
-    const selectedFile = promptFiles.find((f) => f.id === selectedFileId)
-    if (!selectedFile) return
-    if (!window.confirm(t('prompts.deleteConfirm'))) return
+  const handleSave = useCallback(async () => {
+    if (!selectedPrompt) return
+    setSaving(true)
     try {
-      await promptService.deletePromptFile(selectedFile.id)
-      setSelectedFileId(null)
-      setEditContent('')
-      setOriginalContent('')
-      showSuccess(t('prompts.deleted'))
-      await loadPromptFiles()
-    } catch (err) {
-      showError(t('prompts.deleteError'), err)
-      logger.error({
-        event: 'prompts.file.delete.failed',
-        area: 'prompts',
-        outcome: 'failed',
-        message: 'Failed to delete prompt file',
-        meta: {
-          file_id: selectedFile.id,
-          file_name: selectedFile.file_name,
-          tool: selectedFile.tool,
-          scope: selectedFile.scope,
-        },
-      }, err)
+      const updated = await promptService.updatePrompt(selectedPrompt.id, name.trim() || t('prompts.untitled'), content)
+      setPrompts((current) => current.map((prompt) => prompt.id === updated.id ? updated : prompt))
+      selectPrompt(updated)
+      showSuccess(t('prompts.saved'))
+    } catch (error) {
+      showError(t('prompts.saveError'), error)
+    } finally {
+      setSaving(false)
     }
-  }, [loadPromptFiles, promptFiles, selectedFileId, t])
+  }, [content, name, selectPrompt, selectedPrompt, t])
 
-  const handleCloseEditor = useCallback(() => {
-    setSelectedFileId(null)
-    setEditContent('')
-    setOriginalContent('')
-  }, [])
-
-  const toggleToolGroup = useCallback((tool: string) => {
-    setExpandedTools((prev) => {
-      const next = new Set(prev)
-      if (next.has(tool)) {
-        next.delete(tool)
-      } else {
-        next.add(tool)
-      }
-      return next
-    })
-  }, [])
-
-  const groupedFiles = useMemo(() => {
-    const groups = new Map<string, PromptFileDto[]>()
-    for (const file of promptFiles) {
-      const existing = groups.get(file.tool)
-      if (existing) {
-        existing.push(file)
-      } else {
-        groups.set(file.tool, [file])
-      }
-    }
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b))
-  }, [promptFiles])
-
-  const selectedFile = useMemo(
-    () => promptFiles.find((f) => f.id === selectedFileId) ?? null,
-    [promptFiles, selectedFileId],
-  )
-
-  const hasChanges = editContent !== originalContent
-
-  const totalCount = promptFiles.length
-  const existsCount = promptFiles.filter((f) => f.exists_on_disk).length
-
-  const formatTimestamp = useCallback((ms: number) => {
+  const handleCopyContent = useCallback(async () => {
     try {
-      const d = new Date(ms)
-      const now = new Date()
-      const diffMs = now.getTime() - d.getTime()
-      const diffMin = Math.floor(diffMs / 60000)
-      if (diffMin < 1) return t('prompts.justNow')
-      if (diffMin < 60) return t('prompts.minutesAgo', { count: diffMin })
-      const diffHour = Math.floor(diffMin / 60)
-      if (diffHour < 24) return t('prompts.hoursAgo', { count: diffHour })
-      return d.toLocaleDateString()
-    } catch {
-      return String(ms)
+      await navigator.clipboard.writeText(content)
+      showSuccess(t('prompts.contentCopied'))
+    } catch (error) {
+      showError(t('copyFailed'), error)
     }
+  }, [content, t])
+
+  const handleDuplicate = useCallback(async () => {
+    if (!selectedPrompt) return
+    try {
+      const duplicate = await promptService.duplicatePrompt(selectedPrompt.id)
+      setPrompts((current) => [duplicate, ...current])
+      selectPrompt(duplicate)
+      showSuccess(t('prompts.duplicated'))
+    } catch (error) {
+      showError(t('prompts.duplicateError'), error)
+    }
+  }, [selectPrompt, selectedPrompt, t])
+
+  const handleConfirm = useCallback(async () => {
+    if (!confirmAction) return
+    try {
+      if (confirmAction.type === 'delete') {
+        await promptService.deletePrompt(confirmAction.prompt.id)
+        setPrompts((current) => current.filter((prompt) => prompt.id !== confirmAction.prompt.id))
+        setSelectedPromptId(null)
+        setName('')
+        setContent('')
+        setSavedName('')
+        setSavedContent('')
+        showSuccess(t('prompts.deleted'))
+      } else {
+        setBusyLinkId(confirmAction.link.id)
+        await promptService.writePromptToFile(confirmAction.link.id, true)
+        await loadPrompts()
+        showSuccess(t('prompts.written'))
+      }
+      setConfirmAction(null)
+    } catch (error) {
+      showError(confirmAction.type === 'delete' ? t('prompts.deleteError') : t('prompts.writeError'), error)
+    } finally {
+      setBusyLinkId(null)
+    }
+  }, [confirmAction, loadPrompts, t])
+
+  const handleImportFile = useCallback(async () => {
+    const filePath = await pickFile(t('prompts.importFile'))
+    if (!filePath) return
+    try {
+      const prompt = await promptService.importPromptFile(filePath)
+      setPrompts((current) => [prompt, ...current])
+      selectPrompt(prompt)
+      showSuccess(t('prompts.imported'))
+    } catch (error) {
+      showError(t('prompts.importError'), error)
+    }
+  }, [selectPrompt, t])
+
+  const handleLinkFilePick = useCallback(async () => {
+    const filePath = await pickFile(t('prompts.addLink'))
+    if (!filePath) return
+    setLinkPath(filePath)
   }, [t])
 
+  const handleCreateLink = useCallback(async () => {
+    if (!selectedPrompt || !linkPath.trim()) return
+    try {
+      await promptService.createPromptFileLink(selectedPrompt.id, linkPath.trim(), writeBackEnabled)
+      await loadPrompts()
+      setShowLinkDialog(false)
+      setLinkPath('')
+      setWriteBackEnabled(false)
+      showSuccess(t('prompts.linked'))
+    } catch (error) {
+      showError(t('prompts.linkError'), error)
+    }
+  }, [linkPath, loadPrompts, selectedPrompt, t, writeBackEnabled])
+
+  const handleRefreshLink = useCallback(async (link: PromptFileLink) => {
+    setBusyLinkId(link.id)
+    try {
+      const updated = await promptService.refreshPromptFileLink(link.id)
+      setPrompts((current) => current.map((prompt) => prompt.id === updated.id ? updated : prompt))
+      selectPrompt(updated)
+      showSuccess(t('prompts.refreshed'))
+    } catch (error) {
+      showError(t('prompts.refreshError'), error)
+    } finally {
+      setBusyLinkId(null)
+    }
+  }, [selectPrompt, t])
+
+  const handleWriteLink = useCallback(async (link: PromptFileLink) => {
+    setBusyLinkId(link.id)
+    try {
+      await promptService.writePromptToFile(link.id)
+      await loadPrompts()
+      showSuccess(t('prompts.written'))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (message.includes('conflict')) {
+        setConfirmAction({ type: 'force-write', link })
+      } else {
+        showError(t('prompts.writeError'), error)
+      }
+    } finally {
+      setBusyLinkId(null)
+    }
+  }, [loadPrompts, t])
+
+  const handleUnlink = useCallback(async (link: PromptFileLink) => {
+    setBusyLinkId(link.id)
+    try {
+      await promptService.unlinkPromptFile(link.id)
+      await loadPrompts()
+      showSuccess(t('prompts.unlinked'))
+    } catch (error) {
+      showError(t('prompts.unlinkError'), error)
+    } finally {
+      setBusyLinkId(null)
+    }
+  }, [loadPrompts, t])
+
   if (loading) {
-    return (
-      <div className="prompts-page">
-        <div className="prompts-loading">{t('prompts.loading')}</div>
-      </div>
-    )
+    return <div className="prompts-page"><div className="prompts-loading">{t('prompts.loading')}</div></div>
   }
 
   return (
     <div className="prompts-page">
-      {/* Header card */}
       <div className="prompts-header">
         <div>
           <h2>{t('prompts.title')}</h2>
-          <div className="prompts-subtitle">
-            {t('prompts.subtitle', { total: totalCount, exists: existsCount })}
-          </div>
+          <div className="prompts-subtitle">{t('prompts.subtitle', { total: prompts.length })}</div>
         </div>
         <div className="prompts-header-actions">
-          <button
-            className="btn btn-secondary"
-            type="button"
-            disabled={scanning}
-            onClick={() => void handleScan()}
-          >
-            <RefreshCw size={15} className={scanning ? 'spinning' : ''} />
-            {scanning ? t('prompts.scanning') : t('prompts.scan')}
+          <button className="btn btn-secondary" type="button" onClick={() => void handleImportFile()}>
+            <Upload size={15} />{t('prompts.importFile')}
+          </button>
+          <button className="btn btn-primary" type="button" disabled={saving} onClick={() => void handleCreate()}>
+            <Plus size={15} />{t('prompts.new')}
           </button>
         </div>
       </div>
 
-      {/* Error banner */}
-      {error && (
-        <div className="prompts-error">
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* Empty state */}
-      {groupedFiles.length === 0 && !error && (
-        <div className="prompts-empty">
-          <div className="prompts-empty-icon">
-            <FileText size={40} />
+      <div className="prompts-workspace">
+        <aside className="prompts-list-panel">
+          <div className="prompts-search">
+            <Search size={15} />
+            <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t('prompts.searchPlaceholder')} />
           </div>
-          <p className="prompts-empty-title">{t('prompts.emptyTitle')}</p>
-          <p className="prompts-empty-desc">{t('prompts.noFiles')}</p>
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={() => void handleScan()}
-          >
-            <RefreshCw size={15} />
-            {t('prompts.scan')}
-          </button>
-        </div>
-      )}
-
-      {/* Main content: list + editor side by side */}
-      <div className={`prompts-content${selectedFile ? ' has-editor' : ''}`}>
-        {/* File list */}
-        <div className="prompts-list">
-          {groupedFiles.map(([tool, files]) => {
-            const isExpanded = expandedTools.has(tool)
-            const toolExistsCount = files.filter((f) => f.exists_on_disk).length
-            return (
-              <div key={tool} className={`prompts-tool-card${isExpanded ? ' expanded' : ''}`}>
-                <button
-                  className="prompts-tool-header"
-                  type="button"
-                  onClick={() => toggleToolGroup(tool)}
-                >
-                  <div className="prompts-tool-info">
-                    <div className="prompts-tool-icon">
-                      <Monitor size={18} />
-                    </div>
-                    <div>
-                      <div className="prompts-tool-name">{getToolDisplayName(tool)}</div>
-                      <div className="prompts-tool-count">
-                        {files.length} {t('prompts.files')} · {toolExistsCount} {t('prompts.existsLabel')}
-                      </div>
-                    </div>
-                  </div>
-                  <ChevronRight
-                    size={16}
-                    className={`prompts-chevron${isExpanded ? ' rotated' : ''}`}
-                  />
-                </button>
-
-                {isExpanded && (
-                  <div className="prompts-files-list">
-                    {files.map((file) => (
-                      <div
-                        key={file.id}
-                        className={`prompts-file-item${selectedFileId === file.id ? ' active' : ''}${!file.exists_on_disk ? ' missing' : ''}`}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => void handleSelectFile(file)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') void handleSelectFile(file)
-                        }}
-                      >
-                        <div className="prompts-file-left">
-                          <FileText size={14} className="prompts-file-icon" />
-                          <div className="prompts-file-info">
-                            <div className="prompts-file-name">{file.file_name}</div>
-                            <div className="prompts-file-path">{file.file_path}</div>
-                          </div>
-                        </div>
-                        <div className="prompts-file-right">
-                          <span className={`prompts-scope-badge ${file.scope}`}>
-                            {file.scope === 'global' ? t('prompts.global') : t('prompts.project')}
-                          </span>
-                          <span
-                            className={`prompts-status-indicator ${file.exists_on_disk ? 'exists' : 'missing'}`}
-                            title={file.exists_on_disk ? t('prompts.exists') : t('prompts.missing')}
-                          >
-                            {file.exists_on_disk ? (
-                              <CheckCircle size={12} />
-                            ) : (
-                              <AlertCircle size={12} />
-                            )}
-                          </span>
-                          <span className="prompts-file-time">{formatTimestamp(file.last_scanned_at)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Editor panel */}
-        {selectedFile && (
-          <div className="prompts-editor-panel">
-            <div className="prompts-editor-header">
-              <div className="prompts-editor-title-row">
+          <div className="prompts-list">
+            {filteredPrompts.map((prompt) => (
+              <button key={prompt.id} className={`prompts-list-item${prompt.id === selectedPromptId ? ' active' : ''}`} type="button" onClick={() => selectPrompt(prompt)}>
                 <FileText size={16} />
-                <span className="prompts-editor-filename">{selectedFile.file_name}</span>
-                <span className={`prompts-scope-badge ${selectedFile.scope}`}>
-                  {selectedFile.scope === 'global' ? t('prompts.global') : t('prompts.project')}
-                </span>
-                {hasChanges && (
-                  <span className="prompts-unsaved-badge">{t('prompts.unsaved')}</span>
-                )}
-              </div>
-              <div className="prompts-editor-path-row">
-                <FolderOpen size={12} />
-                <span className="prompts-editor-path">{selectedFile.file_path}</span>
-              </div>
+                <span><strong>{prompt.name}</strong><small>{prompt.content || t('prompts.emptyContent')}</small></span>
+              </button>
+            ))}
+            {filteredPrompts.length === 0 ? <div className="prompts-list-empty">{t('prompts.noResults')}</div> : null}
+          </div>
+        </aside>
+
+        {selectedPrompt ? (
+          <main className="prompts-editor-panel">
+            <div className="prompts-editor-header">
+              <input className="prompts-name-input" value={name} onChange={(event) => setName(event.target.value)} placeholder={t('prompts.namePlaceholder')} />
               <div className="prompts-editor-actions">
-                <button
-                  className="btn btn-primary"
-                  type="button"
-                  disabled={saving || !hasChanges || !selectedFile.exists_on_disk}
-                  onClick={() => void handleSave()}
-                >
-                  <Save size={14} />
-                  {saving ? t('prompts.saving') : t('prompts.save')}
-                </button>
-                <button
-                  className="btn btn-secondary prompts-delete-btn"
-                  type="button"
-                  onClick={() => void handleDelete()}
-                >
-                  <Trash2 size={14} />
-                  {t('prompts.delete')}
-                </button>
-                <button
-                  className="prompts-editor-close"
-                  type="button"
-                  onClick={handleCloseEditor}
-                >
-                  <X size={16} />
-                </button>
+                <button className="btn btn-primary" type="button" disabled={saving || !hasChanges} onClick={() => void handleSave()}><Save size={14} />{saving ? t('prompts.saving') : t('prompts.save')}</button>
+                <button className="btn btn-secondary" type="button" onClick={() => void handleCopyContent()}><Copy size={14} />{t('prompts.copyContent')}</button>
+                <button className="btn btn-secondary" type="button" onClick={() => void handleDuplicate()}><FilePlus2 size={14} />{t('prompts.duplicate')}</button>
+                <button className="btn btn-secondary prompts-delete-btn" type="button" onClick={() => setConfirmAction({ type: 'delete', prompt: selectedPrompt })}><Trash2 size={14} />{t('prompts.delete')}</button>
               </div>
             </div>
-
-            {!selectedFile.exists_on_disk ? (
-              <div className="prompts-editor-missing">
-                <AlertCircle size={24} />
-                <p>{t('prompts.fileMissing')}</p>
-                <p className="prompts-editor-missing-hint">{t('prompts.fileMissingHint')}</p>
-              </div>
-            ) : (
-              <textarea
-                className="prompts-editor-textarea"
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                spellCheck={false}
-                placeholder={t('prompts.editorPlaceholder')}
-              />
-            )}
-          </div>
+            <textarea className="prompts-editor-textarea" value={content} onChange={(event) => setContent(event.target.value)} spellCheck={false} placeholder={t('prompts.editorPlaceholder')} />
+            <section className="prompts-links-section">
+              <div className="prompts-links-header"><div><h3>{t('prompts.fileLinks')}</h3><p>{t('prompts.fileLinksHint')}</p></div><button className="btn btn-secondary" type="button" onClick={() => setShowLinkDialog(true)}><Link2 size={14} />{t('prompts.addLink')}</button></div>
+              {selectedPrompt.file_links.length === 0 ? <div className="prompts-links-empty">{t('prompts.noLinks')}</div> : selectedPrompt.file_links.map((link) => (
+                <div key={link.id} className="prompts-link-item">
+                  <FolderOpen size={16} /><div className="prompts-link-path"><span>{formatDisplayPath(link.file_path)}</span><small>{link.write_back_enabled ? t('prompts.writeBackEnabled') : t('prompts.writeBackDisabled')} · {link.exists_on_disk ? t('prompts.exists') : t('prompts.missing')}</small></div>
+                  <div className="prompts-link-actions">
+                    <button className="btn-icon" type="button" disabled={busyLinkId === link.id} title={t('prompts.refreshLink')} onClick={() => void handleRefreshLink(link)}><RefreshCw size={14} /></button>
+                    <button className="btn-icon" type="button" disabled={busyLinkId === link.id || !link.write_back_enabled} title={t('prompts.writeToFile')} onClick={() => void handleWriteLink(link)}><Save size={14} /></button>
+                    <button className="btn-icon prompts-unlink-btn" type="button" disabled={busyLinkId === link.id} title={t('prompts.unlink')} onClick={() => void handleUnlink(link)}><Unlink size={14} /></button>
+                  </div>
+                </div>
+              ))}
+            </section>
+          </main>
+        ) : (
+          <main className="prompts-empty"><div className="prompts-empty-icon"><FileText size={40} /></div><p className="prompts-empty-title">{t('prompts.selectTitle')}</p><p className="prompts-empty-desc">{t('prompts.selectDescription')}</p></main>
         )}
       </div>
+
+      {showLinkDialog ? <div className="modal-backdrop" onClick={() => setShowLinkDialog(false)}><div className="modal prompts-link-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><div className="modal-header"><div className="modal-title">{t('prompts.addLink')}</div><button className="icon-btn" type="button" onClick={() => setShowLinkDialog(false)} aria-label={t('close')}><X size={18} /></button></div><div className="prompts-link-form"><label>{t('prompts.filePath')}<div className="settings-input-row"><input className="settings-input" value={linkPath} onChange={(event) => setLinkPath(event.target.value)} placeholder={t('prompts.filePathPlaceholder')} /><button className="btn btn-secondary" type="button" onClick={() => void handleLinkFilePick()}>{t('browse')}</button></div></label><label className="prompts-write-back-toggle"><input type="checkbox" checked={writeBackEnabled} onChange={(event) => setWriteBackEnabled(event.target.checked)} />{t('prompts.enableWriteBack')}</label></div><div className="modal-actions"><button className="btn btn-secondary" type="button" onClick={() => setShowLinkDialog(false)}>{t('cancel')}</button><button className="btn btn-primary" type="button" disabled={!linkPath.trim()} onClick={() => void handleCreateLink()}>{t('prompts.addLink')}</button></div></div></div> : null}
+      {confirmAction ? <div className="modal-backdrop" onClick={() => setConfirmAction(null)}><div className="modal prompts-confirm-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><div className="modal-body"><h3>{confirmAction.type === 'delete' ? t('prompts.deleteTitle') : t('prompts.conflictTitle')}</h3><p>{confirmAction.type === 'delete' ? t('prompts.deleteConfirm', { name: confirmAction.prompt.name }) : t('prompts.conflictDescription')}</p></div><div className="modal-actions"><button className="btn btn-secondary" type="button" onClick={() => setConfirmAction(null)}>{t('cancel')}</button><button className="btn btn-danger-solid" type="button" onClick={() => void handleConfirm()}>{confirmAction.type === 'delete' ? t('prompts.delete') : t('prompts.forceWrite')}</button></div></div></div> : null}
     </div>
   )
 }

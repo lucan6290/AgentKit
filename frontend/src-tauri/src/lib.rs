@@ -71,7 +71,10 @@ pub fn run() {
         let db_path = crate::config::default_db_path();
         if let Ok(db) = crate::db::Database::new(&db_path) {
             let repo = crate::repositories::SettingsRepository::new(&db);
-            repo.get("log_level").ok().flatten().unwrap_or_else(|| "info".to_string())
+            repo.get("log_level")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| "info".to_string())
         } else {
             "info".to_string()
         }
@@ -143,26 +146,27 @@ pub fn run() {
 
             // Intercept the close button based on user setting:
             // "minimize_to_tray" (default) → hide window; "quit" → exit app.
-            let main_window = app
-                .get_webview_window("main")
-                .unwrap_or_else(|| {
-                    tracing::error!(
-                        target: crate::logging::app_target(),
-                        event = "app.window.missing",
-                        layer = "backend",
-                        area = "window",
-                        outcome = "failed",
-                        "main window not found during setup"
-                    );
-                    panic!("main window not found");
-                });
+            let main_window = app.get_webview_window("main").unwrap_or_else(|| {
+                tracing::error!(
+                    target: crate::logging::app_target(),
+                    event = "app.window.missing",
+                    layer = "backend",
+                    area = "window",
+                    outcome = "failed",
+                    "main window not found during setup"
+                );
+                panic!("main window not found");
+            });
             let app_handle = app.handle().clone();
             let db_for_close = state::AppState::default_db_ref(&app_handle);
 
             // Log initial close behavior setting
             if let Some(db) = db_for_close.as_ref() {
                 let repo = crate::repositories::SettingsRepository::new(db);
-                let initial_behavior = repo.get("close_behavior").ok().flatten()
+                let initial_behavior = repo
+                    .get("close_behavior")
+                    .ok()
+                    .flatten()
                     .unwrap_or_else(|| "minimize_to_tray".to_string());
                 tracing::info!(
                     target: crate::logging::app_target(),
@@ -178,7 +182,8 @@ pub fn run() {
             main_window.clone().on_window_event(move |event| {
                 match event {
                     tauri::WindowEvent::CloseRequested { api, .. } => {
-                        let behavior = db_for_close.as_ref()
+                        let behavior = db_for_close
+                            .as_ref()
                             .and_then(|db| {
                                 let repo = crate::repositories::SettingsRepository::new(db);
                                 repo.get("close_behavior").ok().flatten()
@@ -343,7 +348,8 @@ pub fn run() {
             {
                 let state = app.state::<state::AppState>();
                 let repo = crate::repositories::SettingsRepository::new(&state.db);
-                let auto_refresh = repo.get("auto_refresh_on_startup")
+                let auto_refresh = repo
+                    .get("auto_refresh_on_startup")
                     .ok()
                     .flatten()
                     .map(|v| v == "true")
@@ -459,6 +465,8 @@ pub fn run() {
             crate::commands::settings::get_custom_repo_path,
             crate::commands::settings::set_custom_repo_path,
             crate::commands::settings::open_settings_folder,
+            crate::commands::settings::get_proxy_url,
+            crate::commands::settings::set_proxy_url,
             crate::commands::settings::get_close_behavior,
             crate::commands::settings::set_close_behavior,
             crate::commands::settings::get_show_tray_icon,
@@ -486,14 +494,17 @@ pub fn run() {
             crate::commands::update::check_update,
             crate::commands::update::do_update,
             // prompts
-            crate::commands::prompts::scan_prompt_files,
-            crate::commands::prompts::scan_project_prompt_files,
-            crate::commands::prompts::get_prompt_files,
-            crate::commands::prompts::read_prompt_file,
-            crate::commands::prompts::write_prompt_file,
-            crate::commands::prompts::delete_prompt_file,
+            crate::commands::prompts::list_prompts,
+            crate::commands::prompts::create_prompt,
+            crate::commands::prompts::update_prompt,
+            crate::commands::prompts::duplicate_prompt,
+            crate::commands::prompts::delete_prompt,
+            crate::commands::prompts::import_prompt_file,
+            crate::commands::prompts::create_prompt_file_link,
+            crate::commands::prompts::unlink_prompt_file,
+            crate::commands::prompts::refresh_prompt_file_link,
+            crate::commands::prompts::write_prompt_to_file,
             // misc
-            crate::commands::misc::pick_folder,
             crate::commands::misc::cancel_current_operation,
             crate::commands::misc::reorder,
             crate::commands::misc::open_new_window,
@@ -597,20 +608,17 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
     )?)?;
     menu.append(&MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?)?;
 
-    let icon = app
-        .default_window_icon()
-        .cloned()
-        .unwrap_or_else(|| {
-            tracing::error!(
-                target: crate::logging::app_target(),
-                event = "tray.icon.missing",
-                layer = "backend",
-                area = "tray",
-                outcome = "failed",
-                "window icon is not configured"
-            );
-            panic!("window icon must be configured");
-        });
+    let icon = app.default_window_icon().cloned().unwrap_or_else(|| {
+        tracing::error!(
+            target: crate::logging::app_target(),
+            event = "tray.icon.missing",
+            layer = "backend",
+            area = "tray",
+            outcome = "failed",
+            "window icon is not configured"
+        );
+        panic!("window icon must be configured");
+    });
 
     TrayIconBuilder::with_id("main-tray")
         .icon(icon)
@@ -1010,10 +1018,16 @@ fn tray_check_update(app: &tauri::AppHandle) {
         } else if result.update_available {
             (
                 "发现新版本".to_string(),
-                format!("v{} → v{}\n点击应用内更新按钮进行安装", result.current_version, result.latest_version),
+                format!(
+                    "v{} → v{}\n点击应用内更新按钮进行安装",
+                    result.current_version, result.latest_version
+                ),
             )
         } else {
-            ("已是最新版本".to_string(), format!("v{}", result.current_version))
+            (
+                "已是最新版本".to_string(),
+                format!("v{}", result.current_version),
+            )
         };
 
         if let Err(e) = app_handle
