@@ -199,10 +199,25 @@ agentkit/
 | `moltbot` | MoltBot | `.moltbot/skills` | `.moltbot/skills` | `.moltbot` |
 | `hermes_agent` | Hermes Agent | `.hermes/skills` | N/A | `.hermes` |
 
+## 参与贡献
+
+欢迎所有形式的贡献！无论你是想**提出一个好想法**、**反馈 Bug**、**改善 UI/交互**、**补充文档**，还是**直接提交代码**，都非常欢迎。
+
+**你可以这样参与**：
+
+- **想法/建议**：到 https://github.com/lucan6290/AgentKit/discussions 开帖讨论，任何点子都欢迎（新功能、交互优化、体验细节……）
+- **Bug 反馈**：在 https://github.com/lucan6290/AgentKit/issues 提交，请带上复现步骤和系统版本
+- **提交代码**：Fork 本仓库 → 从 `main` 创建功能分支 → 提交 PR，建议先在 Issue/Discussion 中沟通大改动方向
+- **文档/翻译**：错别字、表述优化、多语言支持，同样欢迎 PR
+- **UI/设计**：标题栏/侧边栏/弹窗的视觉改进、动画细节、配色建议
+
+开始之前建议先读 [AGENTS.md](AGENTS.md)（项目结构与约定），能快速熟悉代码。每一份 PR 都会被认真 review 和合并，期待你的想法！
+
 ## 贡献与安全
 
 - 行为准则：[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
 - 安全策略：[`SECURITY.md`](SECURITY.md)
+- 贡献指南：[`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ## 常见问题
 
