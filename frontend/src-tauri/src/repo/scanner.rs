@@ -207,8 +207,7 @@ fn scan_and_register_repo(
             continue;
         }
 
-        let is_valid =
-            is_skill_dir(&item) || (source_type == "custom" && has_sub_skills(&item));
+        let is_valid = is_skill_dir(&item) || (source_type == "custom" && has_sub_skills(&item));
 
         if !is_valid {
             continue;

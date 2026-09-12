@@ -1,9 +1,12 @@
-﻿use tauri::{AppHandle, State};
+use tauri::{AppHandle, State};
 
 use crate::{contracts::HealthCheckResponse, error::AppResult, state::AppState};
 
 #[tauri::command(rename_all = "snake_case")]
-pub fn health_check(app: AppHandle, state: State<'_, AppState>) -> AppResult<HealthCheckResponse> {
+pub async fn health_check(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> AppResult<HealthCheckResponse> {
     let _started_at = state.started_at;
 
     Ok(build_response(app.package_info().version.to_string()))

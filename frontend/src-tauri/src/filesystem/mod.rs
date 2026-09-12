@@ -8,6 +8,61 @@ use std::path::Path;
 use crate::platform;
 use crate::utils::IGNORE_NAMES;
 
+/// Create a directory and all missing parents.
+pub fn create_dir_all(path: impl AsRef<Path>) -> Result<(), String> {
+    let path = path.as_ref();
+    std::fs::create_dir_all(path)
+        .map_err(|e| format!("failed to create dir {}: {}", path.display(), e))
+}
+
+/// Read a directory without following business-layer error handling.
+pub fn read_dir(path: impl AsRef<Path>) -> Result<std::fs::ReadDir, String> {
+    let path = path.as_ref();
+    std::fs::read_dir(path).map_err(|e| format!("failed to read dir {}: {}", path.display(), e))
+}
+
+/// Read file bytes.
+pub fn read_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>, String> {
+    let path = path.as_ref();
+    std::fs::read(path).map_err(|e| format!("failed to read {}: {}", path.display(), e))
+}
+
+/// Read file metadata.
+pub fn metadata(path: impl AsRef<Path>) -> Result<std::fs::Metadata, String> {
+    let path = path.as_ref();
+    std::fs::metadata(path)
+        .map_err(|e| format!("failed to read metadata for {}: {}", path.display(), e))
+}
+
+/// Copy a file.
+pub fn copy_file(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Result<u64, String> {
+    let source = source.as_ref();
+    let target = target.as_ref();
+    std::fs::copy(source, target).map_err(|e| {
+        format!(
+            "failed to copy {} to {}: {}",
+            source.display(),
+            target.display(),
+            e
+        )
+    })
+}
+
+/// Remove a file; nonexistent paths are ignored.
+pub fn remove_file(path: impl AsRef<Path>) -> Result<(), String> {
+    let path = path.as_ref();
+    match std::fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!("failed to remove {}: {}", path.display(), error)),
+    }
+}
+
+/// Check if a directory is empty.
+pub fn is_dir_empty(path: impl AsRef<Path>) -> Result<bool, String> {
+    Ok(read_dir(path)?.next().is_none())
+}
+
 /// Check if a path exists (follows symlinks).
 pub fn exists(path: impl AsRef<Path>) -> bool {
     path.as_ref().exists()

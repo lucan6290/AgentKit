@@ -32,36 +32,31 @@ pub async fn check_update(app: AppHandle) -> AppResult<CheckUpdateResponse> {
 /// On completion the app restarts automatically.
 #[tauri::command(rename_all = "snake_case")]
 pub async fn do_update(app: AppHandle) -> AppResult<PerformUpdateResponse> {
-    let updater = app
-        .updater()
-        .map_err(|e| {
-            tracing::warn!(
-                target: crate::logging::app_target(),
-                event = "update.perform.updater_unavailable",
-                layer = "backend",
-                area = "update",
-                outcome = "failed",
-                error = %e,
-                "updater is not configured"
-            );
-            AppError::UpdateError(format!("updater 未配置: {e}"))
-        })?;
+    let updater = app.updater().map_err(|e| {
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "update.perform.updater_unavailable",
+            layer = "backend",
+            area = "update",
+            outcome = "failed",
+            error = %e,
+            "updater is not configured"
+        );
+        AppError::UpdateError(format!("updater 未配置: {e}"))
+    })?;
 
-    let update = updater
-        .check()
-        .await
-        .map_err(|e| {
-            tracing::warn!(
-                target: crate::logging::app_target(),
-                event = "update.perform.check.failed",
-                layer = "backend",
-                area = "update",
-                outcome = "failed",
-                error = %e,
-                "native update check failed"
-            );
-            AppError::UpdateError(format!("检查更新失败: {e}"))
-        })?;
+    let update = updater.check().await.map_err(|e| {
+        tracing::warn!(
+            target: crate::logging::app_target(),
+            event = "update.perform.check.failed",
+            layer = "backend",
+            area = "update",
+            outcome = "failed",
+            error = %e,
+            "native update check failed"
+        );
+        AppError::UpdateError(format!("检查更新失败: {e}"))
+    })?;
 
     let Some(update) = update else {
         return Ok(PerformUpdateResponse {

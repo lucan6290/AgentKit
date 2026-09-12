@@ -204,8 +204,7 @@ pub async fn open_tool_skills_dir(
         .ok_or_else(|| AppError::InvalidInput(format!("unknown tool: {}", tool_key)))?;
 
     let dir = resolve_default_path(adapter);
-    std::fs::create_dir_all(&dir)
-        .map_err(|e| AppError::FileSystemError(format!("failed to create dir: {}", e)))?;
+    crate::filesystem::create_dir_all(&dir).map_err(AppError::FileSystemError)?;
 
     crate::filesystem::open_folder(&dir).map_err(|e| AppError::FileSystemError(e))?;
 
@@ -222,8 +221,7 @@ pub async fn skill_to_community_repo(
     name: String,
 ) -> AppResult<OkNameResponse> {
     let community_base = crate::repo::community::resolve_community_repo_path(&state.db);
-    std::fs::create_dir_all(&community_base)
-        .map_err(|e| AppError::FileSystemError(format!("failed to create repo dir: {}", e)))?;
+    crate::filesystem::create_dir_all(&community_base).map_err(AppError::FileSystemError)?;
 
     let dir_name = crate::utils::path_safety::safe_dir_name(Some(&name));
     let target =
@@ -279,7 +277,7 @@ pub async fn clear_tool_skills(
 
     let mut removed: i64 = 0;
     if dir.is_dir() {
-        let entries = std::fs::read_dir(dir).map_err(|error| {
+        let entries = crate::filesystem::read_dir(dir).map_err(|error| {
             tracing::warn!(
                 target: crate::logging::app_target(),
                 event = "tools.skills_clear.failed",

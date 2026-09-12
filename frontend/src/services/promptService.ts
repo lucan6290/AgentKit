@@ -1,28 +1,52 @@
+import type { Prompt, PromptFileLink } from '@/features/prompts/types'
 import { invokeCommand } from '@/lib/api'
-import type { PromptFileDto } from '@/features/prompts/types'
 
 export const promptService = {
-  scanPromptFiles(): Promise<PromptFileDto[]> {
-    return invokeCommand('scan_prompt_files')
+  listPrompts(): Promise<Prompt[]> {
+    return invokeCommand('list_prompts')
   },
 
-  scanProjectPromptFiles(projectPath: string): Promise<PromptFileDto[]> {
-    return invokeCommand('scan_project_prompt_files', { project_path: projectPath })
+  createPrompt(name: string, content: string): Promise<Prompt> {
+    return invokeCommand('create_prompt', { name, content })
   },
 
-  getPromptFiles(tool?: string): Promise<PromptFileDto[]> {
-    return invokeCommand('get_prompt_files', { tool: tool ?? null })
+  updatePrompt(id: string, name: string, content: string): Promise<Prompt> {
+    return invokeCommand('update_prompt', { id, name, content })
   },
 
-  readPromptFile(filePath: string): Promise<string> {
-    return invokeCommand('read_prompt_file', { file_path: filePath })
+  duplicatePrompt(id: string, name?: string): Promise<Prompt> {
+    return invokeCommand('duplicate_prompt', { id, name: name ?? null })
   },
 
-  writePromptFile(filePath: string, content: string): Promise<void> {
-    return invokeCommand('write_prompt_file', { file_path: filePath, content })
+  deletePrompt(id: string): Promise<void> {
+    return invokeCommand('delete_prompt', { id })
   },
 
-  deletePromptFile(id: string, deleteFromDisk?: boolean): Promise<void> {
-    return invokeCommand('delete_prompt_file', { id, delete_from_disk: deleteFromDisk ?? false })
+  importPromptFile(filePath: string, name?: string): Promise<Prompt> {
+    return invokeCommand('import_prompt_file', { file_path: filePath, name: name ?? null })
+  },
+
+  createPromptFileLink(
+    promptId: string,
+    filePath: string,
+    writeBackEnabled: boolean,
+  ): Promise<PromptFileLink> {
+    return invokeCommand('create_prompt_file_link', {
+      prompt_id: promptId,
+      file_path: filePath,
+      write_back_enabled: writeBackEnabled,
+    })
+  },
+
+  unlinkPromptFile(linkId: string): Promise<void> {
+    return invokeCommand('unlink_prompt_file', { link_id: linkId })
+  },
+
+  refreshPromptFileLink(linkId: string): Promise<Prompt> {
+    return invokeCommand('refresh_prompt_file_link', { link_id: linkId })
+  },
+
+  writePromptToFile(linkId: string, force = false): Promise<PromptFileLink> {
+    return invokeCommand('write_prompt_to_file', { link_id: linkId, force })
   },
 }

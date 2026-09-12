@@ -5,9 +5,7 @@ use tauri::State;
 use crate::contracts::ManagedSkillDto;
 use crate::error::{AppError, AppResult};
 use crate::models::Skill;
-use crate::repositories::{
-    SkillTargetsRepository, SkillUsageRepository, SkillsRepository, TagsRepository,
-};
+use crate::repositories::SkillsRepository;
 use crate::services::install::{
     install_local_skill_from_selection, list_local_skills, upsert_skill_from_install,
     LocalSkillCandidate,
@@ -21,62 +19,12 @@ pub async fn get_managed_skills(
     source_type: Option<String>,
     sort: Option<String>,
 ) -> AppResult<Vec<ManagedSkillDto>> {
-    let do_refresh = refresh.unwrap_or(false);
-    if do_refresh {
-        crate::repo::scanner::sync_all_repo_registries(&state.db)
-            .map_err(|e| AppError::FileSystemError(e))?;
-    }
-    let sort = sort.unwrap_or_else(|| "manual".to_string());
-
-    let repo = SkillsRepository::new(&state.db);
-    let tags_repo = TagsRepository::new(&state.db);
-    let targets_repo = SkillTargetsRepository::new(&state.db);
-    let usage_repo = SkillUsageRepository::new(&state.db);
-
-    let skills = repo
-        .list(&sort)
-        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
-
-    let skills: Vec<Skill> = if let Some(st) = source_type {
-        let normalized = match st.as_str() {
-            "custom" => "custom",
-            _ => "community",
-        };
-        skills
-            .into_iter()
-            .filter(|s| {
-                let s_type = crate::repo::scanner::normalize_source_type(&s.source_type);
-                s_type == normalized
-            })
-            .collect()
-    } else {
-        skills
-    };
-
-    let mut dtos = Vec::with_capacity(skills.len());
-    for skill in skills {
-        let tags = tags_repo
-            .get_skill_tags(&skill.id)
-            .map_err(|e| AppError::DatabaseError(e.to_string()))?;
-        let targets = targets_repo
-            .list_by_skill(&skill.id)
-            .map_err(|e| AppError::DatabaseError(e.to_string()))?;
-        let usage = usage_repo
-            .get_by_skill(&skill.id)
-            .map_err(|e| AppError::DatabaseError(e.to_string()))?;
-        let is_suite =
-            crate::repo::scanner::has_sub_skills(std::path::Path::new(&skill.community_path));
-
-        dtos.push(ManagedSkillDto {
-            skill,
-            tags,
-            targets,
-            usage,
-            is_suite,
-        });
-    }
-
-    Ok(dtos)
+    crate::services::managed_skills::get_managed_skills(
+        &state.db,
+        refresh.unwrap_or(false),
+        source_type.as_deref(),
+        &sort.unwrap_or_else(|| "manual".to_string()),
+    )
 }
 
 #[tauri::command(rename_all = "snake_case")]

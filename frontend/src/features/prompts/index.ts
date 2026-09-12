@@ -1,1 +1,1 @@
-export type { PromptFileDto } from './types'
+export type { Prompt, PromptFileLink } from './types'

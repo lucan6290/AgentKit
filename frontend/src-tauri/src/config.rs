@@ -64,7 +64,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         false,
         true,
         Some(true),
-        vec![PromptFileSpec { file_name: ".cursorrules", scope: "project", global_rel: None, project_rel: Some(".cursorrules") }]
+        vec![PromptFileSpec {
+            file_name: ".cursorrules",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some(".cursorrules")
+        }]
     );
     add_tool!(
         "claude_code",
@@ -76,7 +81,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: "CLAUDE.md", scope: "both", global_rel: Some(".claude/CLAUDE.md"), project_rel: Some("CLAUDE.md") }]
+        vec![PromptFileSpec {
+            file_name: "CLAUDE.md",
+            scope: "both",
+            global_rel: Some(".claude/CLAUDE.md"),
+            project_rel: Some("CLAUDE.md")
+        }]
     );
     add_tool!(
         "codex",
@@ -88,7 +98,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: "AGENTS.md", scope: "project", global_rel: None, project_rel: Some("AGENTS.md") }]
+        vec![PromptFileSpec {
+            file_name: "AGENTS.md",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some("AGENTS.md")
+        }]
     );
     add_tool!(
         "opencode",
@@ -148,7 +163,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: "AGENTS.md", scope: "project", global_rel: None, project_rel: Some("AGENTS.md") }]
+        vec![PromptFileSpec {
+            file_name: "AGENTS.md",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some("AGENTS.md")
+        }]
     );
     add_tool!(
         "openclaw",
@@ -184,7 +204,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: ".clinerules", scope: "project", global_rel: None, project_rel: Some(".clinerules") }]
+        vec![PromptFileSpec {
+            file_name: ".clinerules",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some(".clinerules")
+        }]
     );
     add_tool!(
         "codebuddy",
@@ -400,7 +425,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: ".traerules", scope: "project", global_rel: None, project_rel: Some(".traerules") }]
+        vec![PromptFileSpec {
+            file_name: ".traerules",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some(".traerules")
+        }]
     );
     add_tool!(
         "trae_cn",
@@ -412,7 +442,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: ".traerules", scope: "project", global_rel: None, project_rel: Some(".traerules") }]
+        vec![PromptFileSpec {
+            file_name: ".traerules",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some(".traerules")
+        }]
     );
     add_tool!(
         "zencoder",
@@ -472,7 +507,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: ".kilocoderc", scope: "project", global_rel: None, project_rel: Some(".kilocoderc") }]
+        vec![PromptFileSpec {
+            file_name: ".kilocoderc",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some(".kilocoderc")
+        }]
     );
     add_tool!(
         "roo_code",
@@ -484,7 +524,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: ".roorules", scope: "project", global_rel: None, project_rel: Some(".roorules") }]
+        vec![PromptFileSpec {
+            file_name: ".roorules",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some(".roorules")
+        }]
     );
     add_tool!(
         "goose",
@@ -496,7 +541,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: ".gooserc", scope: "project", global_rel: None, project_rel: Some(".gooserc") }]
+        vec![PromptFileSpec {
+            file_name: ".gooserc",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some(".gooserc")
+        }]
     );
     add_tool!(
         "gemini_cli",
@@ -508,7 +558,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: "GEMINI.md", scope: "both", global_rel: Some(".gemini/GEMINI.md"), project_rel: Some("GEMINI.md") }]
+        vec![PromptFileSpec {
+            file_name: "GEMINI.md",
+            scope: "both",
+            global_rel: Some(".gemini/GEMINI.md"),
+            project_rel: Some("GEMINI.md")
+        }]
     );
     add_tool!(
         "github_copilot",
@@ -520,7 +575,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: "copilot-instructions.md", scope: "project", global_rel: None, project_rel: Some(".github/copilot-instructions.md") }]
+        vec![PromptFileSpec {
+            file_name: "copilot-instructions.md",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some(".github/copilot-instructions.md")
+        }]
     );
     add_tool!(
         "clawdbot",
@@ -556,7 +616,12 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
         true,
         false,
         Some(true),
-        vec![PromptFileSpec { file_name: ".windsurfrules", scope: "project", global_rel: None, project_rel: Some(".windsurfrules") }]
+        vec![PromptFileSpec {
+            file_name: ".windsurfrules",
+            scope: "project",
+            global_rel: None,
+            project_rel: Some(".windsurfrules")
+        }]
     );
     add_tool!(
         "moltbot",

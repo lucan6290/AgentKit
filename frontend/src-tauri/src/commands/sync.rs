@@ -64,8 +64,7 @@ pub async fn sync_skill_to_tool(
     let target_path = target_path_buf.to_string_lossy().to_string();
 
     // Ensure parent directory exists
-    std::fs::create_dir_all(&target_dir)
-        .map_err(|e| AppError::FileSystemError(format!("failed to create dir: {}", e)))?;
+    crate::filesystem::create_dir_all(&target_dir).map_err(AppError::FileSystemError)?;
 
     // Perform sync
     crate::skills::sync_engine::sync_dir_for_tool_with_overwrite(
@@ -127,15 +126,8 @@ pub async fn sync_skill_to_tool(
     })?;
 
     // Update skill last_sync_at
-    state
-        .db
-        .with_conn(|conn| {
-            conn.execute(
-                "UPDATE skills SET last_sync_at = ?1, updated_at = ?1 WHERE id = ?2",
-                rusqlite::params![now, skill_id],
-            )?;
-            Ok::<_, rusqlite::Error>(())
-        })
+    SkillsRepository::new(&state.db)
+        .update_last_sync_at(&skill_id, now)
         .map_err(|e| {
             tracing::warn!(
                 target: crate::logging::app_target(),
@@ -259,8 +251,7 @@ pub async fn sync_suite_to_tool(
         )));
     }
 
-    let entries = std::fs::read_dir(source_dir)
-        .map_err(|e| AppError::FileSystemError(format!("failed to read suite dir: {}", e)))?;
+    let entries = crate::filesystem::read_dir(source_dir).map_err(AppError::FileSystemError)?;
 
     let now = now_ms();
     let targets_repo = SkillTargetsRepository::new(&state.db);
@@ -293,8 +284,7 @@ pub async fn sync_suite_to_tool(
             safe_sync_target_path(&target_base, &sub_name, "skill", "suite sub-skill name")?;
         let target_path_str = target_path_buf.to_string_lossy().to_string();
 
-        std::fs::create_dir_all(&target_base)
-            .map_err(|e| AppError::FileSystemError(format!("failed to create dir: {}", e)))?;
+        crate::filesystem::create_dir_all(&target_base).map_err(AppError::FileSystemError)?;
 
         crate::skills::sync_engine::sync_dir_for_tool_with_overwrite(
             &tool,
@@ -374,15 +364,8 @@ pub async fn sync_suite_to_tool(
         AppError::DatabaseError(e.to_string())
     })?;
 
-    state
-        .db
-        .with_conn(|conn| {
-            conn.execute(
-                "UPDATE skills SET last_sync_at = ?1, updated_at = ?1 WHERE id = ?2",
-                rusqlite::params![now, skill_id],
-            )?;
-            Ok::<_, rusqlite::Error>(())
-        })
+    SkillsRepository::new(&state.db)
+        .update_last_sync_at(&skill_id, now)
         .map_err(|e| {
             tracing::warn!(target: crate::logging::app_target(), event = "sync.suite.timestamp_update.failed", layer = "backend", area = "sync", outcome = "failed", skill_id = %skill_id, tool = %tool, scope = %scope, duration_ms = started.elapsed().as_millis() as u64, error = %e, "failed to update suite sync timestamp");
             AppError::DatabaseError(e.to_string())
@@ -495,8 +478,7 @@ pub async fn list_suite_sub_skills(
     }
 
     let mut subs = Vec::new();
-    let entries = std::fs::read_dir(source_dir)
-        .map_err(|e| AppError::FileSystemError(format!("failed to read dir: {}", e)))?;
+    let entries = crate::filesystem::read_dir(source_dir).map_err(AppError::FileSystemError)?;
 
     for entry_result in entries {
         let entry = match entry_result {
@@ -535,68 +517,7 @@ pub async fn bulk_sync_skills(
     state: State<'_, AppState>,
     skill_ids: Vec<String>,
 ) -> AppResult<serde_json::Value> {
-    let skills_repo = SkillsRepository::new(&state.db);
-    let targets_repo = SkillTargetsRepository::new(&state.db);
-    let adapters = effective_tool_adapters(&state.db);
-    let started = Instant::now();
-    tracing::info!(target: crate::logging::app_target(), event = "sync.bulk.started", layer = "backend", area = "sync", outcome = "started", requested_skill_count = skill_ids.len(), "bulk sync started");
-
-    let mut synced = 0usize;
-    let mut skipped = 0usize;
-    let mut errors: Vec<String> = Vec::new();
-
-    for skill_id in &skill_ids {
-        let skill = match skills_repo
-            .get_by_id(skill_id)
-            .map_err(|e| AppError::DatabaseError(e.to_string()))?
-        {
-            Some(skill) => skill,
-            None => {
-                tracing::warn!(target: crate::logging::app_target(), event = "sync.bulk.skill.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, reason = "missing", "skipping missing skill during bulk sync");
-                skipped += 1;
-                continue;
-            }
-        };
-
-        if !skill.enabled {
-            tracing::warn!(target: crate::logging::app_target(), event = "sync.bulk.skill.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, reason = "disabled", "skipping disabled skill during bulk sync");
-            skipped += 1;
-            continue;
-        }
-
-        let targets = targets_repo
-            .list_by_skill(skill_id)
-            .map_err(|e| AppError::DatabaseError(e.to_string()))?;
-
-        for target in &targets {
-            let Some(adapter) = adapter::adapter_by_key(&adapters, &target.tool) else {
-                tracing::warn!(target: crate::logging::app_target(), event = "sync.bulk.target.skipped", layer = "backend", area = "sync", outcome = "skipped", skill_id = %skill_id, tool = %target.tool, reason = "unknown_tool", "skipping target with unknown tool during bulk sync");
-                skipped += 1;
-                continue;
-            };
-            let target_path = std::path::PathBuf::from(&target.target_path);
-            match crate::skills::sync_engine::sync_dir_for_tool_with_overwrite(
-                &target.tool,
-                &skill.community_path,
-                &target_path,
-                true,
-                adapter.force_copy,
-            ) {
-                Ok(_) => synced += 1,
-                Err(e) => {
-                    tracing::warn!(target: crate::logging::app_target(), event = "sync.bulk.item.failed", layer = "backend", area = "sync", outcome = "failed", skill_id = %skill_id, tool = %target.tool, target_path = %target.target_path, error = %e, "bulk sync item failed");
-                    errors.push(format!("{}: {}", skill.name, e));
-                }
-            }
-        }
-    }
-
-    tracing::info!(target: crate::logging::app_target(), event = "sync.bulk.completed", layer = "backend", area = "sync", outcome = "success", synced, skipped, error_count = errors.len(), duration_ms = started.elapsed().as_millis() as u64, "bulk sync completed");
-    Ok(serde_json::json!({
-        "synced": synced,
-        "skipped": skipped,
-        "errors": errors,
-    }))
+    crate::services::managed_skills::bulk_sync_skills(&state.db, &skill_ids)
 }
 
 #[cfg(test)]

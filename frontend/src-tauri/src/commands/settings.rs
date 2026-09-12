@@ -61,8 +61,7 @@ pub async fn set_community_repo_path(
         return Err(AppError::InvalidInput("path must be absolute".into()));
     }
 
-    std::fs::create_dir_all(p)
-        .map_err(|e| AppError::FileSystemError(format!("failed to create dir: {}", e)))?;
+    crate::filesystem::create_dir_all(p).map_err(AppError::FileSystemError)?;
 
     let repo = SettingsRepository::new(&state.db);
     repo.set("community_repo_path", &path)
@@ -87,12 +86,9 @@ pub async fn set_custom_repo_path(
         return Err(AppError::InvalidInput("path must be absolute".into()));
     }
 
-    std::fs::create_dir_all(p)
-        .map_err(|e| AppError::FileSystemError(format!("failed to create dir: {}", e)))?;
+    crate::filesystem::create_dir_all(p).map_err(AppError::FileSystemError)?;
 
-    let is_empty = std::fs::read_dir(p)
-        .map(|mut d| d.next().is_none())
-        .unwrap_or(true);
+    let is_empty = crate::filesystem::is_dir_empty(p).unwrap_or(true);
 
     let repo = SettingsRepository::new(&state.db);
     repo.set("custom_repo_path", &path)
@@ -115,8 +111,7 @@ pub async fn open_settings_folder(path: Option<String>) -> AppResult<OkResponse>
 
     let p = std::path::Path::new(&folder);
     if !p.exists() {
-        std::fs::create_dir_all(p)
-            .map_err(|e| AppError::FileSystemError(format!("failed to create dir: {}", e)))?;
+        crate::filesystem::create_dir_all(p).map_err(AppError::FileSystemError)?;
     }
 
     crate::filesystem::open_folder(p).map_err(|e| AppError::FileSystemError(e))?;

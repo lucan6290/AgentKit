@@ -71,6 +71,18 @@ impl<'a> TagsRepository<'a> {
         })
     }
 
+    pub fn update_sort_orders(&self, items: &[(i64, f64)]) -> AppResult<()> {
+        self.db.with_conn(|conn| {
+            for (id, sort_order) in items {
+                conn.execute(
+                    "UPDATE skill_tags SET sort_order = ?1 WHERE id = ?2",
+                    rusqlite::params![sort_order, id],
+                )?;
+            }
+            Ok(())
+        })
+    }
+
     pub fn list_with_counts(
         &self,
         source_type: Option<&str>,

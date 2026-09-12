@@ -202,6 +202,28 @@ impl<'a> SkillsRepository<'a> {
         })
     }
 
+    pub fn update_sort_orders(&self, items: &[(String, f64)]) -> AppResult<()> {
+        self.db.with_conn(|conn| {
+            for (id, sort_order) in items {
+                conn.execute(
+                    "UPDATE skills SET sort_order = ?1 WHERE id = ?2",
+                    rusqlite::params![sort_order, id],
+                )?;
+            }
+            Ok(())
+        })
+    }
+
+    pub fn update_last_sync_at(&self, skill_id: &str, timestamp: i64) -> AppResult<()> {
+        self.db.with_conn(|conn| {
+            conn.execute(
+                "UPDATE skills SET last_sync_at = ?1, updated_at = ?1 WHERE id = ?2",
+                rusqlite::params![timestamp, skill_id],
+            )?;
+            Ok(())
+        })
+    }
+
     pub fn delete(&self, skill_id: &str) -> AppResult<()> {
         self.db.with_conn(|conn| {
             conn.execute("DELETE FROM skills WHERE id = ?1", [skill_id])?;
