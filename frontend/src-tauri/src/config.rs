@@ -96,8 +96,8 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
             },
             PromptFileSpec {
                 file_name: "README.md",
-                scope: "project",
-                global_rel: None,
+                scope: "both",
+                global_rel: Some(".claude/README.md"),
                 project_rel: Some("README.md")
             }
         ]
@@ -127,8 +127,8 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
             },
             PromptFileSpec {
                 file_name: "README.md",
-                scope: "project",
-                global_rel: None,
+                scope: "both",
+                global_rel: Some(".codex/README.md"),
                 project_rel: Some("README.md")
             }
         ]
@@ -491,8 +491,8 @@ pub fn default_tool_adapters() -> HashMap<String, ToolAdapterDefaults> {
             },
             PromptFileSpec {
                 file_name: "README.md",
-                scope: "project",
-                global_rel: None,
+                scope: "both",
+                global_rel: Some(".trae-cn/README.md"),
                 project_rel: Some("README.md")
             }
         ]

@@ -3,7 +3,7 @@ use std::path::Path;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
-use crate::contracts::PromptDto;
+use crate::contracts::{PromptDto, ScanToolPromptsResult};
 use crate::db::{now_ms, Database};
 use crate::error::{AppError, AppResult};
 use crate::models::{Prompt, PromptFileLink};
@@ -55,6 +55,66 @@ pub fn delete_prompt(db: &Database, id: &str) -> AppResult<()> {
     let repo = PromptsRepository::new(db);
     require_prompt(&repo, id)?;
     repo.delete(id)
+}
+
+pub fn scan_tool_prompt_files(db: &Database) -> AppResult<ScanToolPromptsResult> {
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .unwrap_or_else(|_| ".".to_string());
+    let home_dir = std::path::PathBuf::from(&home);
+
+    let adapters = crate::config::default_tool_adapters();
+    let target_tools = ["trae_cn", "claude_code", "codex"];
+
+    let mut scanned = 0usize;
+    let mut created = 0usize;
+    let mut updated = 0usize;
+
+    let links_repo = PromptFileLinksRepository::new(db);
+
+    for tool_key in &target_tools {
+        let Some(adapter) = adapters.get(*tool_key) else {
+            continue;
+        };
+        for spec in &adapter.prompt_files {
+            let Some(global_rel) = spec.global_rel else {
+                continue;
+            };
+            let file_path = home_dir.join(global_rel);
+            scanned += 1;
+
+            let file_path_str = file_path.to_string_lossy().to_string();
+            if !file_path.exists() {
+                continue;
+            }
+
+            let content = crate::filesystem::read_file(&file_path)
+                .map_err(AppError::FileSystemError)?;
+            let hash = hash_content(&content);
+
+            if let Some(existing_link) = links_repo.get_by_file_path(&file_path_str)? {
+                PromptsRepository::new(db)
+                    .update_content(&existing_link.prompt_id, &content)?;
+                links_repo.update_sync_state(
+                    &existing_link.id,
+                    Some(&hash),
+                    true,
+                    Some(now_ms()),
+                )?;
+                updated += 1;
+            } else {
+                let prompt = create_prompt(db, spec.file_name.to_string(), content)?;
+                create_prompt_file_link(db, &prompt.prompt.id, file_path_str, Some(false))?;
+                created += 1;
+            }
+        }
+    }
+
+    Ok(ScanToolPromptsResult {
+        scanned,
+        created,
+        updated,
+    })
 }
 
 pub fn import_prompt_file(

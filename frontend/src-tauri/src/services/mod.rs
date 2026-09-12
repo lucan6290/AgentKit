@@ -12,6 +12,6 @@ pub use maintenance::{repair_sync_health, scan_sync_health, SyncHealthReport};
 pub use onboarding::{build_onboarding_plan, OnboardingGroup, OnboardingPlan, OnboardingVariant};
 pub use prompts::{
     create_prompt, create_prompt_file_link, delete_prompt, duplicate_prompt, import_prompt_file,
-    list_prompts, refresh_prompt_file_link, unlink_prompt_file, update_prompt,
+    list_prompts, refresh_prompt_file_link, scan_tool_prompt_files, unlink_prompt_file, update_prompt,
     write_prompt_to_file,
 };

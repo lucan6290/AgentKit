@@ -22,6 +22,10 @@ export const promptService = {
     return invokeCommand('delete_prompt', { id })
   },
 
+  scanToolPromptFiles(): Promise<{ scanned: number; created: number; updated: number }> {
+    return invokeCommand('scan_tool_prompt_files')
+  },
+
   importPromptFile(filePath: string, name?: string): Promise<Prompt> {
     return invokeCommand('import_prompt_file', { file_path: filePath, name: name ?? null })
   },

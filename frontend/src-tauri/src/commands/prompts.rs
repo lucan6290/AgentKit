@@ -1,6 +1,6 @@
 use tauri::State;
 
-use crate::contracts::PromptDto;
+use crate::contracts::{PromptDto, ScanToolPromptsResult};
 use crate::error::AppResult;
 use crate::models::PromptFileLink;
 use crate::services;
@@ -42,6 +42,11 @@ pub async fn duplicate_prompt(
 #[tauri::command(rename_all = "snake_case")]
 pub async fn delete_prompt(state: State<'_, AppState>, id: String) -> AppResult<()> {
     services::delete_prompt(&state.db, &id)
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn scan_tool_prompt_files(state: State<'_, AppState>) -> AppResult<ScanToolPromptsResult> {
+    services::scan_tool_prompt_files(&state.db)
 }
 
 #[tauri::command(rename_all = "snake_case")]

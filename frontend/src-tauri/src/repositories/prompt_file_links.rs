@@ -36,6 +36,21 @@ impl<'a> PromptFileLinksRepository<'a> {
         })
     }
 
+    pub fn get_by_file_path(&self, file_path: &str) -> AppResult<Option<PromptFileLink>> {
+        self.db.with_conn(|conn| {
+            let result = conn.query_row(
+                "SELECT id, prompt_id, file_path, write_back_enabled, content_hash, exists_on_disk, last_synced_at, created_at, updated_at FROM prompt_file_links WHERE file_path = ?1",
+                [file_path],
+                map_link,
+            );
+            match result {
+                Ok(link) => Ok(Some(link)),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(error) => Err(error),
+            }
+        })
+    }
+
     pub fn create(&self, link: &PromptFileLink) -> AppResult<()> {
         self.db.with_conn_mut(|conn| {
             conn.execute(

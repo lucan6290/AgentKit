@@ -505,6 +505,7 @@ pub fn run() {
             crate::commands::prompts::update_prompt,
             crate::commands::prompts::duplicate_prompt,
             crate::commands::prompts::delete_prompt,
+            crate::commands::prompts::scan_tool_prompt_files,
             crate::commands::prompts::import_prompt_file,
             crate::commands::prompts::create_prompt_file_link,
             crate::commands::prompts::unlink_prompt_file,

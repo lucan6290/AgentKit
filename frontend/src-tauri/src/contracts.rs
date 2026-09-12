@@ -23,6 +23,13 @@ pub struct PromptDto {
     pub file_links: Vec<PromptFileLink>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct ScanToolPromptsResult {
+    pub scanned: usize,
+    pub created: usize,
+    pub updated: usize,
+}
+
 // ── Health ──────────────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

@@ -44,6 +44,10 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
   const [showLinkDialog, setShowLinkDialog] = useState(false)
   const [linkPath, setLinkPath] = useState('')
   const [writeBackEnabled, setWriteBackEnabled] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [createName, setCreateName] = useState('')
+  const [createFilePath, setCreateFilePath] = useState('')
 
   const loadPrompts = useCallback(async () => {
     setLoading(true)
@@ -84,19 +88,6 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
     setSavedName(prompt.name)
     setSavedContent(prompt.content)
   }, [])
-
-  const handleCreate = useCallback(async () => {
-    setSaving(true)
-    try {
-      const prompt = await promptService.createPrompt(t('prompts.untitled'), '')
-      setPrompts((current) => [prompt, ...current])
-      selectPrompt(prompt)
-    } catch (error) {
-      showError(t('prompts.createError'), error)
-    } finally {
-      setSaving(false)
-    }
-  }, [selectPrompt, t])
 
   const handleSave = useCallback(async () => {
     if (!selectedPrompt) return
@@ -172,6 +163,48 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
       showError(t('prompts.importError'), error)
     }
   }, [selectPrompt, t])
+
+  const handleScan = useCallback(async () => {
+    setScanning(true)
+    try {
+      const result = await promptService.scanToolPromptFiles()
+      showSuccess(t('prompts.scanResult', { scanned: result.scanned, created: result.created, updated: result.updated }))
+      await loadPrompts()
+    } catch (error) {
+      showError(t('prompts.scanError'), error)
+    } finally {
+      setScanning(false)
+    }
+  }, [loadPrompts, t])
+
+  const handleCreateFilePick = useCallback(async () => {
+    const filePath = await pickFile(t('prompts.filePath'))
+    if (!filePath) return
+    setCreateFilePath(filePath)
+  }, [t])
+
+  const handleCreateWithFile = useCallback(async () => {
+    setSaving(true)
+    try {
+      const trimmedName = createName.trim() || t('prompts.untitled')
+      let prompt: Prompt
+      if (createFilePath.trim()) {
+        prompt = await promptService.importPromptFile(createFilePath.trim(), trimmedName)
+      } else {
+        prompt = await promptService.createPrompt(trimmedName, '')
+      }
+      setPrompts((current) => [prompt, ...current])
+      selectPrompt(prompt)
+      setShowCreateDialog(false)
+      setCreateName('')
+      setCreateFilePath('')
+      showSuccess(t('prompts.saved'))
+    } catch (error) {
+      showError(t('prompts.createError'), error)
+    } finally {
+      setSaving(false)
+    }
+  }, [createFilePath, createName, selectPrompt, t])
 
   const handleLinkFilePick = useCallback(async () => {
     const filePath = await pickFile(t('prompts.addLink'))
@@ -250,10 +283,13 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
           <div className="prompts-subtitle">{t('prompts.subtitle', { total: prompts.length })}</div>
         </div>
         <div className="prompts-header-actions">
+          <button className="btn btn-secondary" type="button" disabled={scanning} onClick={() => void handleScan()}>
+            <RefreshCw size={15} />{scanning ? t('prompts.scanning') : t('prompts.scanTools')}
+          </button>
           <button className="btn btn-secondary" type="button" onClick={() => void handleImportFile()}>
             <Upload size={15} />{t('prompts.importFile')}
           </button>
-          <button className="btn btn-primary" type="button" disabled={saving} onClick={() => void handleCreate()}>
+          <button className="btn btn-primary" type="button" onClick={() => setShowCreateDialog(true)}>
             <Plus size={15} />{t('prompts.new')}
           </button>
         </div>
@@ -308,6 +344,7 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
       </div>
 
       {showLinkDialog ? <div className="modal-backdrop" onClick={() => setShowLinkDialog(false)}><div className="modal prompts-link-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><div className="modal-header"><div className="modal-title">{t('prompts.addLink')}</div><button className="icon-btn" type="button" onClick={() => setShowLinkDialog(false)} aria-label={t('close')}><X size={18} /></button></div><div className="prompts-link-form"><label>{t('prompts.filePath')}<div className="settings-input-row"><input className="settings-input" value={linkPath} onChange={(event) => setLinkPath(event.target.value)} placeholder={t('prompts.filePathPlaceholder')} /><button className="btn btn-secondary" type="button" onClick={() => void handleLinkFilePick()}>{t('browse')}</button></div></label><label className="prompts-write-back-toggle"><input type="checkbox" checked={writeBackEnabled} onChange={(event) => setWriteBackEnabled(event.target.checked)} />{t('prompts.enableWriteBack')}</label></div><div className="modal-actions"><button className="btn btn-secondary" type="button" onClick={() => setShowLinkDialog(false)}>{t('cancel')}</button><button className="btn btn-primary" type="button" disabled={!linkPath.trim()} onClick={() => void handleCreateLink()}>{t('prompts.addLink')}</button></div></div></div> : null}
+      {showCreateDialog ? <div className="modal-backdrop" onClick={() => setShowCreateDialog(false)}><div className="modal prompts-link-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><div className="modal-header"><div className="modal-title">{t('prompts.createTitle')}</div><button className="icon-btn" type="button" onClick={() => setShowCreateDialog(false)} aria-label={t('close')}><X size={18} /></button></div><div className="prompts-link-form"><label>{t('prompts.namePlaceholder')}<input className="settings-input" value={createName} onChange={(event) => setCreateName(event.target.value)} placeholder={t('prompts.namePlaceholder')} /></label><label>{t('prompts.filePath')}<small className="prompts-file-path-hint">{t('prompts.filePathOptional')}</small><div className="settings-input-row"><input className="settings-input" value={createFilePath} onChange={(event) => setCreateFilePath(event.target.value)} placeholder={t('prompts.filePathPlaceholder')} /><button className="btn btn-secondary" type="button" onClick={() => void handleCreateFilePick()}>{t('browse')}</button></div></label></div><div className="modal-actions"><button className="btn btn-secondary" type="button" onClick={() => setShowCreateDialog(false)}>{t('cancel')}</button><button className="btn btn-primary" type="button" disabled={saving} onClick={() => void handleCreateWithFile()}><Plus size={14} />{t('prompts.create')}</button></div></div></div> : null}
       {confirmAction ? <div className="modal-backdrop" onClick={() => setConfirmAction(null)}><div className="modal prompts-confirm-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><div className="modal-body"><h3>{confirmAction.type === 'delete' ? t('prompts.deleteTitle') : t('prompts.conflictTitle')}</h3><p>{confirmAction.type === 'delete' ? t('prompts.deleteConfirm', { name: confirmAction.prompt.name }) : t('prompts.conflictDescription')}</p></div><div className="modal-actions"><button className="btn btn-secondary" type="button" onClick={() => setConfirmAction(null)}>{t('cancel')}</button><button className="btn btn-danger-solid" type="button" onClick={() => void handleConfirm()}>{confirmAction.type === 'delete' ? t('prompts.delete') : t('prompts.forceWrite')}</button></div></div></div> : null}
     </div>
   )
