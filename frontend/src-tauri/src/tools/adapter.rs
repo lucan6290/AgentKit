@@ -224,8 +224,8 @@ static EXTRA_INDICATORS: &[ExtraIndicator] = &[
     // VS Code / IDE extensions — need actual extension installed or full CLI
     ExtraIndicator { tool_key: "cline", paths: &["%USERPROFILE%/.vscode/extensions/*cline*", "%APPDATA%/Code/User/globalStorage/*cline*"], require_content: true },
     ExtraIndicator { tool_key: "continue", paths: &["%APPDATA%/Continue", "%USERPROFILE%/.continue/config.yaml"], require_content: false },
-    ExtraIndicator { tool_key: "codebuddy", paths: &["%APPDATA%/CodeBuddy", "%LOCALAPPDATA%/CodeBuddyExtension"], require_content: true },
-    ExtraIndicator { tool_key: "qoder", paths: &["%APPDATA%/Qoder", "%LOCALAPPDATA%/Programs/Qoder", "%LOCALAPPDATA%/.qoder"], require_content: false },
+    ExtraIndicator { tool_key: "codebuddy", paths: &["%APPDATA%/CodeBuddy", "%USERPROFILE%/.vscode/extensions/*codebuddy*"], require_content: true },
+    ExtraIndicator { tool_key: "qoder", paths: &["%APPDATA%/Qoder", "%LOCALAPPDATA%/Programs/Qoder"], require_content: false },
     ExtraIndicator { tool_key: "roo_code", paths: &["%APPDATA%/Roo Code", "%USERPROFILE%/.vscode/extensions/*roo*"], require_content: true },
     ExtraIndicator { tool_key: "kilo_code", paths: &["%APPDATA%/Kilo Code", "%USERPROFILE%/.vscode/extensions/*kilo*"], require_content: true },
     ExtraIndicator { tool_key: "goose", paths: &["%APPDATA%/npm/goose.cmd", "goose"], require_content: false },
@@ -256,18 +256,21 @@ fn expand_env_vars(path_str: &str) -> String {
 }
 
 /// Resolve an indicator path (supports env vars, ~/ prefix, absolute paths).
+/// The returned path uses platform-native separators.
 fn resolve_indicator_path(template: &str) -> PathBuf {
     let expanded = expand_env_vars(template);
     let p = PathBuf::from(&expanded);
     if p.is_absolute() {
-        return p;
+        return PathBuf::from(normalize_separators(expanded));
     }
     // Handle ~/ prefix
     if expanded.starts_with("~/") || expanded.starts_with("~\\") {
         let after = &expanded[2..];
-        return home_dir().join(after);
+        let joined = home_dir().join(after).to_string_lossy().to_string();
+        return PathBuf::from(normalize_separators(joined));
     }
-    home_dir().join(p)
+    let joined = home_dir().join(p).to_string_lossy().to_string();
+    PathBuf::from(normalize_separators(joined))
 }
 
 /// Check if a path exists, supporting simple glob suffix (*/suffix or prefix*/)
