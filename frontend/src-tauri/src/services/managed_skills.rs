@@ -47,6 +47,27 @@ pub fn get_managed_skills(
         .collect()
 }
 
+pub fn get_managed_skill_by_id(db: &Database, skill_id: &str) -> AppResult<Option<ManagedSkillDto>> {
+    let skills_repo = SkillsRepository::new(db);
+    let tags_repo = TagsRepository::new(db);
+    let targets_repo = SkillTargetsRepository::new(db);
+    let usage_repo = SkillUsageRepository::new(db);
+
+    let Some(skill) = skills_repo.get_by_id(skill_id)? else {
+        return Ok(None);
+    };
+
+    Ok(Some(ManagedSkillDto {
+        tags: tags_repo.get_skill_tags(&skill.id)?,
+        targets: targets_repo.list_by_skill(&skill.id)?,
+        usage: usage_repo.get_by_skill(&skill.id)?,
+        is_suite: crate::repo::scanner::has_sub_skills(std::path::Path::new(
+            &skill.community_path,
+        )),
+        skill,
+    }))
+}
+
 pub fn bulk_sync_skills(db: &Database, skill_ids: &[String]) -> AppResult<serde_json::Value> {
     let skills_repo = SkillsRepository::new(db);
     let targets_repo = SkillTargetsRepository::new(db);

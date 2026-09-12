@@ -4,7 +4,6 @@ use tauri::State;
 
 use crate::contracts::ManagedSkillDto;
 use crate::error::{AppError, AppResult};
-use crate::models::Skill;
 use crate::repositories::SkillsRepository;
 use crate::services::install::{
     install_local_skill_from_selection, list_local_skills, upsert_skill_from_install,
@@ -106,13 +105,12 @@ pub async fn update_skill_source_url(
     state: State<'_, AppState>,
     skill_id: String,
     source_url: Option<String>,
-) -> AppResult<Skill> {
+) -> AppResult<ManagedSkillDto> {
     let repo = SkillsRepository::new(&state.db);
     repo.update_source_url(&skill_id, source_url.as_deref())
         .map_err(|e| AppError::DatabaseError(e.to_string()))?;
 
-    repo.get_by_id(&skill_id)
-        .map_err(|e| AppError::DatabaseError(e.to_string()))?
+    crate::services::managed_skills::get_managed_skill_by_id(&state.db, &skill_id)?
         .ok_or_else(|| AppError::NotFound(format!("skill not found: {}", skill_id)))
 }
 
