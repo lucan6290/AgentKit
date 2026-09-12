@@ -23,6 +23,7 @@ type HeaderProps = {
   skillCount: number
   tagCount: number
   toolCount: number
+  promptCount: number
   collapsed: boolean
   onToggleCollapsed: () => void
   onSidebarHoverEnter?: () => void
@@ -93,6 +94,7 @@ const Header = ({
   skillCount,
   tagCount,
   toolCount,
+  promptCount,
   collapsed,
   onToggleCollapsed,
   onSidebarHoverEnter,
@@ -217,6 +219,7 @@ const Header = ({
         >
           <FileText size={18} />
           <span>{t('navPrompts')}</span>
+          <em>{promptCount}</em>
         </button>
       </nav>
 

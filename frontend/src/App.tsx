@@ -18,7 +18,7 @@ import {
 } from '@/features/skills'
 import { useTheme } from '@/features/settings'
 import { useImportFlow } from '@/features/import-flow'
-import { skillService } from '@/services'
+import { skillService, promptService } from '@/services'
 import { AppStateProvider, useAppState } from '@/context/AppStateContext'
 import { ModalProvider, useModal } from '@/context/ModalContext'
 import type { ManagedSkill } from '@/features/skills'
@@ -69,6 +69,7 @@ function AppContent() {
   const [loading, setLoading] = useState(false)
   const [loadingStartAt, setLoadingStartAt] = useState<number | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [promptCount, setPromptCount] = useState(0)
   // When collapsed, track whether the user is hovering over the left edge
   // hot-zone or the sidebar itself (floating overlay) so we can reveal it.
   const [sidebarHovered, setSidebarHovered] = useState(false)
@@ -107,6 +108,18 @@ function AppContent() {
       }
     }
   }, [])
+
+  // ─── Prompt count badge ───────────────────────
+  const refreshPromptCount = useCallback(() => {
+    promptService.listPrompts()
+      .then((items) => setPromptCount(items.length))
+      .catch(() => { /* non-critical */ })
+  }, [])
+
+  // Load on mount, and refresh when leaving the prompts view (count may have changed)
+  useEffect(() => {
+    if (modal.activeView !== 'prompts') refreshPromptCount()
+  }, [modal.activeView, refreshPromptCount])
 
   // ─── Window event logging ──────────────────────
   useEffect(() => {
@@ -582,6 +595,7 @@ function AppContent() {
         skillCount={skills.managedSkills.length}
         tagCount={skills.tags.length}
         toolCount={skills.installedTools.length}
+        promptCount={promptCount}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={handleToggleSidebar}
         onSidebarHoverEnter={handleSidebarEnter}
