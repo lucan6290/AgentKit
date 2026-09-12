@@ -8,7 +8,7 @@ import {
   Pencil,
   Tag,
   X,
-} from 'lucide-react'
+} from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { ManagedSkill, ToolOption } from '../types'
 import { showError, showSuccess } from '@/lib/uiFeedback'

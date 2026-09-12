@@ -9,7 +9,7 @@ import {
   Loader2,
   Copy,
   RefreshCw,
-} from 'lucide-react'
+} from '@/components/icons'
 import type { TFunction } from 'i18next'
 import {
   checkUpdate,

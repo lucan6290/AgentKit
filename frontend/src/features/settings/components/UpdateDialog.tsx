@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { ExternalLink, Loader2 } from 'lucide-react'
+import { ExternalLink, Loader2 } from '@/components/icons'
 import { listen } from '@tauri-apps/api/event'
 import type { TFunction } from 'i18next'
 import { performUpdate, type CheckUpdateResult } from '@/lib/api'

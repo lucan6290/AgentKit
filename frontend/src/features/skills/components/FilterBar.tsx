@@ -1,5 +1,5 @@
 import { memo, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
-import { ArrowUpDown, Check, CheckSquare, ChevronDown, Globe, LayoutGrid, List, Monitor, Plus, RefreshCw, Search, Tags, X } from 'lucide-react'
+import { ArrowUpDown, Check, CheckSquare, ChevronDown, Globe, LayoutGrid, List, Monitor, Plus, RefreshCw, Search, Tags, X } from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { TagWithCountDto, ToolOption } from '@/features/skills/types'
 

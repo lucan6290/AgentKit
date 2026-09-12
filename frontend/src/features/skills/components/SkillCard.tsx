@@ -1,5 +1,5 @@
 import { memo, useState, type MouseEvent } from 'react'
-import { Copy, Folder, GripVertical, Tag, Trash2 } from 'lucide-react'
+import { Copy, Folder, GripVertical, Tag, Trash2 } from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { ManagedSkill, ToolOption } from '@/features/skills/types'
 import { showError, showSuccess } from '@/lib/uiFeedback'

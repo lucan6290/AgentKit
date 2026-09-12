@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react'
-import { Download, Search } from 'lucide-react'
+import { Download, Search } from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { OnboardingGroup, OnboardingPlan, OnboardingVariant } from '@/features/skills/types'
 

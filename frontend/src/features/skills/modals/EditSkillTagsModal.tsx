@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react'
-import { Check, Search } from 'lucide-react'
+import { Check, Search } from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { ManagedSkill, TagWithCountDto } from '../types'
 

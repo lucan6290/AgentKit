@@ -14,7 +14,7 @@ import {
   Unlink,
   Upload,
   X,
-} from 'lucide-react'
+} from '@/components/icons'
 import { promptService } from '@/services/promptService'
 import { formatDisplayPath } from '@/lib/utils'
 import { showError, showSuccess } from '@/lib/uiFeedback'

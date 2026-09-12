@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { TriangleAlert } from 'lucide-react'
+import { TriangleAlert } from '@/components/icons'
 import type { TFunction } from 'i18next'
 
 type DeleteModalProps = {

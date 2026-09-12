@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   Tag,
   User,
-} from 'lucide-react'
+} from '@/components/icons'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import {
   oneLight,

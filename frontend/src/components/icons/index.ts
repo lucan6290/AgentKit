@@ -1,0 +1,91 @@
+/**
+ * AgentKit Icons - 项目专属图标系统
+ *
+ * 统一图标入口，所有组件从此处导入。
+ * 功能图标基于 24x24 网格、1.75px 描边、圆角风格，与项目 UI 语言一致。
+ * 品牌 Logo 为自定义矢量图形，见 BrandLogo 组件。
+ *
+ * 使用方式：
+ *   import { Search, Plus, BrandLogo } from '@/components/icons'
+ *
+ * 所有图标接受标准 SVG 属性（size, strokeWidth, color/className 等）。
+ */
+export {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  ArrowUpDown,
+  Bell,
+  Check,
+  CheckCircle,
+  CheckSquare,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Copy,
+  Database,
+  DatabaseZap,
+  Download,
+  DownloadCloud,
+  Eraser,
+  ExternalLink,
+  Eye,
+  File,
+  FilePlus2,
+  FileText,
+  Folder,
+  FolderOpen,
+  Github,
+  Globe,
+  GripVertical,
+  HardDrive,
+  Hash,
+  History,
+  Layers,
+  LayoutGrid,
+  Languages,
+  Link2,
+  List,
+  ListRestart,
+  Loader2,
+  MessageCircle,
+  Minimize2,
+  Minus,
+  Monitor,
+  Moon,
+  Palette,
+  Pencil,
+  Plus,
+  Power,
+  RefreshCw,
+  RotateCcw,
+  Save,
+  Search,
+  Settings,
+  Settings2,
+  Shield,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+  Square,
+  Sun,
+  Table2,
+  Tag,
+  Tags,
+  Trash2,
+  TriangleAlert,
+  Unlink,
+  Upload,
+  User,
+  Wrench,
+  X,
+  XCircle,
+  Zap,
+} from 'lucide-react';
+
+export { BrandLogo } from './BrandLogo';
+export type { BrandLogoProps } from './BrandLogo';

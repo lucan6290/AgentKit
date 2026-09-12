@@ -14,7 +14,7 @@ import {
   SlidersHorizontal,
   Trash2,
   X,
-} from 'lucide-react'
+} from '@/components/icons'
 import type { TFunction } from 'i18next'
 import { invokeCommand, reorder as apiReorder } from '@/lib/api'
 import { pickFolder } from '@/lib/pickFolder'

@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react'
-import { Folder, X } from 'lucide-react'
+import { Folder, X } from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { ManagedSkill } from '../types'
 

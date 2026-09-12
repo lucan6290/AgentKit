@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef, useState } from 'react'
-import { Layers, MessageCircle } from 'lucide-react'
+import { Layers, MessageCircle } from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { ManagedSkill, OnboardingPlan, ToolOption } from '@/features/skills/types'
 import SkillCard from '@/features/skills/components/SkillCard'

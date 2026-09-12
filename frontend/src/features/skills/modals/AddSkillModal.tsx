@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Check } from 'lucide-react'
+import { Check } from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { TagWithCountDto, ToolOption, ToolStatusDto } from '../types'
 

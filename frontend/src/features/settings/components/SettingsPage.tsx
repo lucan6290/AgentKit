@@ -23,7 +23,8 @@ import {
   HardDrive,
   Shield,
   Settings2,
-} from 'lucide-react'
+  BrandLogo,
+} from '@/components/icons'
 import type { TFunction } from 'i18next'
 import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart'
 import DatabasePanel from '@/features/database/components/DatabasePanel'
@@ -37,8 +38,6 @@ import {
 } from '@/lib/api'
 import { isLogLevel, logger } from '@/lib/logger'
 import { showError, showSuccess } from '@/lib/uiFeedback'
-import logoLight from '@/assets/logo.svg'
-import logoDark from '@/assets/logo-dark.svg'
 
 type SettingsTab = 'general' | 'database' | 'about'
 
@@ -612,8 +611,7 @@ const SettingsPage = ({
             {/* 关于 */}
             <section className="settings-v2-card settings-v2-about">
               <div className="settings-v2-about-logo-wrap">
-                <img className="settings-v2-about-logo-icon settings-v2-about-logo-light" src={logoLight} alt="" width={64} height={64} />
-                <img className="settings-v2-about-logo-icon settings-v2-about-logo-dark" src={logoDark} alt="" width={64} height={64} />
+                <BrandLogo size={64} />
                 <div className="settings-v2-about-logo">
                   <span className="settings-v2-about-brand-skills">Skills</span>
                   <span className="settings-v2-about-brand-hub">Hub</span>

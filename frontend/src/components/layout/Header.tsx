@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import {
+  BrandLogo,
   ChevronLeft,
   FileText,
   Languages,
@@ -11,10 +12,8 @@ import {
   Square,
   Tag,
   X,
-} from 'lucide-react'
+} from '@/components/icons'
 import type { TFunction } from 'i18next'
-import logoLight from '@/assets/logo.svg'
-import logoDark from '@/assets/logo-dark.svg'
 import { logger } from '@/lib/logger'
 
 type HeaderProps = {
@@ -166,20 +165,7 @@ const Header = ({
     >
       <div className="sidebar-brand">
         <div className="sidebar-logo">
-          <img
-            className="brand-logo brand-logo-light"
-            src={logoLight}
-            alt="AgentKit"
-            width={32}
-            height={32}
-          />
-          <img
-            className="brand-logo brand-logo-dark"
-            src={logoDark}
-            alt="AgentKit"
-            width={32}
-            height={32}
-          />
+          <BrandLogo size={32} />
         </div>
         <div className="sidebar-brand-copy">
           <strong>{t('appName')}</strong>

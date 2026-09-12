@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { RefreshCw, Tag, Trash2 } from 'lucide-react'
+import { RefreshCw, Tag, Trash2 } from '@/components/icons'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { getCurrent, onOpenUrl } from '@tauri-apps/plugin-deep-link'

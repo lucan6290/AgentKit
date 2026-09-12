@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search } from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { LocalSkillCandidate } from '@/features/skills/types'
 

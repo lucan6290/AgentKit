@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
-import { ArrowUpDown, Eye, GripVertical, Hash, Pencil, Plus, Search, Tag, Trash2 } from 'lucide-react'
+import { ArrowUpDown, Eye, GripVertical, Hash, Pencil, Plus, Search, Tag, Trash2 } from '@/components/icons'
 import type { TFunction } from 'i18next'
 import type { TagWithCountDto } from '@/features/skills/types'
 
