@@ -856,6 +856,11 @@
   flex-shrink: 0;
 }
 
+.db-maint-card .btn-secondary {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* ── VACUUM confirm modal ── */
 .db-confirm-modal {
   background: var(--bg-panel);
