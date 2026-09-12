@@ -325,7 +325,7 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
             </div>
             <textarea className="prompts-editor-textarea" value={content} onChange={(event) => setContent(event.target.value)} spellCheck={false} placeholder={t('prompts.editorPlaceholder')} />
             <section className="prompts-links-section">
-              <div className="prompts-links-header"><div><h3>{t('prompts.fileLinks')}</h3><p>{t('prompts.fileLinksHint')}</p></div><button className="btn btn-secondary" type="button" onClick={() => setShowLinkDialog(true)}><Link2 size={14} />{t('prompts.addLink')}</button></div>
+              <div className="prompts-links-header"><div><h3>{t('prompts.fileLinks')}</h3><p>{t('prompts.fileLinksHint')}</p></div><button className="btn btn-secondary" type="button" onClick={() => { setLinkPath(selectedPrompt.file_links[0]?.file_path ?? ''); setWriteBackEnabled(selectedPrompt.file_links[0]?.write_back_enabled ?? false); setShowLinkDialog(true) }}><Link2 size={14} />{t('prompts.addLink')}</button></div>
               {selectedPrompt.file_links.length === 0 ? <div className="prompts-links-empty">{t('prompts.noLinks')}</div> : selectedPrompt.file_links.map((link) => (
                 <div key={link.id} className="prompts-link-item">
                   <FolderOpen size={16} /><div className="prompts-link-path"><span>{formatDisplayPath(link.file_path)}</span><small>{link.write_back_enabled ? t('prompts.writeBackEnabled') : t('prompts.writeBackDisabled')} · {link.exists_on_disk ? t('prompts.exists') : t('prompts.missing')}</small></div>
