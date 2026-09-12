@@ -1,6 +1,6 @@
 [package]
 name = "skills-hub"
-version = "0.2.3"
+version = "0.2.4"
 description = "Skills Hub desktop application"
 authors = ["Skills Hub contributors"]
 edition = "2021"

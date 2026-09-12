@@ -4,6 +4,44 @@
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-09-12
+
+### Added
+- 全新 macOS 风格 UI：自定义标题栏、可折叠侧边栏、蓝/中性扁平配色与 Inter 字体
+- 侧边栏 Skills/Tags/Tools/Prompts 导航数量角标
+- 技能启用开关、批量操作模式、卡片列表视图切换
+- 标题栏新版本提示按钮与更新弹窗
+- 关闭按钮行为设置：最小化到托盘/任务栏/退出
+- 数据库 Overview 页面动态查询表列表（sqlite_master），新增表自动展示无需硬编码
+- 数据库维护页面分组展示（安全维护/数据清理），每个操作配图标和更清晰的描述
+- Prompts 模块重构：拆分 prompt_file 为 prompt_file_link，新增独立 service/repository/model
+- 规范化结构化日志系统（tracing + app_target），关键操作全链路可观测
+- 错误边界增强诊断反馈
+
+### Changed
+- 侧边栏宽度调为 200px，副标题精简
+- "我的Skills"改名为"Skills"
+- 搜索框宽度缩小至 220px
+- Skills 列表工具栏按钮重新排版为两行布局
+- 折叠侧边栏保留 64px 图标栏，hover 展开浮层
+
+### Fixed
+- 修复窗口无法拖动和标题栏按钮失效问题
+- 修复日志订阅器初始化冲突，启动日志移至 logger 插件初始化之后
+- 修复 PromptsPage 文件导入改用 Tauri dialog 插件，解决无法获取文件路径问题
+- 修复同步技能时清理非法目录名
+- 统一 setError/showError 签名，补充 error 参数
+- 修复数据库维护按钮缺少 btn 基础类导致样式错乱的问题
+- 修复数据库维护按钮文字换行问题，改为紧凑样式
+- 数据库 Overview 补齐 prompts 和 prompt_file_links 两张表的缺失展示
+
+### Technical
+- 清理文档中残留的旧规范引用（setError 签名、pick_folder、PickFolderResult）
+- 窗口控制和关闭行为添加完整日志记录
+- 补充 Git 提交规范文档
+- 更新 capabilities schema 以包含窗口控制权限
+- get_table_names 增加 debug 日志便于排查动态表名问题
+
 ## [0.2.3] - 2026-08-30
 
 ### Fixed
