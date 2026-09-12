@@ -118,6 +118,7 @@
 .prompts-list-item span { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .prompts-list-item strong { color: var(--text-primary); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prompts-list-item small { color: var(--text-tertiary); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prompts-list-linked { flex-shrink: 0; color: var(--text-tertiary); }
 .prompts-list-empty { padding: 24px 12px; text-align: center; color: var(--text-tertiary); font-size: 13px; }
 
 .prompts-editor-panel { display: flex; flex-direction: column; }

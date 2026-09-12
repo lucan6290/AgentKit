@@ -312,6 +312,7 @@ const PromptsPage = ({ t }: PromptsPageProps) => {
               <button key={prompt.id} className={`prompts-list-item${prompt.id === selectedPromptId ? ' active' : ''}`} type="button" onClick={() => selectPrompt(prompt)}>
                 <FileText size={16} />
                 <span><strong>{prompt.name}</strong><small>{prompt.content || t('prompts.emptyContent')}</small></span>
+                {prompt.file_links.length > 0 ? <Link2 size={13} className="prompts-list-linked" /> : null}
               </button>
             ))}
             {filteredPrompts.length === 0 ? <div className="prompts-list-empty">{t('prompts.noResults')}</div> : null}
