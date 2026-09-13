@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文档中心 — AgentKit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   品牌设计系统 — 语义化令牌
+   ============================================================ */
+:root{
+  --bg:#f6f7f9;
+  --bg-alt:#eef0f3;
+  --surface:#ffffff;
+  --surface-2:#f0f2f5;
+
+  --fg:#0f172a;
+  --fg-muted:#475569;
+  --fg-subtle:#94a3b8;
+
+  --primary:#2563eb;
+  --primary-hover:#1d4ed8;
+  --primary-soft:rgba(37,99,235,.08);
+  --primary-glow:rgba(37,99,235,.25);
+  --primary-gradient:linear-gradient(135deg,#3b82f6,#1d4ed8);
+
+  --border:rgba(15,23,42,.08);
+  --border-hover:rgba(15,23,42,.14);
+
+  --radius:16px;
+  --radius-sm:10px;
+  --radius-lg:24px;
+
+  --shadow-sm:0 1px 2px rgba(15,23,42,.04);
+  --shadow:0 1px 3px rgba(15,23,42,.04),0 8px 24px -12px rgba(15,23,42,.12);
+  --shadow-lg:0 24px 56px -20px rgba(15,23,42,.18);
+
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;
+  --font-mono:'Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace;
+
+  --sidebar-w:260px;
+  --toc-w:220px;
+  --nav-h:60px;
+}
+.dark{
+  --bg:#0a0f1a;
+  --bg-alt:#0f1623;
+  --surface:#141c2b;
+  --surface-2:#1a2335;
+
+  --fg:#e2e8f0;
+  --fg-muted:#94a3b8;
+  --fg-subtle:#64748b;
+
+  --primary:#60a5fa;
+  --primary-hover:#93c5fd;
+  --primary-soft:rgba(96,165,250,.12);
+  --primary-glow:rgba(96,165,250,.3);
+  --primary-gradient:linear-gradient(135deg,#3b82f6,#60a5fa);
+
+  --border:rgba(255,255,255,.08);
+  --border-hover:rgba(255,255,255,.14);
+
+  --shadow-sm:0 1px 2px rgba(0,0,0,.2);
+  --shadow:0 1px 3px rgba(0,0,0,.2),0 8px 24px -12px rgba(0,0,0,.4);
+  --shadow-lg:0 24px 56px -20px rgba(0,0,0,.5);
+}
+
+/* ============================================================
+   Reset
+   ============================================================ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + 24px)}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;transition:background .3s,color .3s}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:var(--primary-soft)}
+img{max-width:100%;display:block}
+
+/* ============================================================
+   顶部导航
+   ============================================================ */
+.nav{position:sticky;top:0;z-index:200;backdrop-filter:blur(16px);background:color-mix(in srgb,var(--bg) 85%,transparent);border-bottom:1px solid var(--border)}
+.nav-inner{display:flex;align-items:center;height:var(--nav-h);gap:16px;max-width:1440px;margin:0 auto;padding:0 24px}
+.nav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--fg);white-space:nowrap}
+.nav-logo{width:28px;height:28px;border-radius:8px;background:var(--primary-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;box-shadow:0 4px 12px var(--primary-glow);transition:transform .2s}
+.nav-brand:hover .nav-logo{transform:scale(1.08) rotate(-4deg)}
+.nav-links{display:flex;gap:2px;margin-left:auto;align-items:center}
+.nav-links a{font-size:13px;color:var(--fg-muted);padding:6px 10px;border-radius:7px;white-space:nowrap;transition:background .15s,color .15s}
+.nav-links a:hover{background:var(--primary-soft);color:var(--primary)}
+.nav-links a.active{color:var(--primary);background:var(--primary-soft);font-weight:600}
+.nav-cta{font-size:13px;padding:7px 14px;border-radius:8px;background:var(--primary);color:#fff;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px -4px var(--primary-glow);transition:background .2s,transform .2s}
+.nav-cta:hover{background:var(--primary-hover);transform:translateY(-1px)}
+.nav-tools{display:flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid var(--border)}
+.theme-picker{position:relative}
+.theme-picker-btn{display:flex;align-items:center;gap:6px;height:34px;padding:0 10px 0 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;font-size:12px;transition:background .15s,border-color .15s,color .15s}
+.theme-picker-btn:hover{border-color:var(--primary);color:var(--primary)}
+.theme-picker-btn .swatch{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);flex-shrink:0}
+.theme-picker-btn .caret{transition:transform .2s}
+.theme-picker.open .caret{transform:rotate(180deg)}
+.theme-picker-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-lg);padding:6px;z-index:300;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .2s,transform .2s,visibility .2s}
+.theme-picker.open .theme-picker-menu{opacity:1;visibility:visible;transform:translateY(0)}
+.theme-picker-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;font-size:12px;color:var(--fg-muted);cursor:pointer;transition:background .12s,color .12s;white-space:nowrap}
+.theme-picker-item:hover{background:var(--primary-soft);color:var(--fg)}
+.theme-picker-item.active{color:var(--primary);font-weight:600}
+.theme-picker-item .swatch{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);flex-shrink:0}
+.theme-picker-item.active .swatch{border-color:var(--fg)}
+.theme-picker-item .check{margin-left:auto;opacity:0;color:var(--primary)}
+.theme-picker-item.active .check{opacity:1}
+.dark-toggle{font-size:13px;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center}
+.dark-toggle:hover{color:var(--primary);border-color:var(--primary)}
+.lang-toggle{font-size:12px;font-weight:600;height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.lang-toggle:hover{color:var(--primary);border-color:var(--primary)}
+.github-link{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center}
+.github-link:hover{color:var(--primary);border-color:var(--primary)}
+
+/* ============================================================
+   文档三栏布局
+   ============================================================ */
+.docs-wrap{display:grid;grid-template-columns:var(--sidebar-w) minmax(0,1fr) var(--toc-w);gap:0;max-width:1440px;margin:0 auto;align-items:start}
+
+/* ---------- 左侧边栏 ---------- */
+.docs-sidebar{position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));overflow-y:auto;padding:20px 16px 24px;border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border-hover) transparent}
+.docs-sidebar::-webkit-scrollbar{width:4px}
+.docs-sidebar::-webkit-scrollbar-track{background:transparent}
+.docs-sidebar::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:99px}
+
+/* 搜索框 */
+.docs-search{position:relative;margin-bottom:16px}
+.docs-search input{width:100%;height:36px;padding:0 36px 0 34px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+.docs-search input::placeholder{color:var(--fg-subtle)}
+.docs-search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.docs-search .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-subtle);pointer-events:none}
+.docs-search .search-kbd{position:absolute;right:8px;top:50%;transform:translateY(-50%);font:500 10px/1 var(--font-mono);color:var(--fg-subtle);background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;pointer-events:none}
+
+/* 折叠分组 */
+.docs-group{margin-bottom:4px}
+.docs-group-header{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:600;color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s;user-select:none}
+.docs-group-header:hover{background:var(--primary-soft);color:var(--primary)}
+.docs-group-header .group-icon{width:16px;height:16px;flex-shrink:0;color:var(--primary)}
+.docs-group-header .group-caret{margin-left:auto;width:14px;height:14px;color:var(--fg-subtle);transition:transform .2s;flex-shrink:0}
+.docs-group.collapsed .group-caret{transform:rotate(-90deg)}
+.docs-group-list{overflow:hidden;max-height:1000px;transition:max-height .25s ease;padding-left:4px}
+.docs-group.collapsed .docs-group-list{max-height:0}
+
+/* 叶子导航链接 */
+.docs-link{display:block;padding:6px 10px 6px 28px;border-radius:7px;font-size:13px;color:var(--fg-muted);transition:background .12s,color .12s;margin-bottom:1px;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.docs-link:hover{background:var(--surface-2);color:var(--fg)}
+.docs-link.active{color:var(--primary);font-weight:600;background:var(--primary-soft)}
+.docs-link.active::before{content:"";position:absolute;left:10px;top:50%;transform:translateY(-50%);width:3px;height:14px;border-radius:2px;background:var(--primary)}
+
+/* ---------- 中间内容 ---------- */
+.docs-content{min-width:0;padding:32px 48px 80px;max-width:820px}
+.docs-article{padding-top:8px}
+.docs-chapter{margin-bottom:56px;scroll-margin-top:calc(var(--nav-h) + 16px)}
+.docs-chapter-title{display:flex;align-items:baseline;gap:12px;padding-bottom:12px;margin-bottom:28px;border-bottom:1px solid var(--border)}
+.docs-chapter-num{font:700 28px/1 var(--font-mono);color:var(--primary);letter-spacing:-.02em}
+.docs-chapter-title h1{font-size:32px;font-weight:800;letter-spacing:-.025em;line-height:1.15;color:var(--fg)}
+.docs-chapter-lead{font-size:15px;color:var(--fg-muted);line-height:1.7;margin:-16px 0 28px}
+.docs-h2{font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--fg);margin:40px 0 14px;padding-top:8px;scroll-margin-top:calc(var(--nav-h) + 16px)}
+.docs-h2:first-child{margin-top:0}
+.docs-h3{font-size:17px;font-weight:600;color:var(--fg);margin:24px 0 8px;scroll-margin-top:calc(var(--nav-h) + 16px)}
+.docs-p{font-size:14.5px;color:var(--fg-muted);line-height:1.8;margin-bottom:14px}
+.docs-ul{list-style:none;padding:0;margin:0 0 16px}
+.docs-ul li{font-size:14.5px;color:var(--fg-muted);padding:5px 0 5px 22px;position:relative;line-height:1.7}
+.docs-ul li::before{content:"";position:absolute;left:4px;top:14px;width:6px;height:6px;border-radius:50%;background:var(--primary);opacity:.7}
+code.inline{font:12.5px/1.5 var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:2px 6px;color:var(--primary)}
+
+/* 代码块 */
+.code-block{background:#0d1117;border-radius:var(--radius-sm);overflow:hidden;margin:14px 0 20px;box-shadow:var(--shadow-sm)}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)}
+.code-tabs{display:flex;gap:4px}
+.code-tab{font-size:11px;padding:3px 9px;border-radius:6px;color:rgba(255,255,255,.4);cursor:pointer;transition:background .15s,color .15s}
+.code-tab:hover{color:rgba(255,255,255,.7)}
+.code-tab.active{background:rgba(255,255,255,.08);color:#fff}
+.code-copy{font-size:11px;color:rgba(255,255,255,.4);cursor:pointer;transition:color .15s;display:flex;align-items:center;gap:4px}
+.code-copy:hover{color:#fff}
+.code-content{padding:16px 18px;font:13px/1.7 var(--font-mono);color:#c9d1d9;text-align:left;white-space:pre;overflow-x:auto}
+.code-content .kw{color:#ff7b72}
+.code-content .str{color:#a5d6ff}
+.code-content .fn{color:#d2a8ff}
+.code-content .com{color:#8b949e}
+.code-content .var{color:#79c0ff}
+.code-content::-webkit-scrollbar{height:6px}
+.code-content::-webkit-scrollbar-track{background:transparent}
+.code-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
+
+/* 表格 */
+.docs-table{width:100%;border-collapse:collapse;margin:14px 0 20px;font-size:13px;border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow-sm)}
+.docs-table th{background:var(--surface-2);color:var(--fg);font-weight:700;text-align:left;padding:10px 14px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+.docs-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--fg-muted);background:var(--surface)}
+.docs-table tr:last-child td{border-bottom:none}
+.docs-table td kbd{font:500 12px/1 var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:2px 7px;color:var(--fg);margin-right:2px}
+.docs-table tr:hover td{background:var(--primary-soft);color:var(--fg)}
+
+/* 提示框 */
+.docs-callout{display:flex;gap:12px;padding:14px 16px;border-radius:var(--radius-sm);margin:16px 0;border-left:3px solid var(--primary);background:var(--primary-soft)}
+.docs-callout-icon{flex-shrink:0;width:20px;height:20px;color:var(--primary);margin-top:1px}
+.docs-callout-body{font-size:13.5px;color:var(--fg-muted);line-height:1.7}
+.docs-callout-body strong{color:var(--fg);font-weight:600}
+
+/* ---------- 右侧本页目录 (TOC) ---------- */
+.docs-toc{position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));overflow-y:auto;padding:24px 16px 24px 8px;border-left:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border-hover) transparent}
+.docs-toc::-webkit-scrollbar{width:4px}
+.docs-toc::-webkit-scrollbar-track{background:transparent}
+.docs-toc::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:99px}
+.docs-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--fg);margin-bottom:12px;padding:0 8px}
+.toc-list{list-style:none;padding:0}
+.toc-item{margin-bottom:1px}
+.toc-link{display:block;padding:5px 8px;border-radius:6px;font-size:13px;color:var(--fg-muted);line-height:1.5;transition:color .12s,background .12s,font-weight .12s;border-left:2px solid transparent;margin-left:-1px}
+.toc-link:hover{color:var(--fg);background:var(--surface-2)}
+.toc-link.active{color:var(--primary);font-weight:600;border-left-color:var(--primary);background:var(--primary-soft)}
+.toc-h3{padding-left:20px;font-size:12.5px}
+
+/* ============================================================
+   CTA + Footer
+   ============================================================ */
+.cta-section{padding:48px 0 64px}
+.cta-box{position:relative;overflow:hidden;background:var(--primary-gradient);border-radius:var(--radius-lg);padding:48px 40px;text-align:center;box-shadow:0 24px 56px -20px var(--primary-glow);max-width:820px;margin:0 auto}
+.cta-box::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 20%,rgba(255,255,255,.18),transparent 50%);pointer-events:none}
+.cta-box h2{position:relative;font-size:clamp(24px,3vw,32px);font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-.02em}
+.cta-box p{position:relative;font-size:14.5px;color:rgba(255,255,255,.85);margin-bottom:20px}
+.btn-white{display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:11px 24px;border-radius:10px;background:#fff;color:var(--primary);font-weight:700;transition:transform .2s,box-shadow .2s;position:relative}
+.btn-white:hover{transform:translateY(-2px);box-shadow:0 12px 32px -8px rgba(0,0,0,.3)}
+
+footer{background:var(--bg-alt);border-top:1px solid var(--border);padding:48px 0 28px}
+.footer-inner{display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;max-width:1440px;margin:0 auto;padding:0 24px}
+.footer-brand{font-size:16px;font-weight:700;color:var(--fg);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.footer-brand .nav-logo{width:26px;height:26px;font-size:12px}
+.footer-desc{font-size:13px;color:var(--fg-muted);max-width:360px;line-height:1.6}
+.footer-col h4{font-size:12px;color:var(--fg);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.footer-col a{display:block;font-size:13px;color:var(--fg-muted);padding:3px 0;transition:color .15s}
+.footer-col a:hover{color:var(--primary)}
+.footer-bottom{max-width:1440px;margin:36px auto 0;padding:18px 24px 0;border-top:1px solid var(--border);font-size:12px;color:var(--fg-subtle)}
+
+/* 返回顶部 */
+.scroll-top{position:fixed;bottom:28px;right:28px;width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--fg-muted);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:150}
+.scroll-top.visible{opacity:1;pointer-events:auto}
+.scroll-top:hover{color:var(--primary);border-color:var(--primary);transform:translateY(-2px)}
+
+/* 动画 */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+@media(max-width:1100px){
+  .docs-toc{display:none}
+  .docs-wrap{grid-template-columns:var(--sidebar-w) 1fr}
+  .docs-content{padding:28px 32px 64px}
+}
+@media(max-width:768px){
+  .nav-links{display:none}
+  .nav-cta{display:none}
+  .nav-tools{gap:6px;padding-left:8px}
+  .nav-brand{font-size:13px}
+  .docs-sidebar{position:relative;top:0;height:auto;max-height:none;border-right:none;border-bottom:1px solid var(--border);overflow:visible}
+  .docs-wrap{grid-template-columns:1fr}
+  .docs-content{padding:24px 20px 48px}
+  .docs-chapter-title h1{font-size:24px}
+  .docs-chapter-num{font-size:22px}
+  .docs-h2{font-size:20px}
+  .footer-inner{grid-template-columns:1fr;gap:24px;padding:0 20px}
+  .footer-bottom{padding:18px 20px 0}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 顶部导航 ============ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <span class="nav-logo">A</span>
+      <span data-i18n="nav.brand">AgentKit</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" data-i18n="nav.home">首页</a>
+      <a href="docs.html" class="active" data-i18n="nav.docs">文档</a>
+      <a href="guide.html" data-i18n="nav.guide">攻略</a>
+      <a href="changelog.html" data-i18n="nav.changelog">更新日志</a>
+      
+      <a href="download.html" data-i18n="nav.freeDownload">免费下载</a>
+    </div>
+    <div class="nav-tools">
+      <div class="theme-picker" id="themePicker">
+        <button class="theme-picker-btn" id="themePickerBtn" aria-label="选择配色" aria-haspopup="true" aria-expanded="false">
+          <span class="swatch" id="currentSwatch" style="background:#2563eb"></span>
+          <span id="currentLabel" data-i18n="theme.emerald">品牌蓝</span>
+          <svg class="caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="theme-picker-menu" id="themePickerMenu" role="menu">
+          <div class="theme-picker-item active" data-color="emerald" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#2563eb"></span><span data-i18n="theme.emerald">品牌蓝</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="indigo" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#4f46e5"></span><span data-i18n="theme.indigo">靛蓝</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="amber" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#d97706"></span><span data-i18n="theme.amber">琥珀</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="rose" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#e11d48"></span><span data-i18n="theme.rose">玫红</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="cyan" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#0891b2"></span><span data-i18n="theme.cyan">青色</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="violet" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#7c3aed"></span><span data-i18n="theme.violet">紫罗兰</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+        </div>
+      </div>
+      <button class="dark-toggle" id="darkToggle" aria-label="切换深色模式">
+        <svg id="darkToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="lang-toggle" id="langToggle" aria-label="切换语言">
+        <span id="langLabel">EN</span>
+      </button>
+      <a href="https://github.com/lucan6290/agentkit" class="github-link" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33.85 0 1.7.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10 10 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+      </a>
+    </div>
+    <a href="download.html" class="nav-cta" data-i18n="nav.download">下载</a>
+  </div>
+</nav>
+
+<!-- ============ 三栏布局 ============ -->
+<div class="docs-wrap">
+
+  <!-- ========== 左侧边栏：搜索 + 折叠目录 ========== -->
+  <aside class="docs-sidebar" id="docsSidebar">
+    <div class="docs-search">
+      <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="docsSearch" placeholder="搜索文档..." data-i18n-placeholder="docs.search">
+      <span class="search-kbd">⌘K</span>
+    </div>
+
+    <!-- 1. 开始 -->
+    <div class="docs-group" data-group="start">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+        <span>开始</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link active" href="#ch-intro" data-ch="ch-intro">项目介绍</a>
+        <a class="docs-link" href="#ch-quickstart" data-ch="ch-quickstart">快速开始</a>
+        <a class="docs-link" href="#ch-install" data-ch="ch-install">安装</a>
+        <a class="docs-link" href="#ch-migration" data-ch="ch-migration">迁移指南</a>
+      </div>
+    </div>
+
+    <!-- 2. 指南 -->
+    <div class="docs-group" data-group="guide">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>指南</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link" href="#ch-concepts" data-ch="ch-concepts">核心概念</a>
+        <a class="docs-link" href="#ch-usage" data-ch="ch-usage">基本用法</a>
+        <a class="docs-link" href="#ch-config" data-ch="ch-config">配置</a>
+        <a class="docs-link" href="#ch-cli" data-ch="ch-cli">命令行工具</a>
+        <a class="docs-link" href="#ch-examples" data-ch="ch-examples">示例</a>
+      </div>
+    </div>
+
+    <!-- 3. 功能特性 -->
+    <div class="docs-group" data-group="features">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>功能特性</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link" href="#ch-features" data-ch="ch-features">功能总览</a>
+      </div>
+    </div>
+
+    <!-- 4. 架构与设计 -->
+    <div class="docs-group" data-group="architecture">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <span>架构与设计</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link" href="#ch-architecture" data-ch="ch-architecture">架构设计</a>
+        <a class="docs-link" href="#ch-structure" data-ch="ch-structure">目录结构</a>
+        <a class="docs-link" href="#ch-principles" data-ch="ch-principles">设计原则</a>
+      </div>
+    </div>
+
+    <!-- 5. 性能与优化 -->
+    <div class="docs-group" data-group="performance">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        <span>性能与优化</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link" href="#ch-performance" data-ch="ch-performance">性能优化</a>
+        <a class="docs-link" href="#ch-bestpractices" data-ch="ch-bestpractices">最佳实践</a>
+      </div>
+    </div>
+
+    <!-- 6. API 参考 -->
+    <div class="docs-group" data-group="api">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span>API 参考</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link" href="#ch-api" data-ch="ch-api">接口总览</a>
+        <a class="docs-link" href="#ch-auth" data-ch="ch-auth">鉴权方式</a>
+      </div>
+    </div>
+
+    <!-- 7. 扩展 -->
+    <div class="docs-group" data-group="extending">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11V7a2 2 0 0 0-2-2h-4V3a2 2 0 0 0-4 0v2H6a2 2 0 0 0-2 2v4H2a2 2 0 0 0 0 4h2v4a2 2 0 0 0 2 2h4v2a2 2 0 0 0 4 0v-2h4a2 2 0 0 0 2-2v-4h2a2 2 0 0 0 0-4h-2z"/></svg>
+        <span>扩展</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link" href="#ch-plugins" data-ch="ch-plugins">插件开发</a>
+        <a class="docs-link" href="#ch-themes" data-ch="ch-themes">主题定制</a>
+        <a class="docs-link" href="#ch-integration" data-ch="ch-integration">第三方集成</a>
+      </div>
+    </div>
+
+    <!-- 8. 部署 -->
+    <div class="docs-group" data-group="deployment">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>部署</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link" href="#ch-deploy" data-ch="ch-deploy">部署指南</a>
+        <a class="docs-link" href="#ch-env" data-ch="ch-env">环境变量</a>
+        <a class="docs-link" href="#ch-cicd" data-ch="ch-cicd">CI/CD</a>
+      </div>
+    </div>
+
+    <!-- 9. 安全 -->
+    <div class="docs-group" data-group="security">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>安全</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link" href="#ch-security" data-ch="ch-security">安全策略</a>
+        <a class="docs-link" href="#ch-reporting" data-ch="ch-reporting">漏洞报告</a>
+      </div>
+    </div>
+
+    <!-- 10. 社区 -->
+    <div class="docs-group" data-group="community">
+      <button class="docs-group-header" data-group-toggle>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>社区</span>
+        <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="docs-group-list">
+        <a class="docs-link" href="#ch-contributing" data-ch="ch-contributing">贡献指南</a>
+        <a class="docs-link" href="#ch-coc" data-ch="ch-coc">行为准则</a>
+        <a class="docs-link" href="#ch-faq" data-ch="ch-faq">常见问题</a>
+        <a class="docs-link" href="#ch-troubleshooting" data-ch="ch-troubleshooting">故障排查</a>
+        <a class="docs-link" href="#ch-changelog" data-ch="ch-changelog">更新日志</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========== 中间文档正文 ========== -->
+  <main class="docs-content" id="docsContent">
+    <article class="docs-article">
+
+      <!-- 1.1 项目介绍 -->
+      <section class="docs-chapter" id="ch-intro" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">1.1</span>
+          <h1>项目介绍</h1>
+        </div>
+
+        <h2 class="docs-h2" id="intro-what" data-toc="项目简介">项目简介</h2>
+        <p class="docs-p">AgentKit 是一个跨平台桌面应用（React 19 + Rust Tauri），统一管理 AI Agent Skills，并将它们一键同步到 44 款 AI 编程工具，实现「一次安装，处处同步」。</p>
+
+        <h2 class="docs-h2" id="intro-why" data-toc="为什么选择它">为什么选择它</h2>
+        <p class="docs-p">相比手动在每个工具里复制、维护同一份 Skill，AgentKit 让技能只存一份，却在每个需要它的地方保持就绪。</p>
+        <ul class="docs-ul">
+          <li><strong>一次安装</strong>：本地优先，无需账户，也没有云端依赖</li>
+          <li><strong>处处同步</strong>：一键同步到 44 款 AI 编程工具</li>
+          <li><strong>智能同步</strong>：symlink/junction 优先，失败自动回退 copy</li>
+          <li><strong>跨平台</strong>：支持 Windows / macOS / Linux</li>
+        </ul>
+
+        <h2 class="docs-h2" id="intro-features" data-toc="核心特性">核心特性</h2>
+        <h3 class="docs-h3" id="intro-feat-1" data-toc="一处管理">一处管理</h3>
+        <p class="docs-p">在统一视图中浏览、导入、整理所有 Agent Skills，并通过 symlink/junction 优先的同步机制保持处处就绪。</p>
+        <h3 class="docs-h3" id="intro-feat-2" data-toc="智能同步">智能同步</h3>
+        <p class="docs-p">在统一视图中浏览、导入、整理所有 Agent Skills，并通过 symlink/junction 优先的同步机制保持处处就绪。</p>
+        <h3 class="docs-h3" id="intro-feat-3" data-toc="工具感知">工具感知</h3>
+        <p class="docs-p">在统一视图中浏览、导入、整理所有 Agent Skills，并通过 symlink/junction 优先的同步机制保持处处就绪。</p>
+
+        <h2 class="docs-h2" id="intro-scenarios" data-toc="适用场景">适用场景</h2>
+        <ul class="docs-ul">
+          <li>场景一：统一管理分散在多个 AI 工具中的 Skills</li>
+          <li>场景二：需要跨工具复用同一套 Skills 的团队</li>
+          <li>场景三：希望本地化管理 AI 能力的个人开发者</li>
+        </ul>
+
+        <h2 class="docs-h2" id="intro-stack" data-toc="技术栈">技术栈</h2>
+        <p class="docs-p">前端使用 React 19 + TypeScript 5.9 + Vite 7 + Tailwind CSS 4，后端使用 Rust + Tauri 2，数据库使用 SQLite（rusqlite）。</p>
+        <div class="docs-callout">
+          <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div class="docs-callout-body"><strong>提示：</strong> 本项目完全开源，你可以在 GitHub 上查看完整源代码并自行构建。</div>
+        </div>
+      </section>
+
+      <!-- 1.2 快速开始 -->
+      <section class="docs-chapter" id="ch-quickstart" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">1.2</span>
+          <h1>快速开始</h1>
+        </div>
+        <p class="docs-chapter-lead">通过几个简单步骤，让读者在最短时间内跑通一个最小可用示例。</p>
+
+        <h2 class="docs-h2" id="qs-prereq" data-toc="环境要求">环境要求</h2>
+        <ul class="docs-ul">
+          <li>Node.js 18+（推荐 20+） / Rust 1.77+</li>
+          <li><a href="https://v2.tauri.app/start/prerequisites/">Tauri Prerequisites</a></li>
+          <li>网络连接（如需拉取依赖）</li>
+        </ul>
+
+        <h2 class="docs-h2" id="qs-run" data-toc="运行第一个示例">运行第一个示例</h2>
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs"><span class="code-tab active">shell</span></div>
+            <span class="code-copy" data-copy-target="code-qs"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</span>
+          </div>
+          <pre class="code-content" id="code-qs"><span class="com"># 安装依赖</span>
+<span class="kw">$</span> cd frontend &amp;&amp; npm install
+
+<span class="com"># 启动开发模式</span>
+<span class="kw">$</span> npm run tauri dev
+
+<span class="fn">✓</span> 桌面窗口已启动</pre>
+        </div>
+
+        <div class="docs-callout">
+          <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div class="docs-callout-body"><strong>提示：</strong> 首次运行会自动生成默认配置，你也可以通过 <code class="inline">--config</code> 参数指定配置文件。</div>
+        </div>
+      </section>
+
+      <!-- 1.3 安装 -->
+      <section class="docs-chapter" id="ch-install" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">1.3</span>
+          <h1>安装</h1>
+        </div>
+        <p class="docs-chapter-lead">根据你的操作系统和偏好，选择一种安装方式。</p>
+
+        <h2 class="docs-h2" id="install-pkg" data-toc="下载安装包">下载安装包</h2>
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs"><span class="code-tab active">Windows</span><span class="code-tab">macOS</span><span class="code-tab">Linux</span></div>
+            <span class="code-copy" data-copy-target="code-pkg"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</span>
+          </div>
+          <pre class="code-content" id="code-pkg"><span class="com"># Windows</span>
+<span class="kw">$</span> 下载 .exe 安装包
+
+<span class="com"># macOS</span>
+<span class="kw">$</span> 下载 .dmg 安装包
+
+<span class="com"># Linux</span>
+<span class="kw">$</span> 下载 AppImage</pre>
+        </div>
+
+        <h2 class="docs-h2" id="install-source" data-toc="从源码构建">从源码构建</h2>
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs"><span class="code-tab active">shell</span></div>
+            <span class="code-copy" data-copy-target="code-src"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</span>
+          </div>
+          <pre class="code-content" id="code-src"><span class="kw">$</span> git clone https://github.com/lucan6290/agentkit.git
+<span class="kw">$</span> cd agentkit
+<span class="kw">$</span> npm install &amp;&amp; npm run build</pre>
+        </div>
+
+        <h2 class="docs-h2" id="install-verify" data-toc="验证安装">验证安装</h2>
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs"><span class="code-tab active">shell</span></div>
+            <span class="code-copy" data-copy-target="code-verify"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</span>
+          </div>
+          <pre class="code-content" id="code-verify"><span class="kw">$</span> agentkit --version
+<span class="str">agentkit v0.3.1</span></pre>
+        </div>
+      </section>
+
+      <!-- 1.4 迁移指南 -->
+      <section class="docs-chapter" id="ch-migration" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">1.4</span>
+          <h1>迁移指南</h1>
+        </div>
+        <h2 class="docs-h2" id="migrate-from" data-toc="从旧版本迁移">从旧版本迁移</h2>
+        <p class="docs-p">说明从旧版本升级时的注意事项和操作步骤，帮助老用户平滑过渡。</p>
+        <h2 class="docs-h2" id="migrate-breaking" data-toc="破坏性变更">破坏性变更</h2>
+        <table class="docs-table">
+          <thead><tr><th>变更项</th><th>旧版本</th><th>新版本</th></tr></thead>
+          <tbody>
+            <tr><td>配置项 A</td><td><code class="inline">foo</code></td><td><code class="inline">bar</code></td></tr>
+            <tr><td>API 方法 B</td><td><code class="inline">old()</code></td><td><code class="inline">new()</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 2.1 核心概念 -->
+      <section class="docs-chapter" id="ch-concepts" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">2.1</span>
+          <h1>核心概念</h1>
+        </div>
+        <h2 class="docs-h2" id="concept-overview" data-toc="概念概述">概念概述</h2>
+        <p class="docs-p">在深入使用之前，先了解项目中的几个关键概念，有助于你更快上手。</p>
+        <h2 class="docs-h2" id="concept-terms" data-toc="关键术语">关键术语</h2>
+        <table class="docs-table">
+          <thead><tr><th>术语</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">实例</code></td><td>指一次运行中的项目对象</td></tr>
+            <tr><td><code class="inline">模块</code></td><td>项目的功能单元，可独立加载</td></tr>
+            <tr><td><code class="inline">配置</code></td><td>用于定制项目行为的参数集合</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 2.2 基本用法 -->
+      <section class="docs-chapter" id="ch-usage" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">2.2</span>
+          <h1>基本用法</h1>
+        </div>
+        <h2 class="docs-h2" id="usage-basic" data-toc="快速示例">快速示例</h2>
+        <p class="docs-p">下面是最基本的使用方式，帮助你理解核心流程。</p>
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs"><span class="code-tab active">js</span></div>
+            <span class="code-copy" data-copy-target="code-usage"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</span>
+          </div>
+          <pre class="code-content" id="code-usage"><span class="kw">import</span> { createApp } <span class="kw">from</span> <span class="str">'agentkit'</span>
+
+<span class="kw">const</span> app = <span class="fn">createApp</span>({ name: <span class="str">'demo'</span> })
+app.<span class="fn">start</span>()</pre>
+        </div>
+        <h2 class="docs-h2" id="usage-common" data-toc="常用操作">常用操作</h2>
+        <ul class="docs-ul">
+          <li>创建与初始化</li>
+          <li>读取与写入数据</li>
+          <li>订阅事件</li>
+          <li>优雅关闭</li>
+        </ul>
+        <h2 class="docs-h2" id="usage-adv" data-toc="进阶用法">进阶用法</h2>
+        <p class="docs-p">结合配置与插件，可以实现更复杂的定制化需求，详见后续章节。</p>
+      </section>
+
+      <!-- 2.3 配置 -->
+      <section class="docs-chapter" id="ch-config" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">2.3</span>
+          <h1>配置</h1>
+        </div>
+        <h2 class="docs-h2" id="config-file" data-toc="配置文件">配置文件</h2>
+        <p class="docs-p">配置文件默认位于项目根目录的 <code class="inline">config.json</code>，支持 JSON 或 YAML 格式。</p>
+        <h2 class="docs-h2" id="config-ref" data-toc="配置项说明">配置项说明</h2>
+        <table class="docs-table">
+          <thead><tr><th>配置项</th><th>类型</th><th>默认值</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">name</code></td><td>string</td><td><code class="inline">""</code></td><td>项目名称</td></tr>
+            <tr><td><code class="inline">port</code></td><td>number</td><td><code class="inline">3000</code></td><td>监听端口</td></tr>
+            <tr><td><code class="inline">debug</code></td><td>boolean</td><td><code class="inline">false</code></td><td>是否开启调试模式</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 2.4 命令行工具 -->
+      <section class="docs-chapter" id="ch-cli" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">2.4</span>
+          <h1>命令行工具</h1>
+        </div>
+        <h2 class="docs-h2" id="cli-cmds" data-toc="基本命令">基本命令</h2>
+        <table class="docs-table">
+          <thead><tr><th>命令</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">init</code></td><td>初始化项目</td></tr>
+            <tr><td><code class="inline">start</code></td><td>启动服务</td></tr>
+            <tr><td><code class="inline">build</code></td><td>构建产物</td></tr>
+            <tr><td><code class="inline">test</code></td><td>运行测试</td></tr>
+          </tbody>
+        </table>
+        <h2 class="docs-h2" id="cli-flags" data-toc="全局参数">全局参数</h2>
+        <p class="docs-p">所有命令都支持 <code class="inline">--help</code> 查看帮助，<code class="inline">--config &lt;path&gt;</code> 指定配置文件。</p>
+      </section>
+
+      <!-- 2.5 示例 -->
+      <section class="docs-chapter" id="ch-examples" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">2.5</span>
+          <h1>示例</h1>
+        </div>
+        <h2 class="docs-h2" id="ex-1" data-toc="示例一">示例一</h2>
+        <p class="docs-p">展示一个典型的应用场景及对应代码。</p>
+        <h2 class="docs-h2" id="ex-2" data-toc="示例二">示例二</h2>
+        <p class="docs-p">展示一个进阶场景，演示组合使用多个能力。</p>
+      </section>
+
+      <!-- 3.1 功能总览 -->
+      <section class="docs-chapter" id="ch-features" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">3.1</span>
+          <h1>功能总览</h1>
+        </div>
+        <h2 class="docs-h2" id="features-list" data-toc="功能列表">功能列表</h2>
+        <table class="docs-table">
+          <thead><tr><th>功能</th><th>说明</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td>一处管理</td><td>统一浏览、导入、整理所有 Agent Skills</td><td>稳定</td></tr>
+            <tr><td>智能同步</td><td>symlink/junction 优先，同步到全局或项目目录</td><td>稳定</td></tr>
+            <tr><td>工具感知</td><td>自动识别 44 款已安装的 AI 工具</td><td>稳定</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 4.1 架构设计 -->
+      <section class="docs-chapter" id="ch-architecture" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">4.1</span>
+          <h1>架构设计</h1>
+        </div>
+        <h2 class="docs-h2" id="arch-overview" data-toc="整体架构">整体架构</h2>
+        <p class="docs-p">描述项目的整体架构分层，以及各层之间的调用关系和数据流向。</p>
+        <h2 class="docs-h2" id="arch-modules" data-toc="模块划分">模块划分</h2>
+        <ul class="docs-ul">
+          <li><strong>核心模块</strong>：负责核心逻辑</li>
+          <li><strong>接口层</strong>：对外暴露的 API</li>
+          <li><strong>适配层</strong>：连接第三方服务</li>
+          <li><strong>工具层</strong>：通用工具函数</li>
+        </ul>
+        <h2 class="docs-h2" id="arch-dataflow" data-toc="数据流">数据流</h2>
+        <p class="docs-p">说明一次请求从进入到返回，会经过哪些处理环节。</p>
+      </section>
+
+      <!-- 4.2 目录结构 -->
+      <section class="docs-chapter" id="ch-structure" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">4.2</span>
+          <h1>目录结构</h1>
+        </div>
+        <h2 class="docs-h2" id="struct-tree" data-toc="目录树">目录树</h2>
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs"><span class="code-tab active">tree</span></div>
+            <span class="code-copy" data-copy-target="code-tree"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</span>
+          </div>
+          <pre class="code-content" id="code-tree">agentkit/
+├── src/            <span class="com"># 源代码</span>
+│   ├── core/       <span class="com"># 核心逻辑</span>
+│   ├── api/        <span class="com"># 接口层</span>
+│   └── utils/      <span class="com"># 工具函数</span>
+├── tests/          <span class="com"># 测试</span>
+├── docs/           <span class="com"># 文档</span>
+└── config.json     <span class="com"># 配置文件</span></pre>
+        </div>
+      </section>
+
+      <!-- 4.3 设计原则 -->
+      <section class="docs-chapter" id="ch-principles" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">4.3</span>
+          <h1>设计原则</h1>
+        </div>
+        <h2 class="docs-h2" id="prin-goals" data-toc="设计目标">设计目标</h2>
+        <ul class="docs-ul">
+          <li><strong>简单优先</strong>：保持 API 简洁，避免过度设计</li>
+          <li><strong>可测试性</strong>：核心逻辑与副作用解耦</li>
+          <li><strong>向后兼容</strong>：尽量不引入破坏性变更</li>
+        </ul>
+      </section>
+
+      <!-- 5.1 性能优化 -->
+      <section class="docs-chapter" id="ch-performance" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">5.1</span>
+          <h1>性能优化</h1>
+        </div>
+        <h2 class="docs-h2" id="perf-tips" data-toc="优化建议">优化建议</h2>
+        <ul class="docs-ul">
+          <li>开启缓存以降低重复计算</li>
+          <li>使用批量接口替代多次单独调用</li>
+          <li>避免在主流程中进行阻塞操作</li>
+        </ul>
+        <h2 class="docs-h2" id="perf-bench" data-toc="基准测试">基准测试</h2>
+        <p class="docs-p">说明如何运行基准测试，以及如何解读测试结果。</p>
+      </section>
+
+      <!-- 5.2 最佳实践 -->
+      <section class="docs-chapter" id="ch-bestpractices" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">5.2</span>
+          <h1>最佳实践</h1>
+        </div>
+        <h2 class="docs-h2" id="bp-recommend" data-toc="推荐做法">推荐做法</h2>
+        <ul class="docs-ul">
+          <li>将配置与代码分离，便于环境切换</li>
+          <li>为关键路径编写单元测试</li>
+          <li>及时更新依赖，修复已知漏洞</li>
+        </ul>
+      </section>
+
+      <!-- 6.1 接口总览 -->
+      <section class="docs-chapter" id="ch-api" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">6.1</span>
+          <h1>接口总览</h1>
+        </div>
+        <h2 class="docs-h2" id="api-list" data-toc="接口列表">接口列表</h2>
+        <table class="docs-table">
+          <thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/items</code></td><td>获取列表</td></tr>
+            <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/items</code></td><td>创建记录</td></tr>
+            <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/items/:id</code></td><td>获取详情</td></tr>
+            <tr><td><code class="inline">DELETE</code></td><td><code class="inline">/api/items/:id</code></td><td>删除记录</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 6.2 鉴权方式 -->
+      <section class="docs-chapter" id="ch-auth" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">6.2</span>
+          <h1>鉴权方式</h1>
+        </div>
+        <h2 class="docs-h2" id="auth-mechanism" data-toc="认证机制">认证机制</h2>
+        <p class="docs-p">说明支持哪些认证方式（如 API Key、OAuth、JWT），以及各自适用场景。</p>
+        <h2 class="docs-h2" id="auth-example" data-toc="示例">示例</h2>
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs"><span class="code-tab active">http</span></div>
+            <span class="code-copy" data-copy-target="code-auth"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</span>
+          </div>
+          <pre class="code-content" id="code-auth"><span class="kw">GET</span> /api/items HTTP/1.1
+<span class="var">Host:</span> api.github.com
+<span class="var">Authorization:</span> Bearer &lt;your-token&gt;</pre>
+        </div>
+      </section>
+
+      <!-- 7.1 插件开发 -->
+      <section class="docs-chapter" id="ch-plugins" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">7.1</span>
+          <h1>插件开发</h1>
+        </div>
+        <h2 class="docs-h2" id="plugin-struct" data-toc="插件结构">插件结构</h2>
+        <p class="docs-p">说明一个插件的基本组成：入口文件、配置文件、依赖声明等。</p>
+        <h2 class="docs-h2" id="plugin-steps" data-toc="开发步骤">开发步骤</h2>
+        <ul class="docs-ul">
+          <li>创建插件目录并初始化</li>
+          <li>实现核心生命周期钩子</li>
+          <li>编写测试并发布</li>
+        </ul>
+      </section>
+
+      <!-- 7.2 主题定制 -->
+      <section class="docs-chapter" id="ch-themes" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">7.2</span>
+          <h1>主题定制</h1>
+        </div>
+        <h2 class="docs-h2" id="theme-custom" data-toc="自定义主题">自定义主题</h2>
+        <p class="docs-p">说明如何通过变量覆盖或自定义样式文件来定制界面外观。</p>
+      </section>
+
+      <!-- 7.3 第三方集成 -->
+      <section class="docs-chapter" id="ch-integration" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">7.3</span>
+          <h1>第三方集成</h1>
+        </div>
+        <h2 class="docs-h2" id="integration-list" data-toc="集成列表">集成列表</h2>
+        <ul class="docs-ul">
+          <li>集成平台 A</li>
+          <li>集成平台 B</li>
+          <li>集成平台 C</li>
+        </ul>
+      </section>
+
+      <!-- 8.1 部署指南 -->
+      <section class="docs-chapter" id="ch-deploy" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">8.1</span>
+          <h1>部署指南</h1>
+        </div>
+        <h2 class="docs-h2" id="deploy-methods" data-toc="部署方式">部署方式</h2>
+        <p class="docs-p">列出支持的部署方式，如 Docker、二进制、云平台一键部署等。</p>
+        <h2 class="docs-h2" id="deploy-docker" data-toc="Docker 部署">Docker 部署</h2>
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs"><span class="code-tab active">shell</span></div>
+            <span class="code-copy" data-copy-target="code-docker"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</span>
+          </div>
+          <pre class="code-content" id="code-docker"><span class="kw">$</span> docker pull lucan6290/agentkit
+<span class="kw">$</span> docker run -d -p 3000:3000 lucan6290/agentkit</pre>
+        </div>
+      </section>
+
+      <!-- 8.2 环境变量 -->
+      <section class="docs-chapter" id="ch-env" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">8.2</span>
+          <h1>环境变量</h1>
+        </div>
+        <h2 class="docs-h2" id="env-list" data-toc="环境变量列表">环境变量列表</h2>
+        <table class="docs-table">
+          <thead><tr><th>变量名</th><th>默认值</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">APP_ENV</code></td><td><code class="inline">production</code></td><td>运行环境</td></tr>
+            <tr><td><code class="inline">APP_PORT</code></td><td><code class="inline">3000</code></td><td>监听端口</td></tr>
+            <tr><td><code class="inline">LOG_LEVEL</code></td><td><code class="inline">info</code></td><td>日志级别</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 8.3 CI/CD -->
+      <section class="docs-chapter" id="ch-cicd" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">8.3</span>
+          <h1>CI/CD</h1>
+        </div>
+        <h2 class="docs-h2" id="cicd-pipeline" data-toc="流水线示例">流水线示例</h2>
+        <p class="docs-p">提供 GitHub Actions 或 GitLab CI 的示例配置，演示自动构建与发布流程。</p>
+      </section>
+
+      <!-- 9.1 安全策略 -->
+      <section class="docs-chapter" id="ch-security" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">9.1</span>
+          <h1>安全策略</h1>
+        </div>
+        <h2 class="docs-h2" id="sec-measures" data-toc="安全措施">安全措施</h2>
+        <ul class="docs-ul">
+          <li>敏感信息加密存储</li>
+          <li>请求输入校验与防注入</li>
+          <li>依赖安全扫描</li>
+        </ul>
+      </section>
+
+      <!-- 9.2 漏洞报告 -->
+      <section class="docs-chapter" id="ch-reporting" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">9.2</span>
+          <h1>漏洞报告</h1>
+        </div>
+        <h2 class="docs-h2" id="report-flow" data-toc="报告流程">报告流程</h2>
+        <p class="docs-p">说明发现安全漏洞后应如何私下报告、报告应包含哪些信息，以及处理时限。</p>
+      </section>
+
+      <!-- 10.1 贡献指南 -->
+      <section class="docs-chapter" id="ch-contributing" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">10.1</span>
+          <h1>贡献指南</h1>
+        </div>
+        <h2 class="docs-h2" id="contrib-how" data-toc="如何贡献">如何贡献</h2>
+        <ul class="docs-ul">
+          <li>提交 Bug 报告</li>
+          <li>贡献代码</li>
+          <li>完善文档</li>
+        </ul>
+        <h2 class="docs-h2" id="contrib-convention" data-toc="提交规范">提交规范</h2>
+        <p class="docs-p">说明 commit message 格式、分支命名和 Pull Request 流程。</p>
+      </section>
+
+      <!-- 10.2 行为准则 -->
+      <section class="docs-chapter" id="ch-coc" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">10.2</span>
+          <h1>行为准则</h1>
+        </div>
+        <h2 class="docs-h2" id="coc-promise" data-toc="我们的承诺">我们的承诺</h2>
+        <p class="docs-p">为了营造开放友好的社区氛围，我们承诺为所有参与者提供一个无骚扰的环境。</p>
+      </section>
+
+      <!-- 10.3 常见问题 -->
+      <section class="docs-chapter" id="ch-faq" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">10.3</span>
+          <h1>常见问题</h1>
+        </div>
+        <h3 class="docs-h3" id="faq-q1" data-toc="如何升级到新版本">如何升级到新版本？</h3>
+        <p class="docs-p">运行升级命令或替换安装包即可，升级前建议备份配置。</p>
+        <h3 class="docs-h3" id="faq-q2" data-toc="是否支持离线使用">是否支持离线使用？</h3>
+        <p class="docs-p">核心功能可离线使用，但部分依赖网络的能力需要联网。</p>
+        <h3 class="docs-h3" id="faq-q3" data-toc="如何获取技术支持">如何获取技术支持？</h3>
+        <p class="docs-p">可以在 GitHub 提交 Issue，或在社区频道寻求帮助。</p>
+      </section>
+
+      <!-- 10.4 故障排查 -->
+      <section class="docs-chapter" id="ch-troubleshooting" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">10.4</span>
+          <h1>故障排查</h1>
+        </div>
+        <h2 class="docs-h2" id="ts-log" data-toc="查看日志">查看日志</h2>
+        <p class="docs-p">日志文件位于 <code class="inline">~/.agentkit/logs/</code> 目录，遇到问题时先查看详细错误信息。</p>
+        <h2 class="docs-h2" id="ts-reset" data-toc="重置配置">重置配置</h2>
+        <p class="docs-p">如果遇到异常，可以通过 <code class="inline">agentkit reset</code> 命令重置所有配置到初始状态。</p>
+        <div class="docs-callout">
+          <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div class="docs-callout-body"><strong>需要更多帮助？</strong> 可以在 GitHub 仓库提交 Issue，或查看社区频道获取更多使用技巧。</div>
+        </div>
+      </section>
+
+      <!-- 10.5 更新日志 -->
+      <section class="docs-chapter" id="ch-changelog" data-chapter>
+        <div class="docs-chapter-title">
+          <span class="docs-chapter-num">10.5</span>
+          <h1>更新日志</h1>
+        </div>
+        <h2 class="docs-h2" id="clog-releases" data-toc="版本记录">版本记录</h2>
+        <table class="docs-table">
+          <thead><tr><th>版本</th><th>日期</th><th>变更说明</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">v0.3.1</code></td><td>2026-09-12</td><td>品牌 Logo、更新体验与多项修复</td></tr>
+            <tr><td><code class="inline">v0.3.0</code></td><td>2026-09-12</td><td>提示词文件、构建脚本与数据目录重组</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </article>
+  </main><!-- /docs-content -->
+
+  <!-- ========== 右侧本页目录 (TOC) ========== -->
+  <aside class="docs-toc" id="docsToc">
+    <div class="docs-toc-title" data-i18n="docs.onThisPage">本页内容</div>
+    <ul class="toc-list" id="tocList">
+      <!-- JS 动态生成 -->
+    </ul>
+  </aside>
+
+</div><!-- /docs-wrap -->
+
+<!-- ============ CTA ============ -->
+<section class="cta-section">
+  <div class="container" style="max-width:1440px;margin:0 auto;padding:0 24px">
+    <div class="cta-box">
+      <h2 data-i18n="docs.cta.title">开始使用AgentKit</h2>
+      <p data-i18n="docs.cta.desc">免费、开源，下载后即可开始管理你的 Agent Skills。</p>
+      <a href="download.html" class="btn-white">
+        <span data-i18n="docs.cta.download">立即下载</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 返回顶部 ============ -->
+<button class="scroll-top" id="scrollTop" aria-label="返回顶部">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<!-- ============ Footer ============ -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">
+        <span class="nav-logo">A</span>
+        <span data-i18n="nav.brand">AgentKit</span>
+      </div>
+      <p class="footer-desc" data-i18n="footer.desc">跨平台桌面应用，统一管理 AI Agent Skills，并一键同步到 44 款 AI 编程工具。</p>
+    </div>
+    <div class="footer-col">
+      <h4 data-i18n="footer.product">产品</h4>
+      <a href="index.html#features" data-i18n="nav.features">功能</a>
+      <a href="index.html#demo" data-i18n="nav.demo">演示</a>
+      <a href="index.html#install" data-i18n="nav.install">安装</a>
+      <a href="index.html#tech" data-i18n="nav.tech">技术栈</a>
+    </div>
+    <div class="footer-col">
+      <h4 data-i18n="footer.resources">资源</h4>
+      <a href="https://github.com/lucan6290/agentkit" target="_blank" data-i18n="footer.github">GitHub 仓库</a>
+      <a href="changelog.html" data-i18n="footer.releases">版本发布</a>
+      <a href="https://github.com/lucan6290/agentkit" target="_blank" data-i18n="footer.issues">问题反馈</a>
+      <a href="docs.html" data-i18n="footer.docs">使用文档</a>
+    </div>
+  </div>
+  <div class="footer-bottom" data-i18n="footer.copyright">© 2026 AgentKit · MIT License · 开源项目</div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ============ 语言 ============ */
+  var currentLang='zh';
+  try{var sl=localStorage.getItem('site-lang');if(sl==='en')currentLang='en'}catch(e){}
+  function updateSearchPlaceholder(){
+    var si=document.getElementById('docsSearch');
+    if(si)si.placeholder=currentLang==='en'?'Search docs...':'搜索文档...';
+  }
+  updateSearchPlaceholder();
+  var lt=document.getElementById('langToggle'),ll=document.getElementById('langLabel');
+  if(ll)ll.textContent=currentLang==='en'?'中':'EN';
+  if(lt)lt.addEventListener('click',function(){
+    currentLang=currentLang==='en'?'zh':'en';
+    try{localStorage.setItem('site-lang',currentLang)}catch(e){}
+    location.reload();
+  });
+
+  /* ============ 主题配色 ============ */
+  var themes={
+    emerald:{light:{'--primary':'#2563eb','--primary-hover':'#1d4ed8','--primary-soft':'rgba(37,99,235,.08)','--primary-glow':'rgba(37,99,235,.25)','--primary-gradient':'linear-gradient(135deg,#3b82f6,#1d4ed8)'},dark:{'--primary':'#60a5fa','--primary-hover':'#93c5fd','--primary-soft':'rgba(96,165,250,.12)','--primary-glow':'rgba(96,165,250,.3)','--primary-gradient':'linear-gradient(135deg,#3b82f6,#60a5fa)'}},
+    indigo:{light:{'--primary':'#4f46e5','--primary-hover':'#4338ca','--primary-soft':'rgba(79,70,229,.08)','--primary-glow':'rgba(79,70,229,.25)','--primary-gradient':'linear-gradient(135deg,#4f46e5,#6366f1)'},dark:{'--primary':'#818cf8','--primary-hover':'#a5b4fc','--primary-soft':'rgba(129,140,248,.1)','--primary-glow':'rgba(129,140,248,.3)','--primary-gradient':'linear-gradient(135deg,#6366f1,#818cf8)'}},
+    amber:{light:{'--primary':'#d97706','--primary-hover':'#b45309','--primary-soft':'rgba(217,119,6,.08)','--primary-glow':'rgba(217,119,6,.25)','--primary-gradient':'linear-gradient(135deg,#d97706,#f59e0b)'},dark:{'--primary':'#fbbf24','--primary-hover':'#fcd34d','--primary-soft':'rgba(251,191,36,.1)','--primary-glow':'rgba(251,191,36,.3)','--primary-gradient':'linear-gradient(135deg,#f59e0b,#fbbf24)'}},
+    rose:{light:{'--primary':'#e11d48','--primary-hover':'#be123c','--primary-soft':'rgba(225,29,72,.08)','--primary-glow':'rgba(225,29,72,.25)','--primary-gradient':'linear-gradient(135deg,#e11d48,#f43f5e)'},dark:{'--primary':'#fb7185','--primary-hover':'#fda4af','--primary-soft':'rgba(251,113,133,.1)','--primary-glow':'rgba(251,113,133,.3)','--primary-gradient':'linear-gradient(135deg,#f43f5e,#fb7185)'}},
+    cyan:{light:{'--primary':'#0891b2','--primary-hover':'#0e7490','--primary-soft':'rgba(8,145,178,.08)','--primary-glow':'rgba(8,145,178,.25)','--primary-gradient':'linear-gradient(135deg,#0891b2,#06b6d4)'},dark:{'--primary':'#22d3ee','--primary-hover':'#67e8f9','--primary-soft':'rgba(34,211,238,.1)','--primary-glow':'rgba(34,211,238,.3)','--primary-gradient':'linear-gradient(135deg,#06b6d4,#22d3ee)'}},
+    violet:{light:{'--primary':'#7c3aed','--primary-hover':'#6d28d9','--primary-soft':'rgba(124,58,237,.08)','--primary-glow':'rgba(124,58,237,.25)','--primary-gradient':'linear-gradient(135deg,#7c3aed,#8b5cf6)'},dark:{'--primary':'#a78bfa','--primary-hover':'#c4b5fd','--primary-soft':'rgba(167,139,250,.1)','--primary-glow':'rgba(167,139,250,.3)','--primary-gradient':'linear-gradient(135deg,#8b5cf6,#a78bfa)'}}
+  };
+  var currentTheme='emerald',isDark=false;
+  try{var s=localStorage.getItem('theme-color');var d=localStorage.getItem('theme-dark');if(s&&themes[s])currentTheme=s;if(d==='1'){isDark=true;document.documentElement.classList.add('dark')}else if(d===null&&window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches){isDark=true;document.documentElement.classList.add('dark')}}catch(e){}
+  function applyTheme(c){var v=themes[c][isDark?'dark':'light'];var r=document.documentElement;Object.keys(v).forEach(function(k){r.style.setProperty(k,v[k])});currentTheme=c;try{localStorage.setItem('theme-color',c)}catch(e){}}
+  var themeMeta={emerald:{c:'#2563eb',zh:'品牌蓝',en:'Blue'},indigo:{c:'#4f46e5',zh:'靛蓝',en:'Indigo'},amber:{c:'#d97706',zh:'琥珀',en:'Amber'},rose:{c:'#e11d48',zh:'玫红',en:'Rose'},cyan:{c:'#0891b2',zh:'青色',en:'Cyan'},violet:{c:'#7c3aed',zh:'紫罗兰',en:'Violet'}};
+  function updatePicker(c){var m=themeMeta[c]||themeMeta.emerald;var sw=document.getElementById('currentSwatch'),lb=document.getElementById('currentLabel');if(sw)sw.style.background=m.c;if(lb)lb.textContent=currentLang==='en'?m.en:m.zh;document.querySelectorAll('.theme-picker-item').forEach(function(it){it.classList.toggle('active',it.dataset.color===c)})}
+  updatePicker(currentTheme);applyTheme(currentTheme);
+  if(isDark){var di=document.getElementById('darkToggleIcon');if(di)di.innerHTML='<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'}
+
+  /* 配色选择器 */
+  var tp=document.getElementById('themePicker'),tpb=document.getElementById('themePickerBtn');
+  tpb.addEventListener('click',function(e){e.stopPropagation();var o=tp.classList.toggle('open');tpb.setAttribute('aria-expanded',o?'true':'false')});
+  document.querySelectorAll('.theme-picker-item').forEach(function(it){
+    it.addEventListener('click',function(){applyTheme(it.dataset.color);updatePicker(it.dataset.color);tp.classList.remove('open');tpb.setAttribute('aria-expanded','false')});
+    it.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();it.click()}});
+  });
+  document.addEventListener('click',function(){tp.classList.remove('open');tpb.setAttribute('aria-expanded','false')});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){tp.classList.remove('open');tpb.setAttribute('aria-expanded','false')}});
+
+  /* 深色模式 */
+  var dt=document.getElementById('darkToggle'),dti=document.getElementById('darkToggleIcon');
+  dt.addEventListener('click',function(){
+    isDark=!isDark;document.documentElement.classList.toggle('dark',isDark);
+    try{localStorage.setItem('theme-dark',isDark?'1':'0')}catch(e){}
+    dti.innerHTML=isDark?'<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>':'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    applyTheme(currentTheme);
+  });
+
+  /* ============ 分组折叠 ============ */
+  document.querySelectorAll('[data-group-toggle]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      btn.closest('.docs-group').classList.toggle('collapsed');
+    });
+  });
+
+  /* ============ 代码复制 ============ */
+  document.querySelectorAll('.code-copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var id=btn.dataset.copyTarget;
+      var el=document.getElementById(id);if(!el)return;
+      navigator.clipboard.writeText(el.textContent).then(function(){
+        var orig=btn.innerHTML;
+        btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> '+(currentLang==='en'?'Copied':'已复制');
+        setTimeout(function(){btn.innerHTML=orig},1500);
+      });
+    });
+  });
+
+  /* ============ 返回顶部 ============ */
+  var st=document.getElementById('scrollTop');
+  window.addEventListener('scroll',function(){st.classList.toggle('visible',window.scrollY>400)});
+  st.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
+
+  /* ============ 动态生成右侧 TOC + 滚动监听高亮 ============ */
+  var tocList=document.getElementById('tocList');
+  var chapters=document.querySelectorAll('[data-chapter]');
+  var sideLinks=document.querySelectorAll('.docs-link');
+  var headings=[]; // {id, text, level:'h2'|'h3', chapterId}
+
+  chapters.forEach(function(ch){
+    var chId=ch.id;
+    ch.querySelectorAll('.docs-h2,.docs-h3').forEach(function(h){
+      if(!h.id)return;
+      headings.push({
+        id:h.id,
+        text:h.textContent.trim(),
+        level:h.classList.contains('docs-h3')?'h3':'h2',
+        chapterId:chId
+      });
+    });
+  });
+
+  /* 生成 TOC 列表 */
+  var tocHtml='';
+  headings.forEach(function(h){
+    tocHtml+='<li class="toc-item"><a class="toc-link '+(h.level==='h3'?'toc-h3':'')+'" href="#'+h.id+'" data-target="'+h.id+'">'+h.text+'</a></li>';
+  });
+  tocList.innerHTML=tocHtml;
+  var tocLinks=tocList.querySelectorAll('.toc-link');
+
+  /* 滚动监听：用 IntersectionObserver 追踪当前可见的 heading */
+  var visibleIds={};
+  var activeId=null;
+  var activeChapterId=null;
+
+  function setActiveHeading(id){
+    if(activeId===id)return;
+    activeId=id;
+    tocLinks.forEach(function(a){a.classList.toggle('active',a.dataset.target===id)});
+    /* 让激活项滚动到 TOC 可视区 */
+    var act=tocList.querySelector('.toc-link.active');
+    if(act){
+      var tocBox=document.getElementById('docsToc');
+      var aTop=act.offsetTop, aH=act.offsetHeight, vH=tocBox.clientHeight, sTop=tocBox.scrollTop;
+      if(aTop<sTop+8)tocBox.scrollTop=aTop-8;
+      else if(aTop+aH>sTop+vH-8)tocBox.scrollTop=aTop+aH-vH+8;
+    }
+  }
+
+  function setActiveChapter(chId){
+    if(activeChapterId===chId)return;
+    activeChapterId=chId;
+    sideLinks.forEach(function(l){l.classList.toggle('active',l.dataset.ch===chId)});
+    /* 自动展开对应分组 */
+    var actLink=document.querySelector('.docs-link.active');
+    if(actLink){
+      var group=actLink.closest('.docs-group');
+      if(group){
+        document.querySelectorAll('.docs-group').forEach(function(g){
+          if(g!==group && !g.contains(document.activeElement))g.classList.add('collapsed');
+        });
+        group.classList.remove('collapsed');
+      }
+      /* 滚动侧边栏使激活项可见 */
+      var sb=document.getElementById('docsSidebar');
+      var lTop=actLink.offsetTop,lH=actLink.offsetHeight,vH=sb.clientHeight,sTop=sb.scrollTop;
+      if(lTop<sTop+8)sb.scrollTop=lTop-8;
+      else if(lTop+lH>sTop+vH-8)sb.scrollTop=lTop+lH-vH+8;
+    }
+  }
+
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      var id=entry.target.id;
+      if(entry.isIntersecting){visibleIds[id]=entry.boundingClientRect.top}else{delete visibleIds[id]}
+    });
+    /* 选择距离顶部最近的可见 heading */
+    var topId=null,topPos=Infinity;
+    Object.keys(visibleIds).forEach(function(id){
+      var top=visibleIds[id];
+      /* 只考虑在屏幕上部（导航栏下方附近）的 heading */
+      if(top<300&&top>-50&&top<topPos){topPos=top;topId=id}
+    });
+    /* 如果没有 heading 在范围内，选屏幕上方最近的一个 */
+    if(!topId){
+      var allH=document.querySelectorAll('.docs-h2,.docs-h3');
+      var scrollY=window.scrollY+100;
+      for(var i=allH.length-1;i>=0;i--){
+        if(allH[i].offsetTop<=scrollY){topId=allH[i].id;break}
+      }
+    }
+    if(topId){
+      setActiveHeading(topId);
+      /* 找到所属章节 */
+      var hEl=document.getElementById(topId);
+      if(hEl){
+        var ch=hEl.closest('[data-chapter]');
+        if(ch)setActiveChapter(ch.id);
+      }
+    }
+  },{rootMargin:'-80px 0px -60% 0px',threshold:[0,1]});
+
+  document.querySelectorAll('.docs-h2,.docs-h3').forEach(function(h){if(h.id)io.observe(h)});
+  /* 也观察每个章节顶部，确保章节起始时能激活 */
+  chapters.forEach(function(ch){io.observe(ch)});
+
+  /* 点击左侧链接：平滑滚动 + 展开分组 */
+  sideLinks.forEach(function(link){
+    link.addEventListener('click',function(e){
+      var id=link.dataset.ch;
+      if(!id)return;
+      var target=document.getElementById(id);
+      if(target){
+        e.preventDefault();
+        document.querySelectorAll('.docs-link').forEach(function(l){l.classList.remove('active')});
+        link.classList.add('active');
+        window.scrollTo({top:target.offsetTop-80,behavior:'smooth'});
+      }
+    });
+  });
+
+  /* ============ 初始化：激活第一个章节/TOC 项 ============ */
+  if(chapters.length){setActiveChapter(chapters[0].id)}
+  if(headings.length){setActiveHeading(headings[0].id)}
+
+  /* ============ 简单搜索过滤 ============ */
+  var searchInput=document.getElementById('docsSearch');
+  if(searchInput){
+    searchInput.addEventListener('input',function(){
+      var q=searchInput.value.trim().toLowerCase();
+      document.querySelectorAll('.docs-group').forEach(function(g){
+        var has=false;
+        g.querySelectorAll('.docs-link').forEach(function(a){
+          var show=!q||a.textContent.toLowerCase().indexOf(q)>=0;
+          a.style.display=show?'':'none';
+          if(show)has=true;
+        });
+        g.style.display=has||!q?'':'none';
+        if(q)g.classList.remove('collapsed');
+      });
+    });
+  }
+  /* ⌘K / Ctrl+K 聚焦搜索 */
+  document.addEventListener('keydown',function(e){
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();searchInput&&searchInput.focus()}
+  });
+
+})();
+</script>
+
+</body>
+</html>

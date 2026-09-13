@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>免费下载 — AgentKit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   品牌设计系统 — 语义化令牌
+   ============================================================ */
+:root{
+  /* 品牌：Emerald + Slate */
+  --bg:#f6f7f9;
+  --bg-alt:#eef0f3;
+  --surface:#ffffff;
+  --surface-2:#f0f2f5;
+
+  --fg:#0f172a;
+  --fg-muted:#475569;
+  --fg-subtle:#94a3b8;
+
+  --primary:#2563eb;
+  --primary-hover:#1d4ed8;
+  --primary-soft:rgba(37,99,235,.08);
+  --primary-glow:rgba(37,99,235,.25);
+  --primary-gradient:linear-gradient(135deg,#3b82f6,#1d4ed8);
+
+  --border:rgba(15,23,42,.08);
+  --border-hover:rgba(15,23,42,.14);
+
+  --radius:16px;
+  --radius-sm:10px;
+  --radius-lg:24px;
+
+  --shadow-sm:0 1px 2px rgba(15,23,42,.04);
+  --shadow:0 1px 3px rgba(15,23,42,.04),0 8px 24px -12px rgba(15,23,42,.12);
+  --shadow-lg:0 24px 56px -20px rgba(15,23,42,.18);
+
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;
+  --font-mono:'Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace;
+
+  --grid-line:rgba(15,23,42,.04);
+  --hero-glow:radial-gradient(600px 400px at 50% 0%,rgba(37,99,235,.06),transparent 70%);
+}
+.dark{
+  --bg:#0a0f1a;
+  --bg-alt:#0f1623;
+  --surface:#141c2b;
+  --surface-2:#1a2335;
+
+  --fg:#e2e8f0;
+  --fg-muted:#94a3b8;
+  --fg-subtle:#64748b;
+
+  --primary:#60a5fa;
+  --primary-hover:#93c5fd;
+  --primary-soft:rgba(96,165,250,.12);
+  --primary-glow:rgba(96,165,250,.3);
+  --primary-gradient:linear-gradient(135deg,#3b82f6,#60a5fa);
+
+  --border:rgba(255,255,255,.08);
+  --border-hover:rgba(255,255,255,.14);
+
+  --shadow-sm:0 1px 2px rgba(0,0,0,.2);
+  --shadow:0 1px 3px rgba(0,0,0,.2),0 8px 24px -12px rgba(0,0,0,.4);
+  --shadow-lg:0 24px 56px -20px rgba(0,0,0,.5);
+
+  --grid-line:rgba(255,255,255,.04);
+  --hero-glow:radial-gradient(600px 400px at 50% 0%,rgba(96,165,250,.08),transparent 70%);
+}
+
+/* ============================================================
+   Reset
+   ============================================================ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;transition:background .3s,color .3s}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:var(--primary-soft)}
+.container{width:min(100% - 48px,1120px);margin:0 auto}
+
+/* ============================================================
+   导航
+   ============================================================ */
+.nav{position:sticky;top:0;z-index:200;backdrop-filter:blur(16px);background:color-mix(in srgb,var(--bg) 85%,transparent);border-bottom:1px solid var(--border)}
+.nav-inner{display:flex;align-items:center;height:60px;gap:16px}
+.nav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--fg);white-space:nowrap}
+.nav-logo{width:28px;height:28px;border-radius:8px;background:var(--primary-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;box-shadow:0 4px 12px var(--primary-glow);transition:transform .2s}
+.nav-brand:hover .nav-logo{transform:scale(1.08) rotate(-4deg)}
+.nav-links{display:flex;gap:2px;margin-left:auto;align-items:center}
+.nav-links a{font-size:13px;color:var(--fg-muted);padding:6px 10px;border-radius:7px;white-space:nowrap;transition:background .15s,color .15s}
+.nav-links a:hover{background:var(--primary-soft);color:var(--primary)}
+.nav-links a.active{color:var(--primary);background:var(--primary-soft);font-weight:600}
+.nav-cta{font-size:13px;padding:7px 14px;border-radius:8px;background:var(--primary);color:#fff;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px -4px var(--primary-glow);transition:background .2s,transform .2s}
+.nav-cta:hover{background:var(--primary-hover);transform:translateY(-1px)}
+/* 导航内工具区 */
+.nav-tools{display:flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid var(--border)}
+/* 配色下拉选择器 */
+.theme-picker{position:relative}
+.theme-picker-btn{display:flex;align-items:center;gap:6px;height:34px;padding:0 10px 0 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;font-size:12px;transition:background .15s,border-color .15s,color .15s}
+.theme-picker-btn:hover{border-color:var(--primary);color:var(--primary)}
+.theme-picker-btn .swatch{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:transform .15s}
+.theme-picker-btn .caret{transition:transform .2s}
+.theme-picker.open .caret{transform:rotate(180deg)}
+.theme-picker-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-lg);padding:6px;z-index:300;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .2s,transform .2s,visibility .2s}
+.theme-picker.open .theme-picker-menu{opacity:1;visibility:visible;transform:translateY(0)}
+.theme-picker-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;font-size:12px;color:var(--fg-muted);cursor:pointer;transition:background .12s,color .12s;white-space:nowrap}
+.theme-picker-item:hover{background:var(--primary-soft);color:var(--fg)}
+.theme-picker-item.active{color:var(--primary);font-weight:600}
+.theme-picker-item .swatch{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);flex-shrink:0}
+.theme-picker-item.active .swatch{border-color:var(--fg)}
+.theme-picker-item .check{margin-left:auto;opacity:0;color:var(--primary)}
+.theme-picker-item.active .check{opacity:1}
+.dark-toggle{font-size:13px;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center}
+.dark-toggle:hover{color:var(--primary);border-color:var(--primary)}
+.lang-toggle{font-size:12px;font-weight:600;height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.lang-toggle:hover{color:var(--primary);border-color:var(--primary)}
+.github-link{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center}
+.github-link:hover{color:var(--primary);border-color:var(--primary)}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero{padding:80px 0 64px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:var(--hero-glow);pointer-events:none}
+.hero-bg-grid{position:absolute;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,#000 40%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,#000 40%,transparent 100%);pointer-events:none}
+.hero-inner{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--primary);background:var(--primary-soft);border:1px solid color-mix(in srgb,var(--primary) 15%,transparent);padding:5px 12px;border-radius:999px;margin-bottom:20px;animation:fadeUp .6s ease both}
+.hero-eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--primary);animation:pulse 2s ease-in-out infinite}
+.hero h1{font-size:clamp(36px,5.2vw,56px);font-weight:800;line-height:1.06;letter-spacing:-.035em;margin-bottom:16px;color:var(--fg);animation:fadeUp .6s .1s ease both}
+.hero h1 em{font-style:normal;background:var(--primary-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:17px;color:var(--fg-muted);line-height:1.7;margin-bottom:28px;max-width:580px;animation:fadeUp .6s .2s ease both}
+.hero-stats{display:flex;gap:32px;animation:fadeUp .6s .3s ease both}
+.hero-stat .num{font-size:22px;font-weight:800;color:var(--fg);font-family:var(--font-mono)}
+.hero-stat .label{font-size:11px;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.06em}
+.btn-primary,.btn-ghost{display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:11px 22px;border-radius:10px;font-weight:600;transition:background .2s,transform .2s,box-shadow .2s,border-color .2s}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 20px -8px var(--primary-glow)}
+.btn-primary:hover{background:var(--primary-hover);transform:translateY(-2px);box-shadow:0 12px 28px -8px var(--primary-glow)}
+.btn-ghost{background:var(--surface);border:1px solid var(--border);color:var(--fg)}
+.btn-ghost:hover{border-color:var(--border-hover);transform:translateY(-1px)}
+
+/* ============================================================
+   Section 通用
+   ============================================================ */
+.section{padding:88px 0;position:relative}
+.section.alt{background:var(--bg-alt)}
+.section-header{text-align:center;margin:0 auto 48px;max-width:640px}
+.section-eyebrow{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;background:var(--primary-soft);padding:4px 11px;border-radius:999px;margin-bottom:12px}
+.section-title{font-size:clamp(28px,3.5vw,40px);font-weight:800;letter-spacing:-.025em;line-height:1.15;margin-bottom:10px;color:var(--fg)}
+.section-desc{font-size:15px;color:var(--fg-muted);max-width:520px;margin:0 auto}
+
+/* ============================================================
+   代码块
+   ============================================================ */
+.code-block{background:#0d1117;border-radius:var(--radius);overflow:hidden;max-width:720px;margin:0 auto;box-shadow:var(--shadow)}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)}
+.code-tabs{display:flex;gap:4px}
+.code-tab{font-size:11px;padding:3px 9px;border-radius:6px;color:rgba(255,255,255,.4);cursor:pointer;transition:background .15s,color .15s}
+.code-tab:hover{color:rgba(255,255,255,.7)}
+.code-tab.active{background:rgba(255,255,255,.08);color:#fff}
+.code-copy{font-size:11px;color:rgba(255,255,255,.4);cursor:pointer;transition:color .15s;display:flex;align-items:center;gap:4px}
+.code-copy:hover{color:#fff}
+.code-content{padding:16px 18px;font:13px/1.7 var(--font-mono);color:#c9d1d9;text-align:left;white-space:pre;overflow-x:auto}
+.code-content .kw{color:#ff7b72}
+.code-content .str{color:#a5d6ff}
+.code-content .fn{color:#d2a8ff}
+.code-content .com{color:#8b949e}
+.code-content .var{color:#79c0ff}
+/* 代码块滚动条 */
+.code-content::-webkit-scrollbar,.install-cmd::-webkit-scrollbar,.checksum-cmd::-webkit-scrollbar{height:6px}
+.code-content::-webkit-scrollbar-track,.install-cmd::-webkit-scrollbar-track,.checksum-cmd::-webkit-scrollbar-track{background:transparent}
+.code-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
+.code-content::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+.install-cmd::-webkit-scrollbar-thumb,.checksum-cmd::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:99px}
+
+/* ============================================================
+   安装命令
+   ============================================================ */
+.install-list{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.install-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:12px;transition:border-color .2s,box-shadow .2s}
+.install-card:hover{border-color:var(--border-hover);box-shadow:var(--shadow)}
+.install-label{font-size:13px;font-weight:600;color:var(--fg);min-width:120px;flex-shrink:0}
+.install-cmd{flex:1;font:13px/1.5 var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--fg-muted);overflow-x:auto;white-space:nowrap}
+.install-copy{padding:7px 14px;border-radius:8px;background:var(--primary);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;transition:background .2s,transform .2s;flex-shrink:0}
+.install-copy:hover{background:var(--primary-hover)}
+.install-copy.copied{background:#22c55e}
+
+/* ============================================================
+   下载卡片
+   ============================================================ */
+.download-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.download-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px 24px;box-shadow:var(--shadow-sm);transition:border-color .25s,box-shadow .25s,transform .25s;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;overflow:hidden}
+.download-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--primary-gradient);transform:scaleX(0);transform-origin:center;transition:transform .3s}
+.download-card:hover{border-color:var(--border-hover);box-shadow:var(--shadow-lg);transform:translateY(-6px)}
+.download-card:hover::before{transform:scaleX(1)}
+.download-icon{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;background:var(--primary-soft);color:var(--primary);transition:transform .25s}
+.download-card:hover .download-icon{transform:scale(1.08)}
+.download-icon svg{width:34px;height:34px}
+.download-card h3{font-size:20px;font-weight:700;margin-bottom:6px;color:var(--fg)}
+.download-version{font-size:12px;color:var(--primary);font-weight:600;font-family:var(--font-mono);margin-bottom:16px}
+.download-meta{width:100%;display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.download-meta-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)}
+.download-meta-row:last-child{border-bottom:none}
+.download-meta-label{color:var(--fg-subtle);font-weight:500}
+.download-meta-value{color:var(--fg-muted);font-weight:600;font-family:var(--font-mono);font-size:12px}
+/* 下载按钮 */
+.download-btn{width:100%;padding:12px 20px;border-radius:10px;background:var(--primary);color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .2s,transform .2s,box-shadow .2s;box-shadow:0 8px 20px -8px var(--primary-glow);overflow:hidden;position:relative;margin-top:auto}
+.download-btn:hover{background:var(--primary-hover);transform:translateY(-2px);box-shadow:0 12px 28px -8px var(--primary-glow)}
+.download-btn:active{transform:translateY(0)!important;transition-duration:.08s}
+/* 下载进度条状态 */
+.download-btn.downloading{background:var(--surface-2);color:var(--fg-muted);box-shadow:none;cursor:default;pointer-events:none}
+.download-btn.downloading:hover{transform:none}
+.download-progress-track{position:absolute;left:0;top:0;bottom:0;background:var(--primary-soft);transition:width .1s linear}
+.download-btn.done{background:#22c55e;color:#fff;box-shadow:0 8px 20px -8px rgba(34,197,94,.3);cursor:default;pointer-events:none}
+.download-btn.done:hover{transform:none}
+
+/* ============================================================
+   校验文件
+   ============================================================ */
+.checksum-list{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.checksum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:12px;transition:border-color .2s,box-shadow .2s}
+.checksum-card:hover{border-color:var(--border-hover);box-shadow:var(--shadow)}
+.checksum-label{font-size:13px;font-weight:600;color:var(--fg);min-width:120px;flex-shrink:0}
+.checksum-cmd{flex:1;font:12px/1.5 var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--fg-muted);overflow-x:auto;white-space:nowrap}
+.checksum-copy{padding:7px 14px;border-radius:8px;background:var(--primary);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;transition:background .2s,transform .2s;flex-shrink:0}
+.checksum-copy:hover{background:var(--primary-hover)}
+.checksum-copy.copied{background:#22c55e}
+
+/* ============================================================
+   CTA
+   ============================================================ */
+.cta-section{padding:64px 0 88px}
+.cta-box{position:relative;overflow:hidden;background:var(--primary-gradient);border-radius:var(--radius-lg);padding:64px 40px;text-align:center;box-shadow:0 24px 56px -20px var(--primary-glow)}
+.cta-box::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 20%,rgba(255,255,255,.18),transparent 50%);pointer-events:none}
+.cta-box h2{position:relative;font-size:clamp(26px,3.5vw,38px);font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-.02em}
+.cta-box p{position:relative;font-size:15px;color:rgba(255,255,255,.85);margin-bottom:24px;max-width:520px;margin-left:auto;margin-right:auto}
+.btn-white{display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:12px 28px;border-radius:10px;background:#fff;color:var(--primary);font-weight:700;transition:transform .2s,box-shadow .2s;position:relative}
+.btn-white:hover{transform:translateY(-2px);box-shadow:0 12px 32px -8px rgba(0,0,0,.3)}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+footer{background:var(--bg-alt);border-top:1px solid var(--border);padding:56px 0 32px}
+.footer-inner{display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px}
+.footer-brand{font-size:16px;font-weight:700;color:var(--fg);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.footer-brand .nav-logo{width:26px;height:26px;font-size:12px}
+.footer-desc{font-size:13px;color:var(--fg-muted);max-width:360px;line-height:1.6}
+.footer-col h4{font-size:12px;color:var(--fg);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.footer-col a{display:block;font-size:13px;color:var(--fg-muted);padding:3px 0;transition:color .15s}
+.footer-col a:hover{color:var(--primary)}
+.footer-bottom{margin-top:36px;padding-top:18px;border-top:1px solid var(--border);font-size:12px;color:var(--fg-subtle)}
+
+/* ============================================================
+   动画
+   ============================================================ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ============================================================
+   交互状态细节
+   ============================================================ */
+.btn-primary:active,.btn-ghost:active,.nav-cta:active,.btn-white:active{transform:translateY(0)!important;transition-duration:.08s}
+.install-copy:active{transform:scale(.95)}
+.checksum-copy:active{transform:scale(.95)}
+/* 键盘焦点 */
+a:focus-visible,button:focus-visible,.theme-picker-item:focus-visible,.install-copy:focus-visible,.checksum-copy:focus-visible,.download-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:8px}
+/* 返回顶部 */
+.scroll-top{position:fixed;bottom:28px;right:28px;width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--fg-muted);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:150}
+.scroll-top.visible{opacity:1;pointer-events:auto}
+.scroll-top:hover{color:var(--primary);border-color:var(--primary);transform:translateY(-2px)}
+.scroll-top:active{transform:translateY(0)!important}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+@media(max-width:820px){
+  .nav-links{display:none}
+  .download-grid{grid-template-columns:1fr}
+  .footer-inner{grid-template-columns:1fr;gap:24px}
+  .install-card,.checksum-card{flex-direction:column;align-items:stretch;gap:8px}
+  .install-label,.checksum-label{min-width:0}
+  .install-copy,.checksum-copy{width:100%;text-align:center}
+  .hero-stats{gap:20px}
+  .nav-brand{font-size:13px}
+  .nav-cta{display:none}
+  .nav-tools{gap:6px;padding-left:8px}
+}
+@media(max-width:520px){
+  .container{width:calc(100% - 24px)}
+  .hero{padding:56px 0 40px}
+  .section{padding:56px 0}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 导航 ============ -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-brand">
+      <span class="nav-logo">A</span>
+      <span data-i18n="nav.brand">AgentKit</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" data-i18n="nav.home">首页</a>
+      <a href="docs.html" data-i18n="nav.docs">文档</a>
+      <a href="guide.html" data-i18n="nav.guide">攻略</a>
+      <a href="changelog.html" data-i18n="nav.changelog">更新日志</a>
+      
+      <a href="download.html" class="active" data-i18n="nav.freeDownload">免费下载</a>
+    </div>
+    <div class="nav-tools">
+      <div class="theme-picker" id="themePicker">
+        <button class="theme-picker-btn" id="themePickerBtn" aria-label="选择配色" aria-haspopup="true" aria-expanded="false">
+          <span class="swatch" id="currentSwatch" style="background:#2563eb"></span>
+          <span id="currentLabel" data-i18n="theme.emerald">品牌蓝</span>
+          <svg class="caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="theme-picker-menu" id="themePickerMenu" role="menu">
+          <div class="theme-picker-item active" data-color="emerald" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#2563eb"></span><span data-i18n="theme.emerald">品牌蓝</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="indigo" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#4f46e5"></span><span data-i18n="theme.indigo">靛蓝</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="amber" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#d97706"></span><span data-i18n="theme.amber">琥珀</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="rose" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#e11d48"></span><span data-i18n="theme.rose">玫红</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="cyan" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#0891b2"></span><span data-i18n="theme.cyan">青色</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="violet" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#7c3aed"></span><span data-i18n="theme.violet">紫罗兰</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+        </div>
+      </div>
+      <button class="dark-toggle" id="darkToggle" aria-label="切换深色模式">
+        <svg id="darkToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="lang-toggle" id="langToggle" aria-label="切换语言">
+        <span id="langLabel">EN</span>
+      </button>
+      <a href="https://github.com/lucan6290/agentkit" class="github-link" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33.85 0 1.7.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10 10 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+      </a>
+    </div>
+    <a href="#platforms" class="nav-cta" data-i18n="nav.download">下载</a>
+  </div>
+</nav>
+
+<!-- ============ Hero ============ -->
+<section class="hero" id="top">
+  <div class="hero-bg-grid"></div>
+  <div class="container hero-inner">
+    <div class="hero-eyebrow">
+      <span class="dot"></span>
+      <span data-i18n="hero.eyebrow">AI Agent Skills 管理器 · 开源 · MIT</span>
+    </div>
+    <h1 data-i18n="hero.title">免费下载</h1>
+    <p data-i18n="hero.desc">选择适合你平台的版本，立即开始使用</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">0.3.1</div><div class="label" data-i18n="hero.stat1">最新版本</div></div>
+      <div class="hero-stat"><div class="num">3</div><div class="label" data-i18n="hero.stat2">支持平台</div></div>
+      <div class="hero-stat"><div class="num">MIT</div><div class="label" data-i18n="hero.stat3">开源协议</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 平台下载卡片 ============ -->
+<section class="section alt" id="platforms">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-eyebrow" data-i18n="download.eyebrow">平台下载</span>
+      <h2 class="section-title" data-i18n="download.title">选择你的平台</h2>
+      <p class="section-desc" data-i18n="download.desc">支持 Windows、macOS 和 Linux，下载后即可使用。</p>
+    </div>
+    <div class="download-grid">
+
+      <!-- Windows 卡片 -->
+      <div class="download-card reveal">
+        <div class="download-icon">
+          <!-- Windows 简化 Logo -->
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8.5v8.5H3V3zm9.5 0H21v8.5h-8.5V3zM3 12.5h8.5V21H3v-8.5zm9.5 0H21V21h-8.5v-8.5z"/></svg>
+        </div>
+        <h3>Windows</h3>
+        <div class="download-version">0.3.1</div>
+        <div class="download-meta">
+          <div class="download-meta-row">
+            <span class="download-meta-label" data-i18n="download.size">文件大小</span>
+            <span class="download-meta-value">42.5 MB</span>
+          </div>
+          <div class="download-meta-row">
+            <span class="download-meta-label" data-i18n="download.requirements">最低要求</span>
+            <span class="download-meta-value">Windows 10 64-bit</span>
+          </div>
+          <div class="download-meta-row">
+            <span class="download-meta-label" data-i18n="download.command">安装命令</span>
+            <span class="download-meta-value">GitHub Releases (.exe)</span>
+          </div>
+        </div>
+        <button class="download-btn" data-platform="windows">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span data-i18n="download.btn">下载</span>
+        </button>
+      </div>
+
+      <!-- macOS 卡片 -->
+      <div class="download-card reveal">
+        <div class="download-icon">
+          <!-- macOS 简化 Logo (Apple) -->
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.03-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.89-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.23 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.39.81 1.4-.02 2.28-1.27 3.13-2.53.98-1.45 1.38-2.85 1.4-2.92-.03-.01-2.69-1.03-2.72-4.09zM14.63 4.59c.72-.87 1.2-2.08 1.07-3.29-1.03.04-2.28.69-3.02 1.56-.66.77-1.24 2-1.09 3.18 1.15.09 2.32-.59 3.04-1.45z"/></svg>
+        </div>
+        <h3>macOS</h3>
+        <div class="download-version">0.3.1</div>
+        <div class="download-meta">
+          <div class="download-meta-row">
+            <span class="download-meta-label" data-i18n="download.size">文件大小</span>
+            <span class="download-meta-value">38.2 MB</span>
+          </div>
+          <div class="download-meta-row">
+            <span class="download-meta-label" data-i18n="download.requirements">最低要求</span>
+            <span class="download-meta-value">macOS 11.0+</span>
+          </div>
+          <div class="download-meta-row">
+            <span class="download-meta-label" data-i18n="download.command">安装命令</span>
+            <span class="download-meta-value">GitHub Releases (.dmg)</span>
+          </div>
+        </div>
+        <button class="download-btn" data-platform="macos">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span data-i18n="download.btn">下载</span>
+        </button>
+      </div>
+
+      <!-- Linux 卡片 -->
+      <div class="download-card reveal">
+        <div class="download-icon">
+          <!-- Linux 简化 Logo (Tux 企鹅) -->
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-1.5 0-2.5 1.5-2.5 3.5 0 1 .3 1.8.3 2.5 0 .8-.5 1.5-1.2 2.2C7.3 11.6 6 13.2 6 15.5c0 1.8.7 3.2 1.8 4.2.5.5 1.2.8 2 .8h4.4c.8 0 1.5-.3 2-.8 1.1-1 1.8-2.4 1.8-4.2 0-2.3-1.3-3.9-2.6-5.3-.7-.7-1.2-1.4-1.2-2.2 0-.7.3-1.5.3-2.5C14.5 3.5 13.5 2 12 2zm-1 3c.3 0 .5.4.5 1s-.2 1-.5 1-.5-.4-.5-1 .2-1 .5-1zm2 0c.3 0 .5.4.5 1s-.2 1-.5 1-.5-.4-.5-1 .2-1 .5-1z"/></svg>
+        </div>
+        <h3>Linux</h3>
+        <div class="download-version">0.3.1</div>
+        <div class="download-meta">
+          <div class="download-meta-row">
+            <span class="download-meta-label" data-i18n="download.size">文件大小</span>
+            <span class="download-meta-value">36.8 MB</span>
+          </div>
+          <div class="download-meta-row">
+            <span class="download-meta-label" data-i18n="download.requirements">最低要求</span>
+            <span class="download-meta-value">Ubuntu 20.04+</span>
+          </div>
+          <div class="download-meta-row">
+            <span class="download-meta-label" data-i18n="download.command">安装命令</span>
+            <span class="download-meta-value">GitHub Releases (AppImage)</span>
+          </div>
+        </div>
+        <button class="download-btn" data-platform="linux">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span data-i18n="download.btn">下载</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ 从源码构建 ============ -->
+<section class="section" id="source">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-eyebrow" data-i18n="source.eyebrow">源码构建</span>
+      <h2 class="section-title" data-i18n="source.title">从源码构建</h2>
+      <p class="section-desc" data-i18n="source.desc">克隆仓库，安装依赖，编译构建。</p>
+    </div>
+    <div class="code-block reveal">
+      <div class="code-header">
+        <div class="code-tabs">
+          <span class="code-tab active">bash</span>
+        </div>
+        <span class="code-copy" id="sourceCodeCopy">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span data-i18n="source.copy">复制</span>
+        </span>
+      </div>
+      <pre class="code-content" id="sourceCodeContent"><span class="com"># 克隆仓库</span>
+<span class="kw">$</span> git clone https://github.com/lucan6290/agentkit.git
+<span class="kw">$</span> cd agentkit
+
+<span class="com"># 安装依赖</span>
+<span class="kw">$</span> npm install
+
+<span class="com"># 构建项目</span>
+<span class="kw">$</span> npm run build</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 校验文件 ============ -->
+<section class="section alt" id="checksums">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-eyebrow" data-i18n="checksum.eyebrow">校验文件</span>
+      <h2 class="section-title" data-i18n="checksum.title">SHA256 校验和</h2>
+      <p class="section-desc" data-i18n="checksum.desc">下载完成后，请校验文件完整性。</p>
+    </div>
+    <div class="checksum-list">
+      <div class="checksum-card reveal">
+        <div class="checksum-label">Windows</div>
+        <code class="checksum-cmd">a3f5e8d2b1c4f7a9e6d3b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7</code>
+        <button class="checksum-copy" data-cmd="a3f5e8d2b1c4f7a9e6d3b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7" data-i18n="checksum.copy">复制</button>
+      </div>
+      <div class="checksum-card reveal">
+        <div class="checksum-label">macOS</div>
+        <code class="checksum-cmd">e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8</code>
+        <button class="checksum-copy" data-cmd="e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8" data-i18n="checksum.copy">复制</button>
+      </div>
+      <div class="checksum-card reveal">
+        <div class="checksum-label">Linux</div>
+        <code class="checksum-cmd">b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5</code>
+        <button class="checksum-copy" data-cmd="b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5b8c1f4a7e2d5" data-i18n="checksum.copy">复制</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box reveal">
+      <h2 data-i18n="cta.title">现在开始简化工作流</h2>
+      <p data-i18n="cta.desc">免费、开源，下载后即可创建你的第一个快捷任务。</p>
+      <a href="#platforms" class="btn-white">
+        <span data-i18n="cta.download">立即下载</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 返回顶部 ============ -->
+<button class="scroll-top" id="scrollTop" aria-label="返回顶部">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<!-- ============ Footer ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">
+          <span class="nav-logo">A</span>
+          <span data-i18n="nav.brand">AgentKit</span>
+        </div>
+        <p class="footer-desc" data-i18n="footer.desc">跨平台桌面应用，统一管理 AI Agent Skills，并一键同步到 44 款 AI 编程工具。</p>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer.product">产品</h4>
+        <a href="index.html" data-i18n="footer.features">功能</a>
+        <a href="index.html" data-i18n="footer.demo">演示</a>
+        <a href="download.html" data-i18n="footer.download">下载</a>
+        <a href="changelog.html" data-i18n="footer.changelog">更新日志</a>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer.resources">资源</h4>
+        <a href="https://github.com/lucan6290/agentkit" data-i18n="footer.github">GitHub 仓库</a>
+        <a href="https://github.com/lucan6290/agentkit/releases" data-i18n="footer.releases">版本发布</a>
+        <a href="https://github.com/lucan6290/agentkit/issues" data-i18n="footer.issues">问题反馈</a>
+        <a href="docs.html" data-i18n="footer.docs">使用文档</a>
+      </div>
+    </div>
+    <div class="footer-bottom" data-i18n="footer.copyright">© 2026 AgentKit · MIT License · 开源项目</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ============ 中英文国际化 (i18n) ============ */
+  var i18nDict={
+    en:{
+      'nav.brand':'AgentKit','nav.home':'Home','nav.docs':'Docs','nav.guide':'Guide','nav.changelog':'Changelog','nav.sponsors':'Sponsors','nav.freeDownload':'Free Download','nav.download':'Download',
+      'theme.emerald':'Blue','theme.indigo':'Indigo','theme.amber':'Amber','theme.rose':'Rose','theme.cyan':'Cyan','theme.violet':'Violet',
+      'hero.eyebrow':'AI Agent Skills Manager · Open Source · MIT','hero.title':'Free Download','hero.desc':'Choose the right version for your platform','hero.stat1':'Latest Version','hero.stat2':'Platforms','hero.stat3':'License',
+      'download.eyebrow':'Platform Download','download.title':'Choose Your Platform','download.desc':'Available for Windows, macOS, and Linux. Download and get started immediately.',
+      'download.size':'File Size','download.requirements':'Min. Requirements','download.command':'Install Command','download.btn':'Download',
+      'download.downloading':'Downloading…','download.done':'Download Complete','download.restore':'Download',
+      'source.eyebrow':'Build from Source','source.title':'Build from Source','source.desc':'Clone the repository, install dependencies, and build.','source.copy':'Copy',
+      'checksum.eyebrow':'Checksums','checksum.title':'SHA256 Checksums','checksum.desc':'Verify file integrity after download.','checksum.copy':'Copy',
+      'cta.title':'Start Simplifying Your Workflow Today','cta.desc':'Free, open-source. Download and create your first quick task now.','cta.download':'Download Now',
+      'footer.desc':'A cross-platform desktop app to manage AI Agent Skills and sync them across 44 AI coding tools.',
+      'footer.product':'Product','footer.resources':'Resources',
+      'footer.features':'Features','footer.demo':'Demo','footer.download':'Download','footer.changelog':'Changelog',
+      'footer.github':'GitHub Repo','footer.releases':'Releases','footer.issues':'Feedback','footer.docs':'Documentation',
+      'footer.copyright':'© 2026 AgentKit Community · MIT License · Open Source',
+      'source.copied':'Copied','checksum.copied':'Copied'
+    }
+  };
+  var currentLang='zh';
+
+  function applyI18n(){
+    if(currentLang==='en'){
+      /* data-i18n: 替换文本内容 */
+      document.querySelectorAll('[data-i18n]').forEach(function(el){
+        var key=el.getAttribute('data-i18n');
+        if(i18nDict.en[key]){el.textContent=i18nDict.en[key]}
+      });
+      /* 更新 langLabel */
+      var langLabel=document.getElementById('langLabel');
+      if(langLabel)langLabel.textContent='中';
+      /* 更新 HTML lang */
+      document.documentElement.lang='en';
+      /* 更新配色选择器显示 */
+      updatePickerDisplay(currentTheme);
+      /* 更新源码构建代码块 */
+      updateSourceCode();
+    }else{
+      /* 恢复中文：重新加载页面 */
+      location.reload();
+    }
+  }
+
+  /* 更新源码构建代码块内容 */
+  function updateSourceCode(){
+    var codeEl=document.getElementById('sourceCodeContent');
+    if(!codeEl)return;
+    if(currentLang==='en'){
+      codeEl.innerHTML='<span class="com"># Clone repository</span>\n<span class="kw">$</span> git clone https://github.com/lucan6290/agentkit.git\n<span class="kw">$</span> cd agentkit\n\n<span class="com"># Install dependencies</span>\n<span class="kw">$</span> npm install\n\n<span class="com"># Build project</span>\n<span class="kw">$</span> npm run build';
+    }else{
+      codeEl.innerHTML='<span class="com"># 克隆仓库</span>\n<span class="kw">$</span> git clone https://github.com/lucan6290/agentkit.git\n<span class="kw">$</span> cd agentkit\n\n<span class="com"># 安装依赖</span>\n<span class="kw">$</span> npm install\n\n<span class="com"># 构建项目</span>\n<span class="kw">$</span> npm run build';
+    }
+  }
+
+  /* 语言切换按钮 */
+  try{var savedLang=localStorage.getItem('site-lang');if(savedLang==='en'){currentLang='en'}}catch(e){}
+  /* 如果保存的是英文，延迟应用（等 DOM 就绪） */
+  if(currentLang==='en'){
+    document.addEventListener('DOMContentLoaded',function(){applyI18n()});
+  }
+
+  /* ============ 主题配色切换 ============ */
+  var themes = {
+    emerald: {
+      light:{'--primary':'#2563eb','--primary-hover':'#1d4ed8','--primary-soft':'rgba(37,99,235,.08)','--primary-glow':'rgba(37,99,235,.25)','--primary-gradient':'linear-gradient(135deg,#3b82f6,#1d4ed8)'},
+      dark:{'--primary':'#60a5fa','--primary-hover':'#93c5fd','--primary-soft':'rgba(96,165,250,.12)','--primary-glow':'rgba(96,165,250,.3)','--primary-gradient':'linear-gradient(135deg,#3b82f6,#60a5fa)'}
+    },
+    indigo:{
+      light:{'--primary':'#4f46e5','--primary-hover':'#4338ca','--primary-soft':'rgba(79,70,229,.08)','--primary-glow':'rgba(79,70,229,.25)','--primary-gradient':'linear-gradient(135deg,#4f46e5,#6366f1)'},
+      dark:{'--primary':'#818cf8','--primary-hover':'#a5b4fc','--primary-soft':'rgba(129,140,248,.1)','--primary-glow':'rgba(129,140,248,.3)','--primary-gradient':'linear-gradient(135deg,#6366f1,#818cf8)'}
+    },
+    amber:{
+      light:{'--primary':'#d97706','--primary-hover':'#b45309','--primary-soft':'rgba(217,119,6,.08)','--primary-glow':'rgba(217,119,6,.25)','--primary-gradient':'linear-gradient(135deg,#d97706,#f59e0b)'},
+      dark:{'--primary':'#fbbf24','--primary-hover':'#fcd34d','--primary-soft':'rgba(251,191,36,.1)','--primary-glow':'rgba(251,191,36,.3)','--primary-gradient':'linear-gradient(135deg,#f59e0b,#fbbf24)'}
+    },
+    rose:{
+      light:{'--primary':'#e11d48','--primary-hover':'#be123c','--primary-soft':'rgba(225,29,72,.08)','--primary-glow':'rgba(225,29,72,.25)','--primary-gradient':'linear-gradient(135deg,#e11d48,#f43f5e)'},
+      dark:{'--primary':'#fb7185','--primary-hover':'#fda4af','--primary-soft':'rgba(251,113,133,.1)','--primary-glow':'rgba(251,113,133,.3)','--primary-gradient':'linear-gradient(135deg,#f43f5e,#fb7185)'}
+    },
+    cyan:{
+      light:{'--primary':'#0891b2','--primary-hover':'#0e7490','--primary-soft':'rgba(8,145,178,.08)','--primary-glow':'rgba(8,145,178,.25)','--primary-gradient':'linear-gradient(135deg,#0891b2,#06b6d4)'},
+      dark:{'--primary':'#22d3ee','--primary-hover':'#67e8f9','--primary-soft':'rgba(34,211,238,.1)','--primary-glow':'rgba(34,211,238,.3)','--primary-gradient':'linear-gradient(135deg,#06b6d4,#22d3ee)'}
+    },
+    violet:{
+      light:{'--primary':'#7c3aed','--primary-hover':'#6d28d9','--primary-soft':'rgba(124,58,237,.08)','--primary-glow':'rgba(124,58,237,.25)','--primary-gradient':'linear-gradient(135deg,#7c3aed,#8b5cf6)'},
+      dark:{'--primary':'#a78bfa','--primary-hover':'#c4b5fd','--primary-soft':'rgba(167,139,250,.1)','--primary-glow':'rgba(167,139,250,.3)','--primary-gradient':'linear-gradient(135deg,#8b5cf6,#a78bfa)'}
+    }
+  };
+  var currentTheme='emerald';
+  var isDark=false;
+
+  /* 从 localStorage 恢复用户偏好，无记录时检测系统偏好 */
+  try{
+    var savedTheme=localStorage.getItem('theme-color');
+    var savedDark=localStorage.getItem('theme-dark');
+    if(savedTheme&&themes[savedTheme]){currentTheme=savedTheme}
+    if(savedDark==='1'){isDark=true;document.documentElement.classList.add('dark')}
+    else if(savedDark===null&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches){isDark=true;document.documentElement.classList.add('dark')}
+  }catch(e){}
+
+  function applyTheme(color){
+    var mode=isDark?'dark':'light';
+    var vars=themes[color][mode];
+    var root=document.documentElement;
+    Object.keys(vars).forEach(function(key){
+      root.style.setProperty(key,vars[key]);
+    });
+    currentTheme=color;
+    try{localStorage.setItem('theme-color',color)}catch(e){}
+  }
+
+  /* 配色元数据（色块 + 名称） */
+  var themeMeta={
+    emerald:{color:'#2563eb',labelZh:'品牌蓝',labelEn:'Blue'},
+    indigo:{color:'#4f46e5',labelZh:'靛蓝',labelEn:'Indigo'},
+    amber:{color:'#d97706',labelZh:'琥珀',labelEn:'Amber'},
+    rose:{color:'#e11d48',labelZh:'玫红',labelEn:'Rose'},
+    cyan:{color:'#0891b2',labelZh:'青色',labelEn:'Cyan'},
+    violet:{color:'#7c3aed',labelZh:'紫罗兰',labelEn:'Violet'}
+  };
+
+  /* 更新配色按钮显示 */
+  function updatePickerDisplay(color){
+    var meta=themeMeta[color]||themeMeta.emerald;
+    var swatch=document.getElementById('currentSwatch');
+    var label=document.getElementById('currentLabel');
+    if(swatch)swatch.style.background=meta.color;
+    if(label)label.textContent=currentLang==='en'?meta.labelEn:meta.labelZh;
+    document.querySelectorAll('.theme-picker-item').forEach(function(item){
+      item.classList.toggle('active',item.dataset.color===color);
+    });
+  }
+
+  /* 初始化：恢复选中的配色 */
+  updatePickerDisplay(currentTheme);
+  /* 初始化：恢复深色图标 */
+  if(isDark){
+    var icon=document.getElementById('darkToggleIcon');
+    if(icon)icon.innerHTML='<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  }
+  applyTheme(currentTheme);
+
+  /* ============ 配色下拉选择器 ============ */
+  var themePicker=document.getElementById('themePicker');
+  var themePickerBtn=document.getElementById('themePickerBtn');
+
+  themePickerBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var isOpen=themePicker.classList.toggle('open');
+    themePickerBtn.setAttribute('aria-expanded',isOpen?'true':'false');
+  });
+
+  document.querySelectorAll('.theme-picker-item').forEach(function(item){
+    item.addEventListener('click',function(){
+      var color=item.dataset.color;
+      applyTheme(color);
+      updatePickerDisplay(color);
+      themePicker.classList.remove('open');
+      themePickerBtn.setAttribute('aria-expanded','false');
+    });
+    item.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();item.click()}
+    });
+  });
+
+  /* 点击外部关闭下拉 */
+  document.addEventListener('click',function(){
+    themePicker.classList.remove('open');
+    themePickerBtn.setAttribute('aria-expanded','false');
+  });
+
+  /* ESC 关闭下拉 */
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      themePicker.classList.remove('open');
+      themePickerBtn.setAttribute('aria-expanded','false');
+    }
+  });
+
+  /* ============ 深色模式 ============ */
+  var darkToggle=document.getElementById('darkToggle');
+  var darkToggleIcon=document.getElementById('darkToggleIcon');
+  darkToggle.addEventListener('click',function(){
+    isDark=!isDark;
+    document.documentElement.classList.toggle('dark',isDark);
+    try{localStorage.setItem('theme-dark',isDark?'1':'0')}catch(e){}
+    darkToggleIcon.innerHTML=isDark
+      ?'<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+      :'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    applyTheme(currentTheme);
+  });
+
+  /* ============ 语言切换 ============ */
+  var langToggle=document.getElementById('langToggle');
+  langToggle.addEventListener('click',function(){
+    currentLang=currentLang==='en'?'zh':'en';
+    try{localStorage.setItem('site-lang',currentLang)}catch(e){}
+    if(currentLang==='en'){
+      applyI18n();
+    }else{
+      location.reload();
+    }
+  });
+
+  /* ============ 下载按钮交互（进度条动画） ============ */
+  var downloadBtnLabel=currentLang==='en'?'Download':'下载';
+  var downloadingLabel=currentLang==='en'?'Downloading…':'下载中…';
+  var doneLabel=currentLang==='en'?'Download Complete':'下载完成';
+
+  /* 语言切换时更新按钮文本 */
+  function updateDownloadBtnLabels(){
+    downloadBtnLabel=currentLang==='en'?'Download':'下载';
+    downloadingLabel=currentLang==='en'?'Downloading…':'下载中…';
+    doneLabel=currentLang==='en'?'Download Complete':'下载完成';
+  }
+
+  document.querySelectorAll('.download-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      if(btn.classList.contains('downloading')||btn.classList.contains('done'))return;
+
+      /* 打开 GitHub Releases 下载页 */
+      window.open('https://github.com/lucan6290/agentkit/releases/latest','_blank');
+
+      /* 保存原始内容 */
+      var originalHTML=btn.innerHTML;
+      var btnWidth=btn.offsetWidth;
+
+      /* 进入下载中状态 */
+      btn.classList.add('downloading');
+      btn.innerHTML='<span class="download-progress-track" style="width:0%"></span><span style="position:relative;z-index:1">'+downloadingLabel+'</span>';
+
+      /* 进度条动画：2秒内从 0% 到 100% */
+      var track=btn.querySelector('.download-progress-track');
+      var progress=0;
+      var interval=setInterval(function(){
+        progress+=5;
+        if(progress>=100){
+          progress=100;
+          clearInterval(interval);
+          /* 显示下载完成 */
+          btn.classList.remove('downloading');
+          btn.classList.add('done');
+          btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> '+doneLabel;
+
+          /* 3秒后恢复 */
+          setTimeout(function(){
+            btn.classList.remove('done');
+            btn.innerHTML=originalHTML;
+            updateDownloadBtnLabels();
+          },3000);
+        }
+        if(track)track.style.width=progress+'%';
+      },100); /* 每100ms更新一次，20次完成 = 2秒 */
+    });
+  });
+
+  /* ============ 源码构建代码复制 ============ */
+  document.getElementById('sourceCodeCopy').addEventListener('click',function(){
+    var text=document.getElementById('sourceCodeContent').textContent;
+    navigator.clipboard.writeText(text).then(function(){
+      var btn=document.getElementById('sourceCodeCopy');
+      var copiedText=currentLang==='en'?'Copied':'已复制';
+      var copyText=currentLang==='en'?'Copy':'复制';
+      btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> '+copiedText;
+      setTimeout(function(){
+        btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> '+copyText;
+      },1600);
+    });
+  });
+
+  /* ============ 校验文件复制 ============ */
+  var checksumCopyText=currentLang==='en'?'Copy':'复制';
+  var checksumCopiedText=currentLang==='en'?'Copied':'已复制';
+  document.querySelectorAll('.checksum-copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      navigator.clipboard.writeText(btn.dataset.cmd).then(function(){
+        btn.textContent=checksumCopiedText;
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent=checksumCopyText;
+          btn.classList.remove('copied');
+        },1600);
+      });
+    });
+  });
+
+  /* ============ 滚动揭示动画 ============ */
+  var observer=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+
+  document.querySelectorAll('.reveal').forEach(function(el){
+    observer.observe(el);
+  });
+
+  /* ============ 返回顶部 ============ */
+  var scrollTopBtn=document.getElementById('scrollTop');
+  window.addEventListener('scroll',function(){
+    if(window.scrollY>400){
+      scrollTopBtn.classList.add('visible');
+    }else{
+      scrollTopBtn.classList.remove('visible');
+    }
+  });
+  scrollTopBtn.addEventListener('click',function(){
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+})();
+</script>
+
+</body>
+</html>

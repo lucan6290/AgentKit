@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使用攻略</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   品牌设计系统 — 语义化令牌（与 index.html 完全一致）
+   ============================================================ */
+:root{
+  /* 品牌：Emerald + Slate */
+  --bg:#f6f7f9;
+  --bg-alt:#eef0f3;
+  --surface:#ffffff;
+  --surface-2:#f0f2f5;
+
+  --fg:#0f172a;
+  --fg-muted:#475569;
+  --fg-subtle:#94a3b8;
+
+  --primary:#2563eb;
+  --primary-hover:#1d4ed8;
+  --primary-soft:rgba(37,99,235,.08);
+  --primary-glow:rgba(37,99,235,.25);
+  --primary-gradient:linear-gradient(135deg,#3b82f6,#1d4ed8);
+
+  --border:rgba(15,23,42,.08);
+  --border-hover:rgba(15,23,42,.14);
+
+  --radius:16px;
+  --radius-sm:10px;
+  --radius-lg:24px;
+
+  --shadow-sm:0 1px 2px rgba(15,23,42,.04);
+  --shadow:0 1px 3px rgba(15,23,42,.04),0 8px 24px -12px rgba(15,23,42,.12);
+  --shadow-lg:0 24px 56px -20px rgba(15,23,42,.18);
+
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;
+  --font-mono:'Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace;
+
+  --grid-line:rgba(15,23,42,.04);
+  --hero-glow:radial-gradient(600px 400px at 50% 0%,rgba(37,99,235,.06),transparent 70%);
+}
+.dark{
+  --bg:#0a0f1a;
+  --bg-alt:#0f1623;
+  --surface:#141c2b;
+  --surface-2:#1a2335;
+
+  --fg:#e2e8f0;
+  --fg-muted:#94a3b8;
+  --fg-subtle:#64748b;
+
+  --primary:#60a5fa;
+  --primary-hover:#93c5fd;
+  --primary-soft:rgba(96,165,250,.12);
+  --primary-glow:rgba(96,165,250,.3);
+  --primary-gradient:linear-gradient(135deg,#3b82f6,#60a5fa);
+
+  --border:rgba(255,255,255,.08);
+  --border-hover:rgba(255,255,255,.14);
+
+  --shadow-sm:0 1px 2px rgba(0,0,0,.2);
+  --shadow:0 1px 3px rgba(0,0,0,.2),0 8px 24px -12px rgba(0,0,0,.4);
+  --shadow-lg:0 24px 56px -20px rgba(0,0,0,.5);
+
+  --grid-line:rgba(255,255,255,.04);
+  --hero-glow:radial-gradient(600px 400px at 50% 0%,rgba(96,165,250,.08),transparent 70%);
+}
+
+/* ============================================================
+   Reset（与 index.html 一致）
+   ============================================================ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;transition:background .3s,color .3s}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:var(--primary-soft)}
+.container{width:min(100% - 48px,1120px);margin:0 auto}
+
+/* ============================================================
+   导航（与 index.html 一致）
+   ============================================================ */
+.nav{position:sticky;top:0;z-index:200;backdrop-filter:blur(16px);background:color-mix(in srgb,var(--bg) 85%,transparent);border-bottom:1px solid var(--border)}
+.nav-inner{display:flex;align-items:center;height:60px;gap:16px}
+.nav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--fg);white-space:nowrap}
+.nav-logo{width:28px;height:28px;border-radius:8px;background:var(--primary-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;box-shadow:0 4px 12px var(--primary-glow);transition:transform .2s}
+.nav-brand:hover .nav-logo{transform:scale(1.08) rotate(-4deg)}
+.nav-links{display:flex;gap:2px;margin-left:auto;align-items:center}
+.nav-links a{font-size:13px;color:var(--fg-muted);padding:6px 10px;border-radius:7px;white-space:nowrap;transition:background .15s,color .15s}
+.nav-links a:hover{background:var(--primary-soft);color:var(--primary)}
+.nav-links a.active{color:var(--primary);background:var(--primary-soft);font-weight:600}
+.nav-cta{font-size:13px;padding:7px 14px;border-radius:8px;background:var(--primary);color:#fff;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px -4px var(--primary-glow);transition:background .2s,transform .2s}
+.nav-cta:hover{background:var(--primary-hover);transform:translateY(-1px)}
+/* 导航内工具区 */
+.nav-tools{display:flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid var(--border)}
+/* 配色下拉选择器 */
+.theme-picker{position:relative}
+.theme-picker-btn{display:flex;align-items:center;gap:6px;height:34px;padding:0 10px 0 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;font-size:12px;transition:background .15s,border-color .15s,color .15s}
+.theme-picker-btn:hover{border-color:var(--primary);color:var(--primary)}
+.theme-picker-btn .swatch{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:transform .15s}
+.theme-picker-btn .caret{transition:transform .2s}
+.theme-picker.open .caret{transform:rotate(180deg)}
+.theme-picker-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-lg);padding:6px;z-index:300;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .2s,transform .2s,visibility .2s}
+.theme-picker.open .theme-picker-menu{opacity:1;visibility:visible;transform:translateY(0)}
+.theme-picker-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;font-size:12px;color:var(--fg-muted);cursor:pointer;transition:background .12s,color .12s;white-space:nowrap}
+.theme-picker-item:hover{background:var(--primary-soft);color:var(--fg)}
+.theme-picker-item.active{color:var(--primary);font-weight:600}
+.theme-picker-item .swatch{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);flex-shrink:0}
+.theme-picker-item.active .swatch{border-color:var(--fg)}
+.theme-picker-item .check{margin-left:auto;opacity:0;color:var(--primary)}
+.theme-picker-item.active .check{opacity:1}
+.dark-toggle{font-size:13px;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center}
+.dark-toggle:hover{color:var(--primary);border-color:var(--primary)}
+.lang-toggle{font-size:12px;font-weight:600;height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.lang-toggle:hover{color:var(--primary);border-color:var(--primary)}
+.github-link{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center}
+.github-link:hover{color:var(--primary);border-color:var(--primary)}
+
+/* ============================================================
+   Hero（与 index.html 一致）
+   ============================================================ */
+.hero{padding:80px 0 64px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:var(--hero-glow);pointer-events:none}
+.hero-bg-grid{position:absolute;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,#000 40%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,#000 40%,transparent 100%);pointer-events:none}
+.hero-inner{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--primary);background:var(--primary-soft);border:1px solid color-mix(in srgb,var(--primary) 15%,transparent);padding:5px 12px;border-radius:999px;margin-bottom:20px;animation:fadeUp .6s ease both}
+.hero-eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--primary);animation:pulse 2s ease-in-out infinite}
+.hero h1{font-size:clamp(36px,5.2vw,56px);font-weight:800;line-height:1.06;letter-spacing:-.035em;margin-bottom:16px;color:var(--fg);animation:fadeUp .6s .1s ease both}
+.hero h1 em{font-style:normal;background:var(--primary-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:17px;color:var(--fg-muted);line-height:1.7;margin-bottom:28px;max-width:580px;animation:fadeUp .6s .2s ease both}
+.hero-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:24px;animation:fadeUp .6s .3s ease both}
+.btn-primary,.btn-ghost{display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:11px 22px;border-radius:10px;font-weight:600;transition:background .2s,transform .2s,box-shadow .2s,border-color .2s}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 20px -8px var(--primary-glow)}
+.btn-primary:hover{background:var(--primary-hover);transform:translateY(-2px);box-shadow:0 12px 28px -8px var(--primary-glow)}
+.btn-ghost{background:var(--surface);border:1px solid var(--border);color:var(--fg)}
+.btn-ghost:hover{border-color:var(--border-hover);transform:translateY(-1px)}
+
+/* ============================================================
+   Section 通用（与 index.html 一致）
+   ============================================================ */
+.section{padding:88px 0;position:relative}
+.section.alt{background:var(--bg-alt)}
+.section-header{text-align:center;margin:0 auto 48px;max-width:640px}
+.section-eyebrow{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;background:var(--primary-soft);padding:4px 11px;border-radius:999px;margin-bottom:12px}
+.section-title{font-size:clamp(28px,3.5vw,40px);font-weight:800;letter-spacing:-.025em;line-height:1.15;margin-bottom:10px;color:var(--fg)}
+.section-desc{font-size:15px;color:var(--fg-muted);max-width:520px;margin:0 auto}
+
+/* ============================================================
+   教程卡片网格 — 点击展开/收起
+   ============================================================ */
+.guide-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+.guide-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm);transition:border-color .25s,box-shadow .25s,transform .25s;cursor:pointer;position:relative;overflow:hidden}
+.guide-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--primary-gradient);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.guide-card:hover{border-color:var(--border-hover);box-shadow:var(--shadow);transform:translateY(-3px)}
+.guide-card:hover::before{transform:scaleX(1)}
+.guide-card.expanded{border-color:var(--primary);box-shadow:var(--shadow)}
+.guide-card.expanded::before{transform:scaleX(1)}
+.guide-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.guide-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--primary-soft);color:var(--primary);flex-shrink:0}
+.guide-icon svg{width:20px;height:20px}
+.guide-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+/* 难度标签：初级=绿色、中级=橙色、高级=红色 */
+.difficulty-badge{font-size:10px;padding:3px 9px;border-radius:99px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.difficulty-badge.beginner{background:rgba(34,197,94,.12);color:#22c55e}
+.difficulty-badge.intermediate{background:rgba(249,115,22,.12);color:#f97316}
+.difficulty-badge.advanced{background:rgba(239,68,68,.12);color:#ef4444}
+.guide-time{font-size:11px;color:var(--fg-subtle);display:flex;align-items:center;gap:4px;white-space:nowrap}
+.guide-time svg{width:12px;height:12px}
+.guide-card h3{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--fg)}
+.guide-card>p{font-size:13px;color:var(--fg-muted);line-height:1.6}
+/* 展开区域 — 点击切换（非 hover） */
+.guide-detail{max-height:0;overflow:hidden;transition:max-height .4s ease,margin-top .3s,opacity .3s;opacity:0}
+.guide-card.expanded .guide-detail{max-height:1200px;margin-top:16px;opacity:1}
+.guide-detail-inner{padding-top:16px;border-top:1px solid var(--border)}
+.guide-step{margin-bottom:18px}
+.guide-step:last-child{margin-bottom:0}
+.guide-step-title{font-size:13px;font-weight:700;color:var(--fg);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.guide-step-num{width:20px;height:20px;border-radius:50%;background:var(--primary-soft);color:var(--primary);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.guide-step-desc{font-size:12px;color:var(--fg-muted);line-height:1.6;margin-bottom:8px;padding-left:26px}
+/* 展开内容中的内联代码块 */
+.guide-code{background:#0d1117;border-radius:var(--radius-sm);overflow:hidden;margin-top:6px}
+.guide-code-header{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)}
+.guide-code-lang{font-size:10px;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.guide-code-copy{font-size:10px;color:rgba(255,255,255,.4);cursor:pointer;transition:color .15s;display:flex;align-items:center;gap:3px}
+.guide-code-copy:hover{color:#fff}
+.guide-code-content{padding:12px 14px;font:12px/1.7 var(--font-mono);color:#c9d1d9;text-align:left;white-space:pre;overflow-x:auto}
+.guide-code-content .kw{color:#ff7b72}
+.guide-code-content .str{color:#a5d6ff}
+.guide-code-content .fn{color:#d2a8ff}
+.guide-code-content .com{color:#8b949e}
+.guide-code-content .var{color:#79c0ff}
+.guide-code-content::-webkit-scrollbar{height:6px}
+.guide-code-content::-webkit-scrollbar-track{background:transparent}
+.guide-code-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
+.guide-code-content::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+/* 快捷键表格 */
+.shortcut-table{width:100%;border-collapse:collapse;font-size:12px}
+.shortcut-table th,.shortcut-table td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+.shortcut-table th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-subtle);font-weight:700}
+.shortcut-table td{color:var(--fg-muted)}
+.shortcut-table tr:last-child td{border-bottom:none}
+.shortcut-key{font-family:var(--font-mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;color:var(--fg);white-space:nowrap;display:inline-block}
+/* 展开提示箭头 */
+.guide-expand-hint{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--primary);margin-top:12px;font-weight:600;transition:opacity .2s}
+.guide-expand-hint svg{width:12px;height:12px;transition:transform .3s}
+.guide-card.expanded .guide-expand-hint svg{transform:rotate(180deg)}
+.guide-card.expanded .guide-expand-hint .hint-text::after{content:attr(data-i18n-collapse)}
+
+/* ============================================================
+   CTA（与 index.html 一致）
+   ============================================================ */
+.cta-section{padding:64px 0 88px}
+.cta-box{position:relative;overflow:hidden;background:var(--primary-gradient);border-radius:var(--radius-lg);padding:64px 40px;text-align:center;box-shadow:0 24px 56px -20px var(--primary-glow)}
+.cta-box::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 20%,rgba(255,255,255,.18),transparent 50%);pointer-events:none}
+.cta-box h2{position:relative;font-size:clamp(26px,3.5vw,38px);font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-.02em}
+.cta-box p{position:relative;font-size:15px;color:rgba(255,255,255,.85);margin-bottom:24px;max-width:520px;margin-left:auto;margin-right:auto}
+.btn-white{display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:12px 28px;border-radius:10px;background:#fff;color:var(--primary);font-weight:700;transition:transform .2s,box-shadow .2s;position:relative}
+.btn-white:hover{transform:translateY(-2px);box-shadow:0 12px 32px -8px rgba(0,0,0,.3)}
+
+/* ============================================================
+   Footer（与 index.html 一致）
+   ============================================================ */
+footer{background:var(--bg-alt);border-top:1px solid var(--border);padding:56px 0 32px}
+.footer-inner{display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px}
+.footer-brand{font-size:16px;font-weight:700;color:var(--fg);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.footer-brand .nav-logo{width:26px;height:26px;font-size:12px}
+.footer-desc{font-size:13px;color:var(--fg-muted);max-width:360px;line-height:1.6}
+.footer-col h4{font-size:12px;color:var(--fg);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.footer-col a{display:block;font-size:13px;color:var(--fg-muted);padding:3px 0;transition:color .15s}
+.footer-col a:hover{color:var(--primary)}
+.footer-bottom{margin-top:36px;padding-top:18px;border-top:1px solid var(--border);font-size:12px;color:var(--fg-subtle)}
+
+/* ============================================================
+   动画（与 index.html 一致）
+   ============================================================ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ============================================================
+   交互状态细节（与 index.html 一致）
+   ============================================================ */
+.btn-primary:active,.btn-ghost:active,.nav-cta:active,.btn-white:active{transform:translateY(0)!important;transition-duration:.08s}
+.guide-card:active{transform:translateY(0)!important;box-shadow:var(--shadow-sm)}
+a:focus-visible,button:focus-visible,.theme-picker-item:focus-visible,.guide-card:focus-visible,.guide-code-copy:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:8px}
+/* 返回顶部 */
+.scroll-top{position:fixed;bottom:28px;right:28px;width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--fg-muted);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:150}
+.scroll-top.visible{opacity:1;pointer-events:auto}
+.scroll-top:hover{color:var(--primary);border-color:var(--primary);transform:translateY(-2px)}
+.scroll-top:active{transform:translateY(0)!important}
+
+/* ============================================================
+   响应式（与 index.html 一致）
+   ============================================================ */
+@media(max-width:820px){
+  .nav-links{display:none}
+  .guide-grid{grid-template-columns:1fr}
+  .footer-inner{grid-template-columns:1fr;gap:24px}
+  .hero-stats{gap:20px}
+  .nav-brand{font-size:13px}
+  .nav-cta{display:none}
+  .nav-tools{gap:6px;padding-left:8px}
+}
+@media(max-width:520px){
+  .container{width:calc(100% - 24px)}
+  .hero{padding:56px 0 40px}
+  .section{padding:56px 0}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 导航 ============ -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="#top" class="nav-brand">
+      <span class="nav-logo">A</span>
+      <span data-i18n="nav.brand">AgentKit</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" data-i18n="nav.home">首页</a>
+      <a href="docs.html" data-i18n="nav.docs">文档</a>
+      <a href="guide.html" class="active" data-i18n="nav.guide">攻略</a>
+      <a href="changelog.html" data-i18n="nav.changelog">更新日志</a>
+      
+      <a href="download.html" data-i18n="nav.freeDownload">免费下载</a>
+    </div>
+    <div class="nav-tools">
+      <div class="theme-picker" id="themePicker">
+        <button class="theme-picker-btn" id="themePickerBtn" aria-label="选择配色" aria-haspopup="true" aria-expanded="false">
+          <span class="swatch" id="currentSwatch" style="background:#2563eb"></span>
+          <span id="currentLabel" data-i18n="theme.emerald">品牌蓝</span>
+          <svg class="caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="theme-picker-menu" id="themePickerMenu" role="menu">
+          <div class="theme-picker-item active" data-color="emerald" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#2563eb"></span><span data-i18n="theme.emerald">品牌蓝</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="indigo" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#4f46e5"></span><span data-i18n="theme.indigo">靛蓝</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="amber" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#d97706"></span><span data-i18n="theme.amber">琥珀</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="rose" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#e11d48"></span><span data-i18n="theme.rose">玫红</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="cyan" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#0891b2"></span><span data-i18n="theme.cyan">青色</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="theme-picker-item" data-color="violet" role="menuitem" tabindex="0">
+            <span class="swatch" style="background:#7c3aed"></span><span data-i18n="theme.violet">紫罗兰</span>
+            <svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+        </div>
+      </div>
+      <button class="dark-toggle" id="darkToggle" aria-label="切换深色模式">
+        <svg id="darkToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="lang-toggle" id="langToggle" aria-label="切换语言">
+        <span id="langLabel">EN</span>
+      </button>
+      <a href="https://github.com/lucan6290/agentkit" class="github-link" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33.85 0 1.7.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10 10 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+      </a>
+    </div>
+    <a href="download.html" class="nav-cta" data-i18n="nav.download">下载</a>
+  </div>
+</nav>
+
+<!-- ============ Hero ============ -->
+<section class="hero" id="top">
+  <div class="hero-bg-grid"></div>
+  <div class="container hero-inner">
+    <div class="hero-eyebrow">
+      <span class="dot"></span>
+      <span data-i18n="hero.eyebrow">教程 · 从入门到精通</span>
+    </div>
+    <h1 data-i18n-html="hero.title">使用攻略<br><em>一步步掌握</em></h1>
+    <p data-i18n="hero.desc">从快速上手到高级配置，跟随教程掌握 AgentKit 管理 AI Agent Skills 的全部能力。</p>
+    <div class="hero-actions">
+      <a href="#guides" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h20v14H2zM8 21h8M12 17v4"/></svg>
+        <span data-i18n="hero.browse">浏览教程</span>
+      </a>
+      <a href="index.html" class="btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        <span data-i18n="hero.backHome">返回首页</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 教程卡片 ============ -->
+<section class="section alt" id="guides">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-eyebrow" data-i18n="guides.eyebrow">教程列表</span>
+      <h2 class="section-title" data-i18n="guides.title">点击卡片展开详细步骤</h2>
+      <p class="section-desc" data-i18n="guides.desc">涵盖从快速上手到高级配置的完整教程，按需学习。</p>
+    </div>
+    <div class="guide-grid">
+
+      <!-- 教程1：5分钟快速上手 -->
+      <div class="guide-card reveal" data-guide tabindex="0">
+        <div class="guide-card-head">
+          <div class="guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+          </div>
+          <div class="guide-meta">
+            <span class="difficulty-badge beginner" data-i18n="difficulty.beginner">初级</span>
+            <span class="guide-time">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span data-i18n="time.5min">5 分钟</span>
+            </span>
+          </div>
+        </div>
+        <h3 data-i18n="guide.g1Title">5分钟快速上手</h3>
+        <p data-i18n="guide.g1Desc">从安装到首次同步，5 分钟内完成 AgentKit 初始化并导入第一个 Skill。</p>
+        <div class="guide-expand-hint">
+          <span class="hint-text" data-i18n="guide.expand">点击展开</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="guide-detail">
+          <div class="guide-detail-inner">
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">1</span><span data-i18n="guide.g1s1Title">安装 AgentKit</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g1s1Desc">使用包管理器一键安装AgentKit。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># 下载安装包</span>
+<span class="kw">$</span> https://github.com/lucan6290/agentkit/releases/latest
+<span class="fn">✓</span> 安装完成 · 版本 <span class="str">v0.3.1</span></pre>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">2</span><span data-i18n="guide.g1s2Title">首次启动</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g1s2Desc">启动 AgentKit 并完成 Onboarding 引导，扫描已安装的 AI 工具。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># 启动 AgentKit</span>
+<span class="kw">$</span> agentkit run
+<span class="fn">→</span> 初始化本地存储 <span class="var">~/.agentkit/data.db</span>
+<span class="fn">✓</span> AgentKit 已启动 · <span class="str">桌面窗口</span></pre>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">3</span><span data-i18n="guide.g1s3Title">导入第一个 Skill</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g1s3Desc">从本地文件夹或已有工具导入 Skill，查看同步结果。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># 导入并同步 Skill</span>
+<span class="kw">$</span> 导入 frontend-design → Cursor
+<span class="fn">✓</span> Skill 已导入
+<span class="fn">✓</span> 已同步到 <span class="kw">3</span> 款工具</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 教程2：创建你的第一个任务 -->
+      <div class="guide-card reveal" data-guide tabindex="0">
+        <div class="guide-card-head">
+          <div class="guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div class="guide-meta">
+            <span class="difficulty-badge beginner" data-i18n="difficulty.beginner">初级</span>
+            <span class="guide-time">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span data-i18n="time.10min">10 分钟</span>
+            </span>
+          </div>
+        </div>
+        <h3 data-i18n="guide.g2Title">导入你的第一个 Skill</h3>
+        <p data-i18n="guide.g2Desc">从本地文件夹或已有 AI 工具导入 Skill，快速建立你的技能库。</p>
+        <div class="guide-expand-hint">
+          <span class="hint-text" data-i18n="guide.expand">点击展开</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="guide-detail">
+          <div class="guide-detail-inner">
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">1</span><span data-i18n="guide.g2s1Title">选择导入来源</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g2s1Desc">支持本地文件夹多选、.claude/skills 目录，以及从已安装工具迁移。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">json</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># tasks.json — 任务配置文件</span>
+{
+  <span class="str">"name"</span>: <span class="str">"启动开发环境"</span>,
+  <span class="str">"command"</span>: <span class="str">"npm run dev"</span>,
+  <span class="str">"cwd"</span>: <span class="str">"~/projects/my-app"</span>,
+  <span class="str">"env"</span>: { <span class="str">"PORT"</span>: <span class="str">"3000"</span> },
+  <span class="str">"retry"</span>: <span class="kw">3</span>,
+  <span class="str">"timeout"</span>: <span class="kw">30000</span>
+}</pre>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">2</span><span data-i18n="guide.g2s2Title">导入并同步</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g2s2Desc">导入后选择目标工具与范围，一键同步到对应 skills 目录。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># 加载并运行任务</span>
+<span class="kw">$</span> agentkit task load <span class="var">./tasks.json</span>
+<span class="fn">→</span> 加载任务: 启动开发环境
+<span class="kw">$</span> agentkit task run
+<span class="fn">✓</span> VITE v5.4.8 ready in <span class="kw">412</span>ms
+<span class="fn">✓</span> Local: <span class="str">http://localhost:3000/</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 教程3：编写自定义脚本 -->
+      <div class="guide-card reveal" data-guide tabindex="0">
+        <div class="guide-card-head">
+          <div class="guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+          </div>
+          <div class="guide-meta">
+            <span class="difficulty-badge intermediate" data-i18n="difficulty.intermediate">中级</span>
+            <span class="guide-time">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span data-i18n="time.15min">15 分钟</span>
+            </span>
+          </div>
+        </div>
+        <h3 data-i18n="guide.g3Title">配置同步范围</h3>
+        <p data-i18n="guide.g3Desc">全局或项目级同步，优先 symlink/junction，受限时自动回退 copy。</p>
+        <div class="guide-expand-hint">
+          <span class="hint-text" data-i18n="guide.expand">点击展开</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="guide-detail">
+          <div class="guide-detail-inner">
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">1</span><span data-i18n="guide.g3s1Title">全局同步</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g3s1Desc">将 Skill 同步到全局目录，在所有项目中生效。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># deploy.sh — 参数化部署脚本</span>
+<span class="kw">#!/bin/bash</span>
+<span class="var">TARGET</span>=<span class="str">"${1:-production}"</span>
+<span class="var">BRANCH</span>=<span class="str">"${2:-main}"</span>
+
+<span class="kw">echo</span> <span class="str">"部署分支 $BRANCH 到 $TARGET"</span>
+git checkout <span class="var">$BRANCH</span>
+npm run build
+rsync -avz dist/ <span class="var">$TARGET</span>:<span class="str">/var/www/app/</span>
+<span class="kw">echo</span> <span class="str">"✓ 部署完成"</span></pre>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">2</span><span data-i18n="guide.g3s2Title">项目级同步</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g3s2Desc">限定到特定项目目录，保持上下文干净。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># 带错误处理的构建脚本</span>
+<span class="kw">set</span> -e
+
+<span class="kw">if</span> ! npm run lint; <span class="kw">then</span>
+  <span class="kw">echo</span> <span class="str">"✗ 代码检查失败"</span>
+  <span class="kw">exit</span> <span class="kw">1</span>
+<span class="kw">fi</span>
+
+npm run build
+<span class="kw">echo</span> <span class="str">"✓ 构建成功"</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 教程4：配置自动化工作流 -->
+      <div class="guide-card reveal" data-guide tabindex="0">
+        <div class="guide-card-head">
+          <div class="guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="4"/></svg>
+          </div>
+          <div class="guide-meta">
+            <span class="difficulty-badge intermediate" data-i18n="difficulty.intermediate">中级</span>
+            <span class="guide-time">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span data-i18n="time.20min">20 分钟</span>
+            </span>
+          </div>
+        </div>
+        <h3 data-i18n="guide.g4Title">管理标签与筛选</h3>
+        <p data-i18n="guide.g4Desc">为 Skill 添加多个标签，按标签快速筛选与组织。</p>
+        <div class="guide-expand-hint">
+          <span class="hint-text" data-i18n="guide.expand">点击展开</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="guide-detail">
+          <div class="guide-detail-inner">
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">1</span><span data-i18n="guide.g4s1Title">创建标签</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g4s1Desc">在标签页新建、重命名、删除自定义标签。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">json</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># workflow.json — 自动化工作流</span>
+{
+  <span class="str">"name"</span>: <span class="str">"CI/CD 流水线"</span>,
+  <span class="str">"steps"</span>: [
+    { <span class="str">"name"</span>: <span class="str">"安装依赖"</span>, <span class="str">"cmd"</span>: <span class="str">"npm ci"</span> },
+    { <span class="str">"name"</span>: <span class="str">"代码检查"</span>, <span class="str">"cmd"</span>: <span class="str">"npm run lint"</span> },
+    { <span class="str">"name"</span>: <span class="str">"单元测试"</span>, <span class="str">"cmd"</span>: <span class="str">"npm test"</span> },
+    { <span class="str">"name"</span>: <span class="str">"构建"</span>, <span class="str">"cmd"</span>: <span class="str">"npm run build"</span> },
+    { <span class="str">"name"</span>: <span class="str">"部署"</span>, <span class="str">"cmd"</span>: <span class="str">"./deploy.sh"</span> }
+  ],
+  <span class="str">"on_fail"</span>: <span class="str">"stop"</span>,
+  <span class="str">"parallel"</span>: <span class="kw">false</span>
+}</pre>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">2</span><span data-i18n="guide.g4s2Title">按标签筛选</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g4s2Desc">在 My Skills 中按标签筛选，包括查看「无标签」Skill。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># 运行工作流</span>
+<span class="kw">$</span> agentkit workflow run <span class="var">./workflow.json</span>
+<span class="fn">→</span> [1/5] 安装依赖 <span class="fn">✓</span>
+<span class="fn">→</span> [2/5] 代码检查 <span class="fn">✓</span>
+<span class="fn">→</span> [3/5] 单元测试 <span class="fn">✓</span> 42 passed
+<span class="fn">→</span> [4/5] 构建 <span class="fn">✓</span> 4.2s
+<span class="fn">→</span> [5/5] 部署 <span class="fn">✓</span>
+<span class="fn">✓</span> 工作流完成 · 总耗时 <span class="kw">38</span>s</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 教程5：快捷键完全指南 -->
+      <div class="guide-card reveal" data-guide tabindex="0">
+        <div class="guide-card-head">
+          <div class="guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></svg>
+          </div>
+          <div class="guide-meta">
+            <span class="difficulty-badge beginner" data-i18n="difficulty.beginner">初级</span>
+            <span class="guide-time">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span data-i18n="time.5min">5 分钟</span>
+            </span>
+          </div>
+        </div>
+        <h3 data-i18n="guide.g5Title">支持的 AI 工具</h3>
+        <p data-i18n="guide.g5Desc">AgentKit 支持 44 款 AI 编程工具，自动识别已安装工具。</p>
+        <div class="guide-expand-hint">
+          <span class="hint-text" data-i18n="guide.expand">点击展开</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="guide-detail">
+          <div class="guide-detail-inner">
+            <table class="shortcut-table">
+              <thead>
+                <tr>
+                  <th data-i18n="guide.g5ColKey">工具</th>
+                  <th data-i18n="guide.g5ColAction">全局 skills 目录</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="shortcut-key">Ctrl + N</span></td><td data-i18n="guide.g5k1">Cursor · .cursor/skills</td></tr>
+                <tr><td><span class="shortcut-key">Ctrl + R</span></td><td data-i18n="guide.g5k2">Claude Code · .claude/skills</td></tr>
+                <tr><td><span class="shortcut-key">Ctrl + S</span></td><td data-i18n="guide.g5k3">Codex · .codex/skills</td></tr>
+                <tr><td><span class="shortcut-key">Ctrl + F</span></td><td data-i18n="guide.g5k4">Trae · .trae/skills</td></tr>
+                <tr><td><span class="shortcut-key">Ctrl + ,</span></td><td data-i18n="guide.g5k5">Gemini CLI · .gemini/skills</td></tr>
+                <tr><td><span class="shortcut-key">Ctrl + K</span></td><td data-i18n="guide.g5k6">Windsurf · .codeium/windsurf/skills</td></tr>
+                <tr><td><span class="shortcut-key">Ctrl + Shift + T</span></td><td data-i18n="guide.g5k7">OpenCode · .config/opencode/skills</td></tr>
+                <tr><td><span class="shortcut-key">Esc</span></td><td data-i18n="guide.g5k8">Kiro · .kiro/skills</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 教程6：数据备份与恢复 -->
+      <div class="guide-card reveal" data-guide tabindex="0">
+        <div class="guide-card-head">
+          <div class="guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="guide-meta">
+            <span class="difficulty-badge advanced" data-i18n="difficulty.advanced">高级</span>
+            <span class="guide-time">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span data-i18n="time.15min">15 分钟</span>
+            </span>
+          </div>
+        </div>
+        <h3 data-i18n="guide.g6Title">数据存储与迁移</h3>
+        <p data-i18n="guide.g6Desc">了解 AgentKit 的数据目录结构，完成备份与跨设备迁移。</p>
+        <div class="guide-expand-hint">
+          <span class="hint-text" data-i18n="guide.expand">点击展开</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="guide-detail">
+          <div class="guide-detail-inner">
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">1</span><span data-i18n="guide.g6s1Title">数据目录</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g6s1Desc">Skills 存储在 ~/.agentkit 下，按资源类型分目录管理。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># 创建完整备份</span>
+<span class="kw">$</span> agentkit backup create
+<span class="fn">→</span> 导出配置文件 <span class="var">~/.agentkit/config.json</span>
+<span class="fn">→</span> 导出数据库 <span class="var">~/.agentkit/data.db</span>
+<span class="fn">→</span> 压缩加密 <span class="var">backup-20260912.enc</span>
+<span class="fn">✓</span> 备份完成 · 大小 <span class="str">2.4MB</span></pre>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">2</span><span data-i18n="guide.g6s2Title">备份数据</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g6s2Desc">复制 ~/.agentkit 目录即可完成备份与跨设备迁移。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># 从备份恢复</span>
+<span class="kw">$</span> agentkit backup restore <span class="var">backup-20260912.enc</span>
+<span class="fn">→</span> 解密备份文件
+<span class="fn">→</span> 恢复配置文件
+<span class="fn">→</span> 恢复数据库
+<span class="fn">✓</span> 恢复完成 · <span class="kw">128</span> 个任务已恢复</pre>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-title"><span class="guide-step-num">3</span><span data-i18n="guide.g6s3Title">恢复数据</span></div>
+              <div class="guide-step-desc" data-i18n="guide.g6s3Desc">将备份目录放回原位置，AgentKit 会自动识别已有 Skills。</div>
+              <div class="guide-code">
+                <div class="guide-code-header"><span class="guide-code-lang">bash</span><span class="guide-code-copy" data-i18n="code.copy">复制</span></div>
+                <pre class="guide-code-content"><span class="com"># 添加每日凌晨3点自动备份</span>
+<span class="kw">$</span> crontab -e
+<span class="com"># 添加以下内容</span>
+<span class="kw">0 3</span> * * * agentkit backup create --auto
+<span class="com"># 保留最近 7 天备份</span>
+<span class="kw">0 3</span> * * * agentkit backup prune --keep <span class="kw">7</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box reveal">
+      <h2 data-i18n="cta.title">准备好开始了吗</h2>
+      <p data-i18n="cta.desc">下载AgentKit，跟随教程创建你的第一个任务。</p>
+      <a href="download.html" class="btn-white">
+        <span data-i18n="cta.download">立即下载</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 返回顶部 ============ -->
+<button class="scroll-top" id="scrollTop" aria-label="返回顶部">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<!-- ============ Footer ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">
+          <span class="nav-logo">A</span>
+          <span data-i18n="nav.brand">AgentKit</span>
+        </div>
+        <p class="footer-desc" data-i18n="footer.desc">跨平台桌面应用，统一管理 AI Agent Skills，并一键同步到 44 款 AI 编程工具。</p>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer.product">产品</h4>
+        <a href="index.html" data-i18n="nav.home">首页</a>
+        <a href="docs.html" data-i18n="nav.docs">文档</a>
+        <a href="guide.html" data-i18n="nav.guide">攻略</a>
+        <a href="download.html" data-i18n="nav.freeDownload">免费下载</a>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer.resources">资源</h4>
+        <a href="https://github.com/lucan6290/agentkit" target="_blank" rel="noopener" data-i18n="footer.github">GitHub 仓库</a>
+        <a href="changelog.html" data-i18n="footer.releases">版本发布</a>
+        <a href="https://github.com/lucan6290/agentkit" target="_blank" rel="noopener" data-i18n="footer.issues">问题反馈</a>
+        <a href="docs.html" data-i18n="footer.docs">使用文档</a>
+      </div>
+    </div>
+    <div class="footer-bottom" data-i18n="footer.copyright">© 2026 AgentKit · MIT License · 开源项目</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ============ 中英文国际化 (i18n) ============ */
+  var i18nDict={
+    en:{
+      'nav.brand':'AgentKit','nav.home':'Home','nav.docs':'Docs','nav.guide':'Guide','nav.changelog':'Changelog','nav.sponsors':'Sponsors','nav.freeDownload':'Free Download','nav.download':'Download',
+      'theme.emerald':'Blue','theme.indigo':'Indigo','theme.amber':'Amber','theme.rose':'Rose','theme.cyan':'Cyan','theme.violet':'Violet',
+      'hero.eyebrow':'Tutorials · From Beginner to Pro','hero.title':'Guides & Tutorials<br><em>Step by Step</em>','hero.desc':'From quick start to advanced configuration, follow these tutorials to master all capabilities of AgentKit.','hero.browse':'Browse Guides','hero.backHome':'Back to Home',
+      'difficulty.beginner':'Beginner','difficulty.intermediate':'Intermediate','difficulty.advanced':'Advanced',
+      'time.5min':'5 min','time.10min':'10 min','time.15min':'15 min','time.20min':'20 min',
+      'guides.eyebrow':'Tutorial List','guides.title':'Click a Card to Expand Steps','guides.desc':'Complete tutorials from quick start to advanced configuration. Learn at your own pace.',
+      'guide.expand':'Click to expand','guide.collapse':'Click to collapse',
+      'guide.g1Title':'5-Minute Quick Start','guide.g1Desc':'From installation to launch, complete initial setup and run your first task in 5 minutes.',
+      'guide.g1s1Title':'Install Workbench','guide.g1s1Desc':'Install AgentKit with one command via package manager.',
+      'guide.g1s2Title':'First Launch','guide.g1s2Desc':'Launch the workbench and complete the initial setup wizard.',
+      'guide.g1s3Title':'Run Your First Task','guide.g1s3Desc':'Click the sample task in the interface and view the result.',
+      'guide.g2Title':'Create Your First Task','guide.g2Desc':'Learn how to write task config files with commands, parameters and execution environment.',
+      'guide.g2s1Title':'Create Config File','guide.g2s1Desc':'Create tasks.json in your working directory to define task metadata.',
+      'guide.g2s2Title':'Load and Run','guide.g2s2Desc':'Import the config file in the workbench and click run to execute.',
+      'guide.g3Title':'Write Custom Scripts','guide.g3Desc':'Master script writing techniques: parameterization, conditionals and error handling.',
+      'guide.g3s1Title':'Parameterized Scripts','guide.g3s1Desc':'Use variables and parameter templates for flexible scripts.',
+      'guide.g3s2Title':'Error Handling','guide.g3s2Desc':'Add error checks and fallback logic for robust scripts.',
+      'guide.g4Title':'Configure Automated Workflows','guide.g4Desc':'Chain multiple tasks into a workflow for automated build, test and deploy.',
+      'guide.g4s1Title':'Define Workflow','guide.g4s1Desc':'Use workflow.json to define task execution order and dependencies.',
+      'guide.g4s2Title':'Run Workflow','guide.g4s2Desc':'Start the workflow via CLI or UI and monitor progress in real time.',
+      'guide.g5Title':'Complete Shortcut Guide','guide.g5Desc':'Master all shortcuts for mouse-free efficient operation.',
+      'guide.g5ColKey':'Shortcut','guide.g5ColAction':'Action',
+      'guide.g5k1':'New Task','guide.g5k2':'Run Selected Task','guide.g5k3':'Save Config','guide.g5k4':'Search Tasks',
+      'guide.g5k5':'Open Settings','guide.g5k6':'Command Palette','guide.g5k7':'Toggle Theme','guide.g5k8':'Cancel/Close',
+      'guide.g6Title':'Data Backup & Recovery','guide.g6Desc':'Learn the complete backup and recovery process to keep your data safe.',
+      'guide.g6s1Title':'Create Backup','guide.g6s1Desc':'Use built-in commands to export all configs and database to a backup file.',
+      'guide.g6s2Title':'Restore Data','guide.g6s2Desc':'Restore all data from a backup file, supports cross-device migration.',
+      'guide.g6s3Title':'Scheduled Auto Backup','guide.g6s3Desc':'Configure cron for daily automatic backups.',
+      'code.copy':'Copy','code.copied':'Copied',
+      'cta.title':'Ready to Get Started?','cta.desc':'Download AgentKit and follow tutorials to create your first task.','cta.download':'Download Now',
+      'footer.desc':'A cross-platform desktop app to manage AI Agent Skills and sync them across 44 AI coding tools.',
+      'footer.product':'Product','footer.resources':'Resources',
+      'footer.github':'GitHub Repo','footer.releases':'Releases','footer.issues':'Feedback','footer.docs':'Documentation',
+      'footer.copyright':'© 2026 AgentKit Community · MIT License · Open Source'
+    }
+  };
+  var currentLang='zh';
+
+  function applyI18n(){
+    if(currentLang==='en'){
+      /* data-i18n: 替换文本内容 */
+      document.querySelectorAll('[data-i18n]').forEach(function(el){
+        var key=el.getAttribute('data-i18n');
+        if(i18nDict.en[key]){el.textContent=i18nDict.en[key]}
+      });
+      /* data-i18n-html: 替换 HTML 内容（含 <br><em> 等） */
+      document.querySelectorAll('[data-i18n-html]').forEach(function(el){
+        var key=el.getAttribute('data-i18n-html');
+        if(i18nDict.en[key]){el.innerHTML=i18nDict.en[key]}
+      });
+      /* 更新展开提示文本 */
+      document.querySelectorAll('.hint-text').forEach(function(el){
+        if(el.closest('.guide-card.expanded')){
+          el.textContent=i18nDict.en['guide.collapse'];
+        }else{
+          el.textContent=i18nDict.en['guide.expand'];
+        }
+      });
+      /* 更新 langLabel */
+      var langLabel=document.getElementById('langLabel');
+      if(langLabel)langLabel.textContent='中';
+      /* 更新 HTML lang */
+      document.documentElement.lang='en';
+      /* 更新配色显示 */
+      updatePickerDisplay(currentTheme);
+    }else{
+      /* 恢复中文：重新加载页面最可靠 */
+      location.reload();
+    }
+  }
+
+  /* 语言切换按钮 — 从 localStorage 恢复偏好 */
+  try{var savedLang=localStorage.getItem('site-lang');if(savedLang==='en'){currentLang='en'}}catch(e){}
+  if(currentLang==='en'){
+    document.addEventListener('DOMContentLoaded',function(){applyI18n()});
+  }
+
+  /* ============ 主题配色切换（与 index.html 一致） ============ */
+  var themes={
+    emerald:{
+      light:{'--primary':'#2563eb','--primary-hover':'#1d4ed8','--primary-soft':'rgba(37,99,235,.08)','--primary-glow':'rgba(37,99,235,.25)','--primary-gradient':'linear-gradient(135deg,#3b82f6,#1d4ed8)'},
+      dark:{'--primary':'#60a5fa','--primary-hover':'#93c5fd','--primary-soft':'rgba(96,165,250,.12)','--primary-glow':'rgba(96,165,250,.3)','--primary-gradient':'linear-gradient(135deg,#3b82f6,#60a5fa)'}
+    },
+    indigo:{
+      light:{'--primary':'#4f46e5','--primary-hover':'#4338ca','--primary-soft':'rgba(79,70,229,.08)','--primary-glow':'rgba(79,70,229,.25)','--primary-gradient':'linear-gradient(135deg,#4f46e5,#6366f1)'},
+      dark:{'--primary':'#818cf8','--primary-hover':'#a5b4fc','--primary-soft':'rgba(129,140,248,.1)','--primary-glow':'rgba(129,140,248,.3)','--primary-gradient':'linear-gradient(135deg,#6366f1,#818cf8)'}
+    },
+    amber:{
+      light:{'--primary':'#d97706','--primary-hover':'#b45309','--primary-soft':'rgba(217,119,6,.08)','--primary-glow':'rgba(217,119,6,.25)','--primary-gradient':'linear-gradient(135deg,#d97706,#f59e0b)'},
+      dark:{'--primary':'#fbbf24','--primary-hover':'#fcd34d','--primary-soft':'rgba(251,191,36,.1)','--primary-glow':'rgba(251,191,36,.3)','--primary-gradient':'linear-gradient(135deg,#f59e0b,#fbbf24)'}
+    },
+    rose:{
+      light:{'--primary':'#e11d48','--primary-hover':'#be123c','--primary-soft':'rgba(225,29,72,.08)','--primary-glow':'rgba(225,29,72,.25)','--primary-gradient':'linear-gradient(135deg,#e11d48,#f43f5e)'},
+      dark:{'--primary':'#fb7185','--primary-hover':'#fda4af','--primary-soft':'rgba(251,113,133,.1)','--primary-glow':'rgba(251,113,133,.3)','--primary-gradient':'linear-gradient(135deg,#f43f5e,#fb7185)'}
+    },
+    cyan:{
+      light:{'--primary':'#0891b2','--primary-hover':'#0e7490','--primary-soft':'rgba(8,145,178,.08)','--primary-glow':'rgba(8,145,178,.25)','--primary-gradient':'linear-gradient(135deg,#0891b2,#06b6d4)'},
+      dark:{'--primary':'#22d3ee','--primary-hover':'#67e8f9','--primary-soft':'rgba(34,211,238,.1)','--primary-glow':'rgba(34,211,238,.3)','--primary-gradient':'linear-gradient(135deg,#06b6d4,#22d3ee)'}
+    },
+    violet:{
+      light:{'--primary':'#7c3aed','--primary-hover':'#6d28d9','--primary-soft':'rgba(124,58,237,.08)','--primary-glow':'rgba(124,58,237,.25)','--primary-gradient':'linear-gradient(135deg,#7c3aed,#8b5cf6)'},
+      dark:{'--primary':'#a78bfa','--primary-hover':'#c4b5fd','--primary-soft':'rgba(167,139,250,.1)','--primary-glow':'rgba(167,139,250,.3)','--primary-gradient':'linear-gradient(135deg,#8b5cf6,#a78bfa)'}
+    }
+  };
+  var currentTheme='emerald';
+  var isDark=false;
+
+  /* 从 localStorage 恢复用户偏好，无记录时检测系统偏好 */
+  try{
+    var savedTheme=localStorage.getItem('theme-color');
+    var savedDark=localStorage.getItem('theme-dark');
+    if(savedTheme&&themes[savedTheme]){currentTheme=savedTheme}
+    if(savedDark==='1'){isDark=true;document.documentElement.classList.add('dark')}
+    else if(savedDark===null&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches){isDark=true;document.documentElement.classList.add('dark')}
+  }catch(e){}
+
+  function applyTheme(color){
+    var mode=isDark?'dark':'light';
+    var vars=themes[color][mode];
+    var root=document.documentElement;
+    Object.keys(vars).forEach(function(key){
+      root.style.setProperty(key,vars[key]);
+    });
+    currentTheme=color;
+    try{localStorage.setItem('theme-color',color)}catch(e){}
+  }
+
+  /* 配色元数据（色块 + 名称） */
+  var themeMeta={
+    emerald:{color:'#2563eb',labelZh:'品牌蓝',labelEn:'Blue'},
+    indigo:{color:'#4f46e5',labelZh:'靛蓝',labelEn:'Indigo'},
+    amber:{color:'#d97706',labelZh:'琥珀',labelEn:'Amber'},
+    rose:{color:'#e11d48',labelZh:'玫红',labelEn:'Rose'},
+    cyan:{color:'#0891b2',labelZh:'青色',labelEn:'Cyan'},
+    violet:{color:'#7c3aed',labelZh:'紫罗兰',labelEn:'Violet'}
+  };
+
+  function updatePickerDisplay(color){
+    var meta=themeMeta[color]||themeMeta.emerald;
+    var swatch=document.getElementById('currentSwatch');
+    var label=document.getElementById('currentLabel');
+    if(swatch)swatch.style.background=meta.color;
+    if(label)label.textContent=currentLang==='en'?meta.labelEn:meta.labelZh;
+    document.querySelectorAll('.theme-picker-item').forEach(function(item){
+      item.classList.toggle('active',item.dataset.color===color);
+    });
+  }
+
+  updatePickerDisplay(currentTheme);
+  if(isDark){
+    var icon=document.getElementById('darkToggleIcon');
+    if(icon)icon.innerHTML='<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  }
+  applyTheme(currentTheme);
+
+  /* ============ 配色下拉选择器交互 ============ */
+  var themePicker=document.getElementById('themePicker');
+  var themePickerBtn=document.getElementById('themePickerBtn');
+
+  themePickerBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var isOpen=themePicker.classList.toggle('open');
+    themePickerBtn.setAttribute('aria-expanded',isOpen?'true':'false');
+  });
+
+  document.querySelectorAll('.theme-picker-item').forEach(function(item){
+    item.addEventListener('click',function(){
+      var color=item.dataset.color;
+      applyTheme(color);
+      updatePickerDisplay(color);
+      themePicker.classList.remove('open');
+      themePickerBtn.setAttribute('aria-expanded','false');
+    });
+    item.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();item.click()}
+    });
+  });
+
+  /* 点击外部关闭下拉 */
+  document.addEventListener('click',function(){
+    themePicker.classList.remove('open');
+    themePickerBtn.setAttribute('aria-expanded','false');
+  });
+
+  /* ESC 关闭下拉 */
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      themePicker.classList.remove('open');
+      themePickerBtn.setAttribute('aria-expanded','false');
+    }
+  });
+
+  /* ============ 深色模式切换 ============ */
+  var darkToggle=document.getElementById('darkToggle');
+  var darkToggleIcon=document.getElementById('darkToggleIcon');
+  darkToggle.addEventListener('click',function(){
+    isDark=!isDark;
+    document.documentElement.classList.toggle('dark',isDark);
+    try{localStorage.setItem('theme-dark',isDark?'1':'0')}catch(e){}
+    darkToggleIcon.innerHTML=isDark
+      ?'<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+      :'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    applyTheme(currentTheme);
+  });
+
+  /* ============ 语言切换 ============ */
+  var langToggle=document.getElementById('langToggle');
+  langToggle.addEventListener('click',function(){
+    currentLang=currentLang==='en'?'zh':'en';
+    try{localStorage.setItem('site-lang',currentLang)}catch(e){}
+    if(currentLang==='en'){
+      applyI18n();
+    }else{
+      location.reload();
+    }
+  });
+
+  /* ============ 教程卡片点击展开/收起 ============ */
+  document.querySelectorAll('.guide-card').forEach(function(card){
+    card.addEventListener('click',function(e){
+      /* 如果点击的是代码复制按钮，不触发展开 */
+      if(e.target.closest('.guide-code-copy'))return;
+      var isExpanded=card.classList.toggle('expanded');
+      /* 更新展开提示文本 */
+      var hint=card.querySelector('.hint-text');
+      if(hint){
+        if(currentLang==='en'){
+          hint.textContent=isExpanded?i18nDict.en['guide.collapse']:i18nDict.en['guide.expand'];
+        }else{
+          hint.textContent=isExpanded?'点击收起':'点击展开';
+        }
+      }
+    });
+    /* 键盘支持：Enter/空格展开 */
+    card.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){
+        e.preventDefault();
+        card.click();
+      }
+    });
+  });
+
+  /* ============ 代码块复制 ============ */
+  document.querySelectorAll('.guide-code-copy').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var codeEl=btn.closest('.guide-code').querySelector('.guide-code-content');
+      var text=codeEl.textContent;
+      navigator.clipboard.writeText(text).then(function(){
+        var copyText=currentLang==='en'?'Copy':'复制';
+        var copiedText=currentLang==='en'?'Copied':'已复制';
+        btn.textContent=copiedText;
+        setTimeout(function(){btn.textContent=copyText},1600);
+      });
+    });
+  });
+
+  /* ============ 滚动揭示动画 ============ */
+  var observer=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+
+  document.querySelectorAll('.reveal').forEach(function(el){
+    observer.observe(el);
+  });
+
+  /* ============ 返回顶部 ============ */
+  var scrollTopBtn=document.getElementById('scrollTop');
+  window.addEventListener('scroll',function(){
+    if(window.scrollY>400){
+      scrollTopBtn.classList.add('visible');
+    }else{
+      scrollTopBtn.classList.remove('visible');
+    }
+  });
+  scrollTopBtn.addEventListener('click',function(){
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+})();
+</script>
+
+</body>
+</html>
