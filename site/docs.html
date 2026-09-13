@@ -578,6 +578,7 @@ footer{background:var(--bg-alt);border-top:1px solid var(--border);padding:48px 
             <tr><td>智能同步</td><td>symlink/junction 优先，失败回退 copy，同步到全局或项目目录</td></tr>
             <tr><td>标签与筛选</td><td>新建/重命名/删除标签，为 Skill 添加多标签并筛选</td></tr>
             <tr><td>工具感知</td><td>自动识别 44 款已安装的 AI 工具并提示同步</td></tr>
+            <tr><td>提示词文件</td><td>管理并关联 AI 工具的提示词文件（CLAUDE.md、AGENTS.md 等），扫描与同步</td></tr>
             <tr><td>Onboarding 迁移</td><td>扫描已安装工具中的现有 skills，导入到 Community Repo</td></tr>
             <tr><td>数据库面板</td><td>表统计、碎片整理、备份与维护</td></tr>
           </tbody>
@@ -709,7 +710,7 @@ footer{background:var(--bg-alt);border-top:1px solid var(--border);padding:48px 
           <li>先更新 <code class="inline">CHANGELOG.md</code>，在「Unreleased」下方添加新版本条目</li>
           <li>运行 <code class="inline">node scripts/version.mjs set 0.x.x</code> 更新版本号</li>
           <li>提交并打 tag：<code class="inline">git tag -a v0.x.x</code></li>
-          <li>推送 tag 后，GitHub Actions 自动构建 exe、ZIP、NSIS 安装包并创建 draft Release</li>
+          <li>推送 tag 后，GitHub Actions 自动构建 NSIS 与 MSI 安装包并创建 draft Release</li>
         </ul>
       </section>
 
