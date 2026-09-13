@@ -2,7 +2,7 @@
 
 > 中文 | [English](docs/README.en.md)
 
-一个跨平台桌面应用（React 19 + Rust Tauri），用于统一管理 AI Agent Skills，并把它们同步到多种 AI 编程工具的全局或项目级 skills 目录（优先 symlink/junction，失败回退 copy），实现 "Install once, sync everywhere"。
+一个 Windows 桌面应用（React 19 + Rust Tauri），用于统一管理 AI Agent Skills，并把它们同步到多种 AI 编程工具的全局或项目级 skills 目录（优先 symlink/junction，失败回退 copy），实现 "Install once, sync everywhere"。
 
 ## 主要功能
 

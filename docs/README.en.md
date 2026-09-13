@@ -2,7 +2,7 @@
 
 > [中文版本](../README.md) | English
 
-A cross-platform desktop application (React 19 + Rust Tauri) for managing AI Agent Skills and syncing them to multiple AI coding tools' global or project-level skills directories (symlink/junction preferred, copy fallback), achieving "Install once, sync everywhere".
+A Windows desktop application (React 19 + Rust Tauri) for managing AI Agent Skills and syncing them to multiple AI coding tools' global or project-level skills directories (symlink/junction preferred, copy fallback), achieving "Install once, sync everywhere".
 
 ## Features
 
